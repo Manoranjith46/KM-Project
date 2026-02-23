@@ -1,0 +1,171 @@
+/* 1. FONT IMPORT */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* 2. THEME & COLOR SYSTEM */
+:root {
+  /* Common */
+  --font-main: 'Plus Jakarta Sans', sans-serif;
+  --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Light Theme */
+  --bg-main: #f1f5f9;
+  --bg-mesh: radial-gradient(at 0% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+             radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+  
+  /* Role Colors */
+  --owner-primary: #4f46e5;
+  --owner-glow: rgba(79, 70, 229, 0.3);
+  --resident-primary: #059669;
+  --resident-glow: rgba(5, 150, 105, 0.3);
+}
+
+[data-theme='dark'] {
+  --bg-main: #020617;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --glass-bg: rgba(15, 23, 42, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* 3. GLOBAL RESET & BASE */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-main);
+  transition: var(--transition-smooth);
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* 4. GLOBAL PAGE SCROLLBAR - Volume Bar Style */
+/* Scrollbar for Webkit browsers (Chrome, Safari, Edge) */
+html::-webkit-scrollbar {
+  width: 10px;
+}
+
+html::-webkit-scrollbar-track {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 6px rgba(37, 99, 235, 0.3);
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #2563eb, #1e40af);
+  box-shadow: inset 0 0 8px rgba(37, 99, 235, 0.5), 0 0 4px rgba(37, 99, 235, 0.4);
+}
+
+html::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(to bottom, #1e40af, #1e3a8a);
+  box-shadow: inset 0 0 10px rgba(37, 99, 235, 0.7);
+}
+
+/* Firefox Scrollbar - Owner Theme (Blue) */
+html {
+  scrollbar-color: linear-gradient(to bottom, #3b82f6, #2563eb) rgba(255, 255, 255, 0.05);
+  scrollbar-width: auto;
+}
+
+/* Firefox Scrollbar - Resident Theme (Green) */
+html.resident-theme {
+  scrollbar-color: linear-gradient(to bottom, #10b981, #059669) rgba(255, 255, 255, 0.05);
+}
+
+/* Resident Theme Scrollbar - Webkit */
+html.resident-theme::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #10b981, #059669);
+  box-shadow: inset 0 0 6px rgba(5, 150, 105, 0.3);
+}
+
+html.resident-theme::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #059669, #047857);
+  box-shadow: inset 0 0 8px rgba(5, 150, 105, 0.5), 0 0 4px rgba(5, 150, 105, 0.4);
+}
+
+html.resident-theme::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(to bottom, #047857, #065f46);
+  box-shadow: inset 0 0 10px rgba(5, 150, 105, 0.7);
+}
+
+/* 5. 3D & GLASS UTILITIES */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 24px;
+}
+
+.perspective-view {
+  perspective: 1500px;
+}
+
+/* Background Animated Blobs */
+.blob {
+  position: absolute;
+  filter: blur(100px);
+  z-index: -1;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: float 20s infinite alternate;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, 100px) scale(1.2); }
+}
+
+/* 5. STRICT RESPONSIVE BREAKPOINTS */
+
+/* Mobile Small (320px) */
+@media (min-width: 320px) {
+  .container { width: 95%; padding: 10px; }
+  h1 { font-size: 1.8rem; }
+}
+
+/* Mobile Medium (375px) */
+@media (min-width: 375px) {
+  .container { padding: 15px; }
+}
+
+/* Mobile Large (425px) */
+@media (min-width: 425px) {
+  .container { width: 90%; }
+}
+
+/* Tablet (768px) */
+@media (min-width: 768px) {
+  .container { width: 80%; }
+  h1 { font-size: 2.5rem; }
+}
+
+/* Laptop (1024px) */
+@media (min-width: 1024px) {
+  .container { width: 450px; } /* Fixed width for Login card on large screens */
+}
+
+/* Desktop Large (1440px+) */
+@media (min-width: 1440px) {
+  .container { width: 500px; }
+  body { font-size: 18px; }
+}
