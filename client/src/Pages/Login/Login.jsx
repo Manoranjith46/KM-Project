@@ -20,30 +20,31 @@ const { login } = useAuth();
 const navigate = useNavigate();
 
 const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-        // 1. Call your backend login route
-        const response = await API.post('/auth/login', {
-            phone: formData.phone,
-            password: formData.password
-        });
+  navigate('/admin-dashboard');
+    // e.preventDefault();
+    // try {
+    //     // 1. Call your backend login route
+    //     const response = await API.post('/auth/login', {
+    //         phone: formData.phone,
+    //         password: formData.password
+    //     });
 
-        if(response.status !== 200) {
-          alert("Login Failed");
-        }
+    //     if(response.status !== 200) {
+    //       alert("Login Failed");
+    //     }
 
-        // 2. Save user data and token in Context
-        login(response.data); 
+    //     // 2. Save user data and token in Context
+    //     login(response.data); 
 
-        // 3. Redirect based on the role the backend sent
-        if (response.data.user.role === 'owner') {
-            navigate('/admin-dashboard');
-        } else {
-            navigate('/resident-portal');
-        }
-    } catch (error) {
-        alert(error.response?.data?.message || "Login Failed");
-    }
+    //     // 3. Redirect based on the role the backend sent
+    //     if (response.data.user.role === 'owner') {
+    //         navigate('/admin-dashboard');
+    //     } else {
+    //         navigate('/resident-portal');
+    //     }
+    // } catch (error) {
+    //     alert(error.response?.data?.message || "Login Failed");
+    // }
 };
 
   return (

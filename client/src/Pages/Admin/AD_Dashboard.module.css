@@ -1,3 +1,7 @@
+/* ============================================
+   DASHBOARD - DEFAULT STYLES (768px and above)
+   ============================================ */
+
 /* Dashboard Wrapper */
 .dashboardWrapper {
   min-height: 100vh;
@@ -64,19 +68,71 @@
   }
 }
 
+/* Sidebar Overlay - Mobile */
+.sidebarOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  animation: fadeIn 0.3s ease-out;
+  backdrop-filter: blur(2px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Volume Bar Style Scrollbar - Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  margin: 8px 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #4F46E5, #7C3AED);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 6px rgba(79, 70, 229, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #7C3AED, #A78BFA);
+  border-color: #4F46E5;
+  box-shadow: inset 0 0 8px rgba(79, 70, 229, 0.5), 0 0 4px rgba(124, 58, 237, 0.4);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(to bottom, #A78BFA, #C4B5FD);
+  box-shadow: inset 0 0 10px rgba(79, 70, 229, 0.7);
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-color: linear-gradient(to bottom, #4F46E5, #7C3AED) rgba(255, 255, 255, 0.1);
+  scrollbar-width: auto;
+}
+
 /* Main Content */
 .mainContent {
   flex: 1;
-  margin-left: 92.5px;
   padding: 2rem;
-  position: relative;
   z-index: 1;
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  padding-bottom: 6rem;
-}
-
-.sidebar.collapsed ~ .mainContent {
-  margin-left: 92.5px;
+  padding-bottom: 2rem;
+  margin-left: 85px;
+  overflow-y: auto;
 }
 
 /* Top Bar */
@@ -96,6 +152,15 @@
 
 .topBarLeft {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: auto;
+}
+
+.titleSection {
+  flex: 1;
+  min-width: 0;
 }
 
 .pageTitle {
@@ -110,114 +175,6 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
   margin: 0.25rem 0 0;
-}
-
-.topBarCenter {
-  flex: 1;
-  max-width: 500px;
-}
-
-.searchBar {
-  position: relative;
-  width: 100%;
-}
-
-.searchIcon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.25rem;
-  opacity: 0.5;
-}
-
-.searchInput {
-  width: 100%;
-  padding: 0.875rem 1rem 0.875rem 3rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  transition: all 0.3s ease;
-}
-
-.searchInput::placeholder {
-  color: var(--text-secondary);
-}
-
-.searchInput:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(79, 70, 229, 0.5);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-.topBarRight {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.notificationBtn {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  background: rgba(79, 70, 229, 0.1);
-  border: 1px solid rgba(79, 70, 229, 0.3);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.notificationBtn:hover {
-  background: rgba(79, 70, 229, 0.2);
-  transform: scale(1.05);
-}
-
-.notificationIcon {
-  font-size: 1.5rem;
-}
-
-.badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: linear-gradient(135deg, #EF4444, #DC2626);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 700;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid var(--bg-main);
-}
-
-.profileCircle {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 1.25rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
-}
-
-.profileCircle:hover {
-  transform: scale(1.05) translateY(-2px);
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.5);
 }
 
 /* Hero Stats */
@@ -308,45 +265,6 @@
   opacity: 0.7;
 }
 
-/* Progress Ring */
-.progressRing {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 80px;
-  height: 80px;
-}
-
-.progressSvg {
-  transform: rotate(-90deg);
-  width: 100%;
-  height: 100%;
-}
-
-.progressBg {
-  fill: none;
-  stroke: rgba(79, 70, 229, 0.1);
-  stroke-width: 8;
-}
-
-.progressFill {
-  fill: none;
-  stroke: url(#progressGradient);
-  stroke-width: 8;
-  stroke-linecap: round;
-  stroke-dasharray: 339.292;
-  transition: stroke-dashoffset 1s ease;
-}
-
-.progressText {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 1rem;
-  font-weight: 700;
-  color: #A78BFA;
-}
 
 /* Sparkline */
 .sparkline {
@@ -503,9 +421,28 @@
   background: linear-gradient(90deg, #8B5CF6, #A78BFA);
 }
 
-/* Resident Section */
-.residentSection {
-  margin-bottom: 2rem;
+/* Desktop Sidebar - Hover Based Expand/Collapse */
+.sidebar {
+  width: 280px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 50;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.collapsed {
+  width: 92.5px;
+}
+
+.sidebar.expanded {
+  width: 250px;
 }
 
 .tableContainer {
@@ -611,69 +548,478 @@
   color: #EF4444;
 }
 
-/* Bottom Navigation - Mobile Only */
-.bottomNav {
+/* ============================================
+   RESIDENT CARDS - Mobile Card View
+   ============================================ */
+.residentCardsView {
   display: none;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .sidebar.collapsed ~ .mainContent {
-    margin-left: 80px;
-  }
+.residentCardsView.visible {
+  display: flex;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
+.residentCard {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+}
 
-  .sidebar.collapsed {
-    width: 82.5px;
-    transform: translateX(0);
-  }
+.residentCard:active {
+  background: rgba(79, 70, 229, 0.1);
+  border-color: rgba(79, 70, 229, 0.3);
+}
 
+.residentCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.residentCardAvatar {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.residentCardName {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.residentCardStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.residentCardStatus.paid {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+.residentCardStatus.pending {
+  background: rgba(251, 191, 36, 0.1);
+  color: #FBBF24;
+}
+
+.residentCardStatus.overdue {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.residentCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.residentCardRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.residentCardLabel {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex: 0 0 70px;
+}
+
+.residentCardValue {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  flex: 1;
+  text-align: right;
+}
+
+.residentCardValue.room {
+  color: #A78BFA;
+  font-weight: 600;
+}
+
+.residentCardValue.amount {
+  font-weight: 600;
+}
+
+.residentCardValue.date {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Desktop Sidebar - Hover Based Expand/Collapse */
+.sidebar {
+  width: 250px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 50;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.collapsed {
+  width: 92.5px;
+}
+
+.sidebar.expanded {
+  width: 250px;
+}
+
+.sidebarContent {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .logoContainer {
+  justify-content: center;
+  gap: 0;
+}
+
+.logoIcon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .logoText {
+  opacity: 0;
+  visibility: hidden;
+  width: 0;
+}
+
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebarItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+  min-height: 44px;
+  justify-content: flex-start;
+}
+
+.sidebar.collapsed .sidebarItem {
+  justify-content: center;
+  padding: 0.75rem;
+  gap: 0;
+}
+
+.sidebarItemIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebarItemLabel {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebarItemLabel {
+  opacity: 0;
+  visibility: hidden;
+  width: 0;
+}
+
+.sidebarItem:hover {
+  background: rgba(79, 70, 229, 0.08);
+}
+
+.sidebarItem.active {
+  background: rgba(79, 70, 229, 0.15);
+  border: 1px solid rgba(79, 70, 229, 0.3);
+  color: #A78BFA;
+  font-weight: 600;
+}
+
+.sidebarItem.active:hover {
+  background: rgba(79, 70, 229, 0.2);
+}
+
+/* Bottom Navigation - Hidden on Desktop */
+.bottomNav {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.bottomNavItem {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.bottomNavIcon {
+  font-size: 1.5rem;
+}
+
+.bottomNavLabel {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Sidebar - Desktop */
+.sidebar {
+  width: 280px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.sidebarContent {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.logoIcon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebarItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+  min-height: 44px;
+  justify-content: flex-start;
+}
+
+.sidebarItemIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebarItemLabel {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.sidebarItem:hover {
+  background: rgba(79, 70, 229, 0.08);
+}
+
+.sidebarItem.active {
+  background: rgba(79, 70, 229, 0.15);
+  border: 1px solid rgba(79, 70, 229, 0.3);
+  color: #A78BFA;
+  font-weight: 600;
+}
+
+.sidebarItem.active:hover {
+  background: rgba(79, 70, 229, 0.2);
+}
+
+/* ============================================
+   TABLET - 767px
+   ============================================ */
+@media (max-width: 768px){
   .mainContent {
-    margin-left: 82.5px;
-    padding: 1.5rem 1rem;
+    padding: 1.5rem;
+    padding-bottom: 6rem;
+    margin-left: 0;
   }
 
   .topBar {
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 1rem;
     padding: 1rem;
   }
 
-  .topBarLeft,
-  .topBarCenter,
-  .topBarRight {
+  .topBarLeft {
     width: 100%;
+    gap: 0.5rem;
   }
 
-  .topBarCenter {
-    max-width: 100%;
+  .pageTitle {
+    font-size: 1.5rem;
   }
 
-  .topBarRight {
-    justify-content: space-between;
+  .sidebarOverlay {
+    display: block !important;
+    visibility: visible !important;
   }
 
   .heroStats {
-    grid-template-columns: 1fr;
-    overflow-x: auto;
-    display: flex;
-    scroll-snap-type: x mandatory;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
-    padding-bottom: 1rem;
   }
 
   .statCard {
-    min-width: 280px;
-    scroll-snap-align: start;
+    padding: 1rem;
+    border-radius: 12px;
+    position: relative;
+  }
+
+  .statHeader {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .statValue {
+    font-size: 2rem;
+    margin: 0.5rem 0;
+  }
+
+  .statTitle {
+    font-size: 0.85rem;
+  }
+
+  .statSubtitle {
+    font-size: 0.75rem;
+  }
+
+  .statIcon {
+    font-size: 1.75rem;
+  }
+
+  .statTrend {
+    font-size: 0.7rem;
   }
 
   .mealGrid {
     grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .mealCard {
+    padding: 0.9rem;
+    border-radius: 10px;
   }
 
   .tableContainer {
@@ -683,28 +1029,30 @@
   .residentTable {
     min-width: 600px;
   }
-}
 
-@media (max-width: 425px) {
-  .sidebar {
-    display: none;
-  }
-
-  .mainContent {
-    margin-left: 0;
-    padding: 1rem 0.75rem 5rem;
-  }
-
-  .pageTitle {
-    font-size: 1.5rem;
-  }
-
-  .searchBar {
-    display: none;
-  }
-
-  .bottomNav {
+  /* Show cards, hide table on tablet */
+  .residentCardsView.visible {
     display: flex;
+  }
+
+  .residentCard {
+    padding: 1rem;
+  }
+
+  .residentCardLabel {
+    flex: 0 0 60px;
+    font-size: 0.75rem;
+  }
+
+  .residentCardValue {
+    font-size: 0.9rem;
+  }
+
+  /* Bottom Navigation - Tablet */
+  .bottomNav {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -712,11 +1060,10 @@
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.75rem 0.5rem;
+    padding: 0.5rem 0.25rem;
     justify-content: space-around;
-    gap: 0.5rem;
+    gap: 0.25rem;
     z-index: 1000;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
   }
 
   .bottomNavItem {
@@ -724,13 +1071,14 @@
     flex-direction: column;
     align-items: center;
     gap: 0.25rem;
-    padding: 0.5rem 1rem;
-    border-radius: 12px;
-    text-decoration: none;
+    padding: 0.5rem;
+    border-radius: 8px;
     color: var(--text-secondary);
     transition: all 0.3s ease;
     flex: 1;
-    max-width: 80px;
+    font-size: 0.7rem;
+    min-height: 56px;
+    justify-content: center;
   }
 
   .bottomNavItem:hover {
@@ -740,19 +1088,429 @@
   .bottomNavItem.active {
     background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
     color: #A78BFA;
-    transform: translateY(-4px);
+  }
+}
+
+/* ============================================
+   LARGE PHONE - 425px
+   ============================================ */
+@media (max-width: 425px) {
+  .mainContent {
+    padding: 1rem;
+    padding-bottom: 6rem;
   }
 
-  .bottomNavIcon {
-    font-size: 1.5rem;
+  .topBar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 12px;
   }
 
-  .bottomNavLabel {
+  .topBarLeft {
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .titleSection {
+    flex: 1;
+  }
+
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+
+  .pageSubtitle {
     font-size: 0.75rem;
-    font-weight: 500;
+  }
+
+  .sidebarOverlay {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .sidebarContent {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .sidebarItem {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+    min-height: 40px;
+  }
+
+  .heroStats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
   }
 
   .statCard {
-    min-width: 260px;
+    padding: 1rem;
+    border-radius: 12px;
+    position: relative;
+  }
+
+  .statHeader {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    justify-content: space-between;
+  }
+
+  .statValue {
+    font-size: 1.75rem;
+    margin: 0.25rem 0;
+  }
+
+  .statTitle {
+    font-size: 0.875rem;
+  }
+
+  .statSubtitle {
+    font-size: 0.75rem;
+  }
+
+  .statIcon {
+    font-size: 1.5rem;
+  }
+
+  .statTrend {
+    font-size: 0.65rem;
+  }
+
+  .mealGrid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .mealCard {
+    padding: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .mealType {
+    font-size: 1rem;
+  }
+
+  .countNumber {
+    font-size: 2rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.25rem;
+  }
+
+  .tableContainer {
+    overflow-x: auto;
+  }
+
+  .residentTable {
+    min-width: 500px;
+  }
+
+  .residentTable th,
+  .residentTable td {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  /* Show cards, hide table on large phone */
+  .residentCardsView.visible {
+    display: flex;
+  }
+
+  .residentCard {
+    padding: 1rem;
+  }
+
+  .residentCardHeader {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .residentCardAvatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .residentCardName {
+    font-size: 0.95rem;
+  }
+
+  .residentCardStatus {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.7rem;
+  }
+
+  .residentCardLabel {
+    flex: 0 0 50px;
+    font-size: 0.7rem;
+  }
+
+  .residentCardValue {
+    font-size: 0.85rem;
+  }
+
+  /* Bottom Navigation - Large Phone */
+  .bottomNav {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 0.25rem;
+    justify-content: space-around;
+    gap: 0.25rem;
+    z-index: 1000;
+  }
+
+  .bottomNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.4rem;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    flex: 1;
+    font-size: 0.65rem;
+    min-height: 52px;
+    justify-content: center;
+  }
+
+  .bottomNavItem:hover {
+    background: rgba(79, 70, 229, 0.1);
+  }
+
+  .bottomNavItem.active {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
+    color: #A78BFA;
+  }
+
+  .bottomNavIcon {
+    font-size: 1.25rem;
+  }
+}
+
+/* ============================================
+   SMALL PHONE - 320px
+   ============================================ */
+@media (max-width: 320px) {
+  .mainContent {
+    padding: 0.75rem;
+    padding-bottom: 5.5rem;
+  }
+
+  .topBar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 10px;
+  }
+
+  .topBarLeft {
+    width: 100%;
+    gap: 0.3rem;
+  }
+
+  .heroStats {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .statCard {
+    padding: 0.75rem;
+    border-radius: 10px;
+    position: relative;
+  }
+
+  .statHeader {
+    gap: 0.3rem;
+    margin-bottom: 0.25rem;
+    justify-content: space-between;
+  }
+
+  .statValue {
+    font-size: 1.5rem;
+    margin: 0.15rem 0;
+  }
+
+  .statTitle {
+    font-size: 0.75rem;
+  }
+
+  .statSubtitle {
+    font-size: 0.7rem;
+  }
+
+  .statIcon {
+    font-size: 1.5rem;
+  }
+
+  .mealGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .mealCard {
+    padding: 0.75rem;
+  }
+
+  .mealType {
+    font-size: 0.9rem;
+  }
+
+  .mealTime {
+    font-size: 0.75rem;
+  }
+
+  .countNumber {
+    font-size: 1.5rem;
+  }
+
+  .countLabel {
+    font-size: 0.8rem;
+  }
+
+  .sectionHeader {
+    margin-bottom: 1rem;
+  }
+
+  .sectionTitle {
+    font-size: 1rem;
+  }
+
+  .sectionAction {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  .tableContainer {
+    overflow-x: auto;
+  }
+
+  .residentTable {
+    min-width: 450px;
+  }
+
+  .residentTable th,
+  .residentTable td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  /* Show cards, hide table on small phone */
+  .residentCardsView.visible {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .residentCard {
+    padding: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .residentCardHeader {
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.65rem;
+    gap: 0.65rem;
+  }
+
+  .residentCardAvatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.8rem;
+  }
+
+  .residentCardName {
+    font-size: 0.9rem;
+  }
+
+  .residentCardStatus {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .residentCardBody {
+    gap: 0.6rem;
+  }
+
+  .residentCardRow {
+    gap: 0.75rem;
+  }
+
+  .residentCardLabel {
+    flex: 0 0 45px;
+    font-size: 0.65rem;
+  }
+
+  .residentCardValue {
+    font-size: 0.8rem;
+  }
+
+  .residentAvatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
+
+  /* Bottom Navigation - Small Phone */
+  .bottomNav {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.4rem 0.2rem;
+    justify-content: space-around;
+    gap: 0.2rem;
+    z-index: 1000;
+  }
+
+  .bottomNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.3rem;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    flex: 1;
+    font-size: 0.6rem;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .bottomNavItem:hover {
+    background: rgba(79, 70, 229, 0.1);
+  }
+
+  .bottomNavItem.active {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
+    color: #A78BFA;
+  }
+
+  .bottomNavIcon {
+    font-size: 1rem;
+  }
+
+  .bottomNavLabel {
+    font-size: 0.6rem;
   }
 }

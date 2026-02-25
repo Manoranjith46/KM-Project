@@ -1,7 +1,43 @@
+import { useState, useEffect } from 'react'
 import styles from './AD_Dashboard.module.css'
-import Sidebar from './Components/Navbar/Sidebar'
+import Sidebar from './Components/Sidebar/Sidebar'
 
 export default function Admin_Dashboard() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    // Detect mobile on mount and resize (678px breakpoint)
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 678
+      setIsMobile(mobile)
+      if (!mobile) {
+        setIsSidebarOpen(false)
+      }
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setIsSidebarOpen(false)
+      }
+    }
+
+    if (isSidebarOpen) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isSidebarOpen])
+
+  const handleBackdropClick = () => {
+    setIsSidebarOpen(false)
+  }
 
   const statsData = [
     {
@@ -60,36 +96,26 @@ export default function Admin_Dashboard() {
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
+      {/* Mobile Overlay Backdrop */}
+      {isSidebarOpen && isMobile && (
+        <div 
+          className={styles.sidebarOverlay} 
+          onClick={handleBackdropClick}
+          role="presentation"
+        />
+      )}
+
       {/* Sidebar Component */}
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} currentPath={'dashboard'} />
 
       {/* Main Content */}
       <main className={styles.mainContent}>
         {/* Top Bar */}
         <header className={styles.topBar}>
           <div className={styles.topBarLeft}>
-            <h1 className={styles.pageTitle}>Owner Dashboard</h1>
-            <p className={styles.pageSubtitle}>Welcome back, Admin</p>
-          </div>
-
-          <div className={styles.topBarCenter}>
-            <div className={styles.searchBar}>
-              <span className={styles.searchIcon}>🔍</span>
-              <input 
-                type="text" 
-                placeholder="Search residents, rooms, payments..." 
-                className={styles.searchInput}
-              />
-            </div>
-          </div>
-
-          <div className={styles.topBarRight}>
-            <button className={styles.notificationBtn}>
-              <span className={styles.notificationIcon}>🔔</span>
-              <span className={styles.badge}>3</span>
-            </button>
-            <div className={styles.profileCircle}>
-              <span>A</span>
+            <div className={styles.titleSection}>
+              <h1 className={styles.pageTitle}>Owner Dashboard</h1>
+              <p className={styles.pageSubtitle}>Welcome back, Admin</p>
             </div>
           </div>
         </header>
@@ -107,26 +133,6 @@ export default function Admin_Dashboard() {
                 <p className={styles.statTitle}>{stat.title}</p>
                 <p className={styles.statSubtitle}>{stat.subtitle}</p>
               </div>
-              {stat.progress && (
-                <div className={styles.progressRing}>
-                  <svg className={styles.progressSvg} viewBox="0 0 120 120">
-                    <circle 
-                      className={styles.progressBg} 
-                      cx="60" 
-                      cy="60" 
-                      r="54"
-                    />
-                    <circle 
-                      className={styles.progressFill} 
-                      cx="60" 
-                      cy="60" 
-                      r="54"
-                      style={{ strokeDashoffset: 339.292 - (339.292 * stat.progress) / 100 }}
-                    />
-                  </svg>
-                  <div className={styles.progressText}>{stat.progress}%</div>
-                </div>
-              )}
               {stat.sparkline && (
                 <div className={styles.sparkline}>
                   <svg viewBox="0 0 100 30" className={styles.sparklineSvg}>
@@ -185,7 +191,8 @@ export default function Admin_Dashboard() {
             <button className={styles.sectionAction}>View All</button>
           </div>
 
-          <div className={styles.tableContainer}>
+          {/* Desktop Table View */}
+          <div className={styles.tableContainer} style={isMobile ? { display: 'none' } : {}}>
             <table className={styles.residentTable}>
               <thead>
                 <tr>
@@ -222,27 +229,62 @@ export default function Admin_Dashboard() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className={`${styles.residentCardsView} ${isMobile ? styles.visible : ''}`}>
+            {residentsData.map((resident) => (
+              <div key={resident.id} className={styles.residentCard}>
+                <div className={styles.residentCardHeader}>
+                  <div className={styles.residentCardAvatar}>
+                    {resident.name.charAt(0)}
+                  </div>
+                  <div className={styles.residentCardName}>
+                    {resident.name}
+                  </div>
+                  <span className={`${styles.residentCardStatus} ${styles[resident.status]}`}>
+                    {resident.status === 'paid' ? '✓ Paid' : 
+                     resident.status === 'pending' ? '⏳ Pending' : 
+                     '⚠ Overdue'}
+                  </span>
+                </div>
+                <div className={styles.residentCardBody}>
+                  <div className={styles.residentCardRow}>
+                    <span className={styles.residentCardLabel}>Room</span>
+                    <span className={`${styles.residentCardValue} ${styles.room}`}>{resident.room}</span>
+                  </div>
+                  <div className={styles.residentCardRow}>
+                    <span className={styles.residentCardLabel}>Amount</span>
+                    <span className={`${styles.residentCardValue} ${styles.amount}`}>{resident.amount}</span>
+                  </div>
+                  <div className={styles.residentCardRow}>
+                    <span className={styles.residentCardLabel}>Date</span>
+                    <span className={`${styles.residentCardValue} ${styles.date}`}>{resident.date}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       </main>
 
       {/* Mobile Bottom Navigation */}
       <nav className={styles.bottomNav}>
-        <a href="#" className={`${styles.bottomNavItem} ${styles.active}`}>
+        <button className={`${styles.bottomNavItem} ${styles.active}`} title="Dashboard">
           <span className={styles.bottomNavIcon}>📊</span>
           <span className={styles.bottomNavLabel}>Dashboard</span>
-        </a>
-        <a href="#" className={styles.bottomNavItem}>
+        </button>
+        <button className={styles.bottomNavItem} title="Residents">
           <span className={styles.bottomNavIcon}>👥</span>
           <span className={styles.bottomNavLabel}>Residents</span>
-        </a>
-        <a href="#" className={styles.bottomNavItem}>
+        </button>
+        <button className={styles.bottomNavItem} title="Payments">
           <span className={styles.bottomNavIcon}>💳</span>
           <span className={styles.bottomNavLabel}>Payments</span>
-        </a>
-        <a href="#" className={styles.bottomNavItem}>
+        </button>
+        <button className={styles.bottomNavItem} title="More">
           <span className={styles.bottomNavIcon}>⚙️</span>
           <span className={styles.bottomNavLabel}>More</span>
-        </a>
+        </button>
       </nav>
     </div>
   )

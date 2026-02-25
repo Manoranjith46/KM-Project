@@ -1,0 +1,698 @@
+/* ============================================
+   SETTINGS - DEFAULT STYLES (768px and above)
+   Matches PG-Ease dashboard exactly using global vars
+   ============================================ */
+
+/* Dashboard Wrapper */
+.dashboardWrapper {
+  min-height: 100vh;
+  background: var(--background);
+  display: flex;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Floating Background Blobs */
+.backgroundBlobs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: floatBlob 20s infinite ease-in-out;
+}
+
+.blob1 {
+  width: 400px; height: 400px;
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  top: -100px; left: -100px;
+  animation-delay: 0s;
+}
+
+.blob2 {
+  width: 500px; height: 500px;
+  background: linear-gradient(135deg, #7C3AED, #A78BFA);
+  bottom: -150px; right: -150px;
+  animation-delay: 7s;
+}
+
+.blob3 {
+  width: 350px; height: 350px;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 14s;
+}
+
+@keyframes floatBlob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -50px) scale(1.1); }
+  66% { transform: translate(-50px, 50px) scale(0.9); }
+}
+
+/* Main Content Area */
+.mainContent {
+  flex: 1;
+  padding: 2rem;
+  z-index: 1;
+  margin-left: 92.5px; /* Offset for sidebar */
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Top Nav ── */
+.topBar {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  box-shadow: var(--glass-shadow);
+}
+
+.titleSection {
+  flex: 1;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.searchWrap {
+  flex: 1;
+  max-width: 400px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+}
+.searchInput {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border-radius: 12px;
+  border: 1.5px solid var(--glass-border);
+  background: var(--background);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.3s ease;
+}
+.searchInput::placeholder { color: var(--text-secondary); }
+.searchInput:focus {
+  border-color: var(--pg-purple);
+  box-shadow: 0 0 0 3px var(--pg-purple-light);
+}
+
+.topNavRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.bellBtn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 6px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+.bellBtn:hover { background: var(--pg-purple-light); color: var(--pg-purple); }
+.bellDot {
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--status-red-text);
+  border: 1.5px solid var(--background);
+}
+.avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ── Content Area ── */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.contentHeader {
+  display: flex;
+  align-items: center;
+}
+.contentTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* ── Settings Split Card ── */
+.settingsCard {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  flex-direction: row;
+  min-height: 520px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.settingsCard:hover {
+  box-shadow: var(--glass-shadow-lg);
+  border-color: rgba(124, 92, 191, 0.3);
+}
+
+/* Inner Sidebar */
+.innerSidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--glass-border);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: rgba(124, 92, 191, 0.03);
+}
+
+.settingTab {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.settingTab:hover {
+  background: var(--pg-purple-light);
+  color: var(--pg-purple);
+}
+.settingTabActive {
+  background: var(--pg-purple-light);
+  color: var(--pg-purple);
+  font-weight: 700;
+  border-left: 3px solid var(--pg-purple);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Form Area */
+.formArea {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.tabContentFade {
+  animation: fadeIn 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.formHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.formTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+.formSubtext {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Form Elements */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.input {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--background);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+.input:focus {
+  border-color: var(--pg-purple);
+  box-shadow: 0 0 0 3px var(--pg-purple-light);
+}
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Sub-sections */
+.subSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: var(--pg-purple-light);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+}
+.subSectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Toggles */
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.toggleRowLabel {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.toggleRowSub {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+.toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--ring);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.3s;
+  padding: 0;
+}
+.toggleOn {
+  background: var(--pg-purple);
+}
+.toggleThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toggleOn .toggleThumb {
+  transform: translateX(20px);
+}
+
+/* Footer & Buttons */
+.formFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.divider {
+  border: none;
+  border-top: 1px solid var(--glass-border);
+  margin: 0;
+}
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+.cancelBtn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--pg-purple);
+  color: var(--pg-purple);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.cancelBtn:hover {
+  background: var(--pg-purple-light);
+}
+.saveBtn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7c3aed, #4F46E5);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+  transition: all 0.3s ease;
+}
+.saveBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.45);
+}
+
+/* Profile Specific */
+.avatarRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--pg-purple-light);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+}
+.profileAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #4F46E5);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--glass-shadow);
+}
+.avatarMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.avatarName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.avatarRole {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pg-purple);
+}
+.outlineBtn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--pg-purple);
+  color: var(--pg-purple);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.outlineBtn:hover {
+  background: var(--pg-purple);
+  color: #fff;
+}
+
+/* Billing Specific */
+.planCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--pg-purple-light) 0%, transparent 100%);
+  border: 1px solid var(--pg-purple);
+  border-radius: 16px;
+}
+.planInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.planBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  background: var(--status-green-bg);
+  color: var(--status-green-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: fit-content;
+  text-transform: uppercase;
+}
+.planName {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+.planPrice {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--pg-purple);
+  margin: 0;
+}
+.planPrice small {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.planRenews {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.invoiceTable {
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+}
+.invoiceHead, .invoiceRow {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem 0;
+  min-width: 500px;
+}
+.invoiceHead {
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+.invoiceRow {
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  align-items: center;
+}
+.invoiceRow:last-child {
+  border-bottom: none;
+}
+.invoiceId {
+  font-weight: 600;
+  color: var(--pg-purple);
+}
+.pillPaid {
+  display: inline-flex;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--status-green-bg);
+  color: var(--status-green-text);
+  width: fit-content;
+}
+
+/* ============================================
+   TABLET - 768px
+   ============================================ */
+@media (max-width: 1024px) {
+  .settingsCard {
+    flex-direction: column;
+  }
+  .innerSidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+    padding: 1rem;
+  }
+  .settingTabActive {
+    border-left: none;
+    border-bottom: 3px solid var(--pg-purple);
+    border-radius: 8px 8px 0 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0;
+    padding: 1.5rem;
+    padding-bottom: 6rem; /* Space for bottom nav */
+  }
+
+  .topBar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .searchWrap {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .pageTitle { font-size: 1.5rem; }
+
+  /* Bottom Navigation */
+  .bottomNav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--glass-border);
+    padding: 0.5rem;
+    justify-content: space-around;
+    z-index: 1000;
+  }
+
+  .bottomNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    cursor: pointer;
+  }
+
+  .bottomNavItemActive {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
+    color: var(--pg-purple);
+  }
+
+  .bottomNavIcon { font-size: 1.25rem; }
+}
+
+/* ============================================
+   MOBILE - 425px & 320px
+   ============================================ */
+@media (max-width: 425px) {
+  .mainContent {
+    padding: 1rem;
+    padding-bottom: 5.5rem;
+  }
+  
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formArea {
+    padding: 1.5rem 1rem;
+  }
+
+  .footerActions {
+    flex-direction: column-reverse;
+  }
+
+  .cancelBtn, .saveBtn {
+    width: 100%;
+  }
+
+  .avatarRow {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .planCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .mainContent { padding: 0.75rem; }
+}

@@ -7,12 +7,13 @@
   width: 92.5px;
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid var(--glass-border);
   z-index: 100;
   display: flex;
   flex-direction: column;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  color: var(--text-primary);
 }
 
 .sidebar:hover {
@@ -75,8 +76,12 @@
 }
 
 .navItem.active {
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.25), rgba(124, 58, 237, 0.25));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(79, 70, 229, 0.4);
   color: #A78BFA;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
 .navItem.active::before {
@@ -89,6 +94,7 @@
   height: 70%;
   background: linear-gradient(180deg, #4F46E5, #7C3AED);
   border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 12px rgba(79, 70, 229, 0.5);
 }
 
 .navIcon {
@@ -144,4 +150,10 @@
 
 .sidebar:hover .themeToggleText {
   opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
 }
