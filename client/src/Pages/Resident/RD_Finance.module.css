@@ -1,0 +1,353 @@
+/* =========================================================
+   PAGE WRAPPER & VIBE BLOBS
+   ========================================================= */
+.pageWrapper {
+  background: rgba(240, 253, 244, 0.8);
+  height: 100vh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  padding: 2rem;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.container {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.pageWrapper::-webkit-scrollbar {
+  width: 11px;
+}
+
+.pageWrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.pageWrapper::-webkit-scrollbar-thumb {
+  background-color:#059669;
+  border-radius: 10px;
+  border: 3px solid #f1f5f9;
+}
+
+.pageWrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #006246;
+}
+
+/* Background Blobs */
+.backgroundBlobs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; animation: floatBlob 20s infinite ease-in-out; }
+.blob1 { width: 400px; height: 400px; background: linear-gradient(135deg, #10b981, #059669); top: -100px; left: -100px; animation-delay: 0s; }
+.blob2 { width: 500px; height: 500px; background: linear-gradient(135deg, #059669, #047857); bottom: -150px; right: -150px; animation-delay: 7s; }
+.blob3 { width: 350px; height: 350px; background: linear-gradient(135deg, #34d399, #10b981); top: 50%; left: 50%; margin-top: -175px; margin-left: -175px; animation-delay: 14s; }
+
+@keyframes floatBlob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -50px) scale(1.1); }
+  66% { transform: translate(-50px, 50px) scale(0.9); }
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+.header { display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem; }
+.backBtn { display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.8); padding: 0.5rem 1rem; border-radius: 12px; color: #0f172a; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.05); }
+.backBtn:hover { background: white; transform: translateX(-4px); }
+.backBtn svg { width: 20px; height: 20px; }
+.pageTitle { font-size: 2.2rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; }
+.subTitle { font-size: 1.05rem; color: #475569; margin: 0; font-weight: 500; }
+
+/* =========================================================
+   GRID LAYOUT & CARDS
+   ========================================================= */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.leftCol,
+.rightCol {
+  height: 100vh;
+}
+
+.leftCol {
+  display: flex;
+}
+
+.leftCol .glassCard {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.leftCol .formContainer {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding-right: 0.25rem;
+}
+
+.leftCol .formContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.leftCol .formContainer::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 10px;
+}
+
+.leftCol .formContainer::-webkit-scrollbar-thumb {
+  background-color: #059669;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.leftCol .formContainer::-webkit-scrollbar-thumb:hover {
+  background-color: #047857;
+}
+
+.rightCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.glassCard {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(4, 120, 87, 0.05);
+}
+
+.cardTitle { font-size: 1.3rem; font-weight: 800; color: #0f172a; margin: 0 0 0.5rem 0; }
+.cardDesc { font-size: 0.95rem; color: #475569; margin: 0 0 1.5rem 0; }
+
+/* =========================================================
+   UPLOAD FORM AREA (Left Column)
+   ========================================================= */
+.upiBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px dashed #10b981;
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  height: 10vh;
+}
+.upiId { font-weight: 800; color: #047857; font-size: 1.1rem; letter-spacing: 0.5px; }
+.copyBtn { background: #10b981; color: white; border: none; padding: 0.4rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
+.copyBtn:hover { background: #059669; }
+
+.formContainer { display: flex; flex-direction: column; gap: 1.5rem; }
+.inputRow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.inputGroup { display: flex; flex-direction: column; gap: 0.5rem; }
+.label { font-size: 0.95rem; font-weight: 700; color: #0f172a; }
+
+.inputField {
+  width: 100%; padding: 1rem 1.25rem; background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 16px; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem; color: #0f172a; outline: none; transition: all 0.2s ease; box-sizing: border-box;
+}
+.inputField:focus { background: white; border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+.selectWrapper { position: relative; }
+.selectWrapper select { appearance: none; cursor: pointer; }
+.selectArrow { position: absolute; right: 1.25rem; top: 50%; transform: translateY(-50%); color: #10b981; pointer-events: none; font-size: 0.8rem; }
+
+/* Photo Upload */
+.hiddenInput { display: none; }
+.uploadZone { width: 100%; padding: 1.5rem;  height: 225px; background: rgba(16, 185, 129, 0.03); border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 16px; cursor: pointer; transition: all 0.2s ease; text-align: center; box-sizing: border-box; }
+.uploadZone:hover { background: rgba(16, 185, 129, 0.08); border-color: #10b981; }
+.uploadContent { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.uploadIcon { font-size: 2rem; text-align: center; margin-top: 40px; }
+.uploadPreview {
+  width: 100%;
+  max-width: 260px;
+  max-height: 170px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 10px rgba(4, 120, 87, 0.1);
+}
+.uploadText { font-size: 0.95rem; font-weight: 600; color: #047857; }
+.clearPreviewBtn {
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(255, 255, 255, 0.9);
+  color: #047857;
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clearPreviewBtn:hover {
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+/* Submit Button */
+.submitBtn { width: 100%; padding: 1.1rem; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 6px 20px rgba(4, 120, 87, 0.25); display: flex; justify-content: center; align-items: center; min-height: 56px; margin-top: 0.5rem; }
+.submitBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(4, 120, 87, 0.35); }
+
+
+/* =========================================================
+   NEW: PAYMENT TABS & GATEWAY INFO
+   ========================================================= */
+
+.paymentTabs {
+  display: flex;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 12px;
+  padding: 0.35rem;
+  margin-bottom: 1.5rem;
+}
+
+.tabButton {
+  flex: 1;
+  padding: 0.8rem;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #047857;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabActive {
+  background: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.gatewayInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  margin-bottom: 0.5rem;
+}
+
+.gatewayIcon {
+  font-size: 1.8rem;
+}
+
+.gatewayTitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #047857;
+  font-weight: 800;
+}
+
+.gatewaySub {
+  color: #059669;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+/* =========================================================
+   STATS & HISTORY (Right Column)
+   ========================================================= */
+.statsGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+.statCard { padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; }
+.statLabel { font-size: 0.9rem; font-weight: 600; color: #475569; margin: 0 0 0.25rem 0; }
+.statValue { font-size: 1.8rem; font-weight: 800; color: #0f172a; margin: 0; }
+.textGreen { color: #059669; }
+
+.historyCard {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.historyList { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0.75rem; 
+  margin-top: 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding-right: .75rem;
+  flex: 1;
+}
+
+.historyList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.historyList::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 10px;
+}
+
+.historyList::-webkit-scrollbar-thumb {
+  background-color: #059669;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.historyList::-webkit-scrollbar-thumb:hover {
+  background-color: #047857;
+}
+.historyItem { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; transition: background 0.2s; }
+.historyItem:hover { background: white; }
+.historyLeft { display: flex; align-items: center; gap: 1rem; }
+.historyIcon { font-size: 1.5rem; background: rgba(16, 185, 129, 0.1); padding: 0.6rem; border-radius: 12px; }
+.historyMonth { margin: 0; font-weight: 700; color: #0f172a; font-size: 1.05rem; }
+.historyDate { color: #64748b; font-weight: 500; font-size: 0.85rem; }
+.historyRight { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }
+.historyAmount { margin: 0 0 0.25rem 0; font-weight: 800; color: #0f172a; font-size: 1.1rem; }
+.methodBadge { padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: rgba(5, 150, 105, 0.12); color: #047857; }
+.statusBadge { padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+.badgeGreen { background: rgba(16, 185, 129, 0.15); color: #059669; }
+.badgePending { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+
+/* Toast / Loaders */
+.successToast { background: #ecfdf5; border: 1px solid #10b981; color: #047857; padding: 1rem; border-radius: 16px; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); animation: slideDown 0.3s ease; margin-bottom: 1rem; }
+.loader { width: 24px; height: 24px; border: 3px solid rgba(255, 255, 255, 0.3); border-bottom-color: white; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
+@keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* =========================================================
+   RESPONSIVE (Tablets & Mobile)
+   ========================================================= */
+@media (max-width: 992px) {
+  .mainGrid { grid-template-columns: 1fr; } /* Stack columns vertically on tablets */
+  .leftCol,
+  .rightCol {
+    height: auto;
+  }
+}
+@media (max-width: 768px) {
+  .pageWrapper { padding: 1rem; }
+  .inputRow { grid-template-columns: 1fr; } /* Stack Amount and Month inputs */
+  .statsGrid { grid-template-columns: 1fr; } /* Stack Total Spendings and Dues */
+  .pageTitle { font-size: 1.8rem; }
+  .glassCard { padding: 1.5rem; }
+}

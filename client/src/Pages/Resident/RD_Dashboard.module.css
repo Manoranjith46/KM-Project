@@ -1,0 +1,424 @@
+/* =========================================================
+   FLOATING EMERALD BACKGROUND BLOBS
+   ========================================================= */
+
+.backgroundBlobs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none; /* Prevents blobs from blocking button clicks! */
+  z-index: 0; /* Keeps them behind the glass cards */
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35; /* Slightly increased for better visibility behind glass */
+  animation: floatBlob 20s infinite ease-in-out;
+}
+
+/* Top Left Blob: Bright Emerald */
+.blob1 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  top: -100px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+/* Bottom Right Blob: Dark Forest Green */
+.blob2 {
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, #059669, #047857);
+  bottom: -150px;
+  right: -150px;
+  animation-delay: 7s;
+}
+
+/* Center Blob: Soft Mint to Emerald */
+.blob3 {
+  width: 350px;
+  height: 350px;
+  background: linear-gradient(135deg, #34d399, #10b981);
+  top: 50%;
+  left: 50%;
+  /* Using margin instead of translate so the float animation doesn't break */
+  margin-top: -175px; 
+  margin-left: -175px;
+  animation-delay: 14s;
+}
+
+@keyframes floatBlob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(50px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-50px, 50px) scale(0.9);
+  }
+}
+
+
+/* =========================================================
+   BASE STYLES & BACKGROUND (Matching your image's soft depth)
+   ========================================================= */
+
+.dashboardWrapper {
+  /* A beautiful soft mint-to-white gradient for depth */
+  background: linear-gradient(135deg, #e6f9f0 0%, #f4fdf8 50%, #eefbf4 100%);
+  height: 100vh;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  padding: 2rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.dashboardWrapper::-webkit-scrollbar {
+  width: 11px;
+}
+
+.dashboardWrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.dashboardWrapper::-webkit-scrollbar-thumb {
+  background-color:#059669;
+  border-radius: 10px;
+  border: 3px solid #f1f5f9;
+}
+
+.dashboardWrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #006246;
+}
+
+.hubContainer {
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+
+/* =========================================================
+   HEADER GLASS (Matches the top wide bar in your image)
+   ========================================================= */
+
+.headerGlass {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  padding: 1.5rem 2.5rem;
+  box-shadow: 0 8px 32px rgba(4, 120, 87, 0.04);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.greeting {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+
+.roleText {
+  font-size: 0.95rem;
+  color: #475569;
+  margin: 0;
+  font-weight: 500;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #059669, #047857); /* Dark Emerald */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  box-shadow: 0 8px 16px rgba(4, 120, 87, 0.25);
+}
+
+.avatarName {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1.05rem;
+}
+
+/* =========================================================
+   MAIN FULL-WIDTH GRID (Desktop Default)
+   ========================================================= */
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 Equal Columns */
+  gap: 2rem;
+}
+
+.mealsSection {
+  grid-column: span 2; /* Meals takes up 2/3 of the width on desktop */
+}
+
+/* =========================================================
+   THE EXACT GLASSMORPHISM CARD RECIPE
+   ========================================================= */
+
+.glassCard {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-shadow: 0 8px 32px rgba(4, 120, 87, 0.05); /* Soft emerald shadow */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glassCard:hover {
+  box-shadow: 0 12px 40px rgba(4, 120, 87, 0.08);
+}
+
+.borderGreen { border-top: 5px solid #059669; }
+.borderRed { border-top: 5px solid #ef4444; }
+
+/* =========================================================
+   CARD INTERNALS & TYPOGRAPHY
+   ========================================================= */
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.cardTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.badgeGreen { background: rgba(5, 150, 105, 0.1); color: #047857; padding: 0.35rem 0.8rem; border-radius: 12px; font-size: 0.85rem; font-weight: 700; }
+.badgeRed { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.35rem 0.8rem; border-radius: 12px; font-size: 0.85rem; font-weight: 700; }
+.roomBadge { background: #f1f5f9; color: #475569; padding: 0.35rem 0.8rem; border-radius: 12px; font-size: 0.85rem; font-weight: 700; }
+
+.statusDisplay {
+  margin-bottom: 2rem;
+  flex-grow: 1;
+}
+
+.statusText {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.textGreen { color: #059669; } /* Dark Emerald */
+.textRed { color: #ef4444; }
+
+/* Financials Layout */
+.financeDisplay {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+  flex-grow: 1;
+}
+
+.financeIcon {
+  font-size: 2.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.amountText {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.subText {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* =========================================================
+   BUTTONS & ACTIONS (Dark Emerald Theme)
+   ========================================================= */
+
+.qrButton, .payBtn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #059669, #047857); /* Dark Emerald Gradient */
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-shadow: 0 6px 20px rgba(4, 120, 87, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.qrButton:hover, .payBtn:hover { background: #006246; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(4, 120, 87, 0.35); }
+.qrButton svg { width: 22px; height: 22px; }
+
+/* Action Grid (Services) */
+.servicesSection { display: flex; flex-direction: column; }
+.actionGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-grow: 1;
+}
+.actionCard {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1.05rem;
+}
+.actionCard:hover { background: white; transform: translateX(4px); box-shadow: 0 8px 20px rgba(4, 120, 87, 0.08); }
+.actionIcon { font-size: 1.8rem; background: rgba(5, 150, 105, 0.1); padding: 0.75rem; border-radius: 12px; }
+
+
+/* =========================================================
+   MEAL TOGGLES
+   ========================================================= */
+
+.mealGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns inside the meal section on desktop */
+  gap: 1.5rem;
+}
+
+.mealRow {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 140px;
+}
+.mealRow:hover { background: rgba(255, 255, 255, 0.8); box-shadow: 0 8px 24px rgba(4, 120, 87, 0.06); }
+.mealDisabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(100%); pointer-events: none; }
+
+.mealInfoBox { display: flex; flex-direction: column; gap: 0.75rem; }
+.mealIcon { font-size: 2rem; background: rgba(5, 150, 105, 0.1); width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 16px; }
+.mealText p { margin: 0; font-weight: 800; color: #0f172a; font-size: 1.15rem; }
+.mealText small { color: #64748b; font-weight: 500; font-size: 0.85rem; }
+
+/* Custom Toggle */
+.toggleSwitch { width: 54px; height: 32px; background-color: #cbd5e1; border-radius: 30px; position: relative; transition: background-color 0.3s ease; margin-top: auto; align-self: flex-end; }
+.toggleOn { background-color: #059669; } /* Dark Emerald */
+.toggleKnob { width: 26px; height: 26px; background-color: white; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.toggleOn .toggleKnob { transform: translateX(22px); }
+
+
+/* =========================================================
+   RESPONSIVE MEDIA QUERIES (All sizes of Mobile & Tablets)
+   ========================================================= */
+
+/* Laptops / Tablets Landscape (max-width: 1200px) */
+@media (max-width: 1200px) {
+  .mainGrid {
+    grid-template-columns: repeat(2, 1fr); /* Drop to 2 columns */
+  }
+  .mealsSection {
+    grid-column: span 2; /* Meals stays full width of the 2 columns */
+  }
+  .servicesSection {
+    grid-column: span 2; /* Services drops below meals, full width */
+  }
+  .actionGrid {
+    grid-template-columns: repeat(2, 1fr); /* Services buttons side-by-side */
+  }
+}
+
+/* Tablets Portrait (max-width: 992px) */
+@media (max-width: 992px) {
+  .dashboardWrapper { padding: 1.5rem; }
+  .headerGlass { padding: 1.25rem 1.5rem; }
+  .mealGrid { grid-template-columns: 1fr; } /* Stack meals vertically inside the card */
+  .mealRow { flex-direction: row; min-height: auto; align-items: center; }
+  .mealInfoBox { flex-direction: row; align-items: center; gap: 1rem; }
+  .toggleSwitch { align-self: center; margin-top: 0; }
+}
+
+/* Standard Mobile Phones (max-width: 768px) */
+@media (max-width: 768px) {
+  .dashboardWrapper { padding: 1rem; }
+  .headerGlass { flex-direction: column; align-items: flex-start; gap: 1rem; border-radius: 20px; }
+  .headerRight { width: 100%; justify-content: flex-end; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 1rem; }
+  .greeting { font-size: 1.5rem; }
+  
+  .mainGrid { grid-template-columns: 1fr; /* 100% Single Column for Phones */ gap: 1.25rem; }
+  .mealsSection, .servicesSection { grid-column: span 1; }
+  
+  .actionGrid { grid-template-columns: 1fr; /* Stack service buttons vertically */ }
+  .amountText { font-size: 1.8rem; }
+  .glassCard { padding: 1.25rem; border-radius: 20px; }
+}
+
+/* Very Small Phones (max-width: 480px) */
+@media (max-width: 480px) {
+  .dashboardWrapper { padding: 0.75rem; }
+  .mealIcon { width: 44px; height: 44px; font-size: 1.5rem; }
+  .financeIcon { width: 50px; height: 50px; font-size: 2rem; }
+  .amountText { font-size: 1.5rem; }
+  .statusText { font-size: 1.4rem; }
+}

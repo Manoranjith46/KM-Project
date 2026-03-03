@@ -1,0 +1,267 @@
+.dashboardWrapper {
+	min-height: 100vh;
+	background: var(--background);
+	display: flex;
+	position: relative;
+	overflow-x: hidden;
+}
+
+.backgroundBlobs {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+	overflow: hidden;
+}
+
+.blob {
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(80px);
+	opacity: 0.3;
+	animation: floatBlob 20s infinite ease-in-out;
+}
+
+.blob1 {
+	width: 400px;
+	height: 400px;
+	background: linear-gradient(135deg, #4F46E5, #7C3AED);
+	top: -100px;
+	left: -100px;
+	animation-delay: 0s;
+}
+
+.blob2 {
+	width: 500px;
+	height: 500px;
+	background: linear-gradient(135deg, #7C3AED, #A78BFA);
+	bottom: -150px;
+	right: -150px;
+	animation-delay: 7s;
+}
+
+.blob3 {
+	width: 350px;
+	height: 350px;
+	background: linear-gradient(135deg, #6366F1, #8B5CF6);
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	animation-delay: 14s;
+}
+
+@keyframes floatBlob {
+	0%,
+	100% {
+		transform: translate(0, 0) scale(1);
+	}
+
+	33% {
+		transform: translate(50px, -50px) scale(1.1);
+	}
+
+	66% {
+		transform: translate(-50px, 50px) scale(0.9);
+	}
+}
+
+.mainContent {
+	flex: 1;
+	padding: 2rem;
+	z-index: 1;
+	margin-left: 92.5px;
+	transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	height: 100vh;
+    scroll-behavior: smooth;
+}
+
+.mainContent::-webkit-scrollbar {
+  width: 11px;
+}
+
+.mainContent::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.mainContent::-webkit-scrollbar-thumb {
+  background-color: #6366F1;
+  border-radius: 10px;
+  border: 3px solid #f1f5f9;
+}
+
+.mainContent::-webkit-scrollbar-thumb:hover {
+  background-color: #6366F1;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.contentHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.sectionTitle {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: var(--text-primary);
+	margin: 0;
+}
+
+.backBtn {
+	padding: 0.65rem 1rem;
+	border-radius: 10px;
+	border: 1px solid var(--glass-border);
+	background: var(--glass-bg);
+	color: var(--text-primary);
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+	border-color: var(--pg-purple);
+	color: var(--pg-purple);
+}
+
+.formCard {
+	background: var(--glass-bg);
+	backdrop-filter: blur(20px);
+	border: 1px solid var(--glass-border);
+	border-radius: 16px;
+	box-shadow: var(--glass-shadow);
+	padding: 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1rem;
+}
+
+.fieldGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+}
+
+.label {
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.input {
+	padding: 0.8rem 0.95rem;
+	border-radius: 10px;
+	border: 1px solid var(--glass-border);
+	background: var(--background);
+	font-size: 0.9rem;
+	color: var(--text-primary);
+	outline: none;
+	transition: all 0.25s ease;
+}
+
+.input:focus {
+	border-color: var(--pg-purple);
+	box-shadow: 0 0 0 3px var(--pg-purple-light);
+}
+
+.actionsRow {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+}
+
+.secondaryBtn,
+.primaryBtn {
+	padding: 0.7rem 1.1rem;
+	border-radius: 10px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	border: 1px solid var(--glass-border);
+	cursor: pointer;
+}
+
+.secondaryBtn {
+	background: var(--glass-bg);
+	color: var(--text-primary);
+}
+
+.primaryBtn {
+	background: linear-gradient(135deg, #4F46E5, #7C3AED);
+	color: #ffffff;
+	border: none;
+}
+
+.primaryBtn:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+.messageBox,
+.errorMessage,
+.successMessage {
+	padding: 0.9rem 1rem;
+	border-radius: 10px;
+	border: 1px solid var(--glass-border);
+	font-size: 0.9rem;
+}
+
+.messageBox {
+	color: var(--text-secondary);
+	background: var(--glass-bg);
+}
+
+.errorMessage {
+	color: var(--text-primary);
+	background: var(--glass-bg);
+}
+
+.successMessage {
+	color: var(--pg-purple);
+	background: var(--glass-bg);
+}
+
+@media (max-width: 768px) {
+	.mainContent {
+		margin-left: 0;
+		padding: 1rem;
+		padding-bottom: 84px;
+	}
+
+	.contentHeader {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.grid {
+		grid-template-columns: 1fr;
+	}
+
+	.actionsRow {
+		justify-content: stretch;
+	}
+
+	.secondaryBtn,
+	.primaryBtn {
+		flex: 1;
+	}
+}

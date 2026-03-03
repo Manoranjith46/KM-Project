@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import styles from "./AD_Maintenance.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
+import Topbar from "./Components/Header/Topbar";
 
-/* ─── Static mock data ─── */
-const TICKETS = [
+/* ─── Initial mock data ─── */
+const INITIAL_TICKETS = [
   { id: "#TKT-042", resident: "Rahul Sharma",  room: "101", initials: "RS", category: "Plumbing",   desc: "Water leakage under sink in bathroom",   date: "24 Feb 2026", status: "Open",        priority: "High"   },
   { id: "#TKT-041", resident: "Priya Patel",   room: "205", initials: "PP", category: "Electrical", desc: "Power socket not working near study desk", date: "23 Feb 2026", status: "In Progress", priority: "Medium" },
   { id: "#TKT-040", resident: "Amit Kumar",    room: "312", initials: "AK", category: "Wi-Fi",      desc: "Intermittent connectivity on floor 3",    date: "22 Feb 2026", status: "In Progress", priority: "Medium" },
@@ -35,10 +36,10 @@ const PRIORITY_MAP = {
 
 export default function Admin_Maintenance() {
   const [activeNav, setActiveNav] = useState("maintenance");
+  const [tickets, setTickets] = useState(INITIAL_TICKETS);
+  const [search, setSearch] = useState("");
   const [catFilter,  setCatFilter]  = useState("All");
   const [statFilter, setStatFilter] = useState("All");
-  const [priFilter,  setPriFilter]  = useState("All");
-  const [openKebab,  setOpenKebab]  = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -50,44 +51,59 @@ export default function Admin_Maintenance() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const filtered = TICKETS.filter(t =>
-    (catFilter  === "All" || t.category === catFilter) &&
-    (statFilter === "All" || t.status   === statFilter) &&
-    (priFilter  === "All" || t.priority === priFilter)
-  );
+  // Function to assign staff and change status to In Progress
+  const handleAssignStaff = (ticketId) => {
+    setTickets(prevTickets => 
+      prevTickets.map(ticket => 
+        ticket.id === ticketId && ticket.status === "Open"
+          ? { ...ticket, status: "In Progress" }
+          : ticket
+      )
+    );
+    alert(`Staff assigned to ticket ${ticketId}. Status changed to In Progress.`);
+  };
 
-  const openCount     = TICKETS.filter(t => t.status === "Open").length;
-  const progressCount = TICKETS.filter(t => t.status === "In Progress").length;
-  const resolvedCount = TICKETS.filter(t => t.status === "Resolved").length;
+  const filtered = tickets.filter(t => {
+    const q = search.toLowerCase();
+    const matchesSearch = 
+      t.id.toLowerCase().includes(q) ||
+      t.resident.toLowerCase().includes(q) ||
+      t.room.includes(q) ||
+      t.category.toLowerCase().includes(q) ||
+      t.desc.toLowerCase().includes(q);
+    
+    return (
+      matchesSearch &&
+      (catFilter  === "All" || t.category === catFilter) &&
+      (statFilter === "All" || t.status   === statFilter)
+    );
+  });
+
+  const openCount     = tickets.filter(t => t.status === "Open").length;
+  const progressCount = tickets.filter(t => t.status === "In Progress").length;
+  const resolvedCount = tickets.filter(t => t.status === "Resolved").length;
 
   return (
     <div className={styles.dashboardWrapper}>
-      {/* ── Floating Background Blobs ── */}
+      {/* Floating Background Blobs */}
       <div className={styles.backgroundBlobs}>
         <div className={`${styles.blob} ${styles.blob1}`}></div>
         <div className={`${styles.blob} ${styles.blob2}`}></div>
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      {/* ── Desktop Sidebar ── */}
       <Sidebar currentPath={'maintenance'} />
 
-      {/* ── Main Content ── */}
       <main className={styles.mainContent}>
 
         {/* Top Bar */}
-        <header className={styles.topBar}>
-          <div className={styles.topBarLeft}>
-            <div className={styles.titleSection}>
-              <h1 className={styles.pageTitle}>Maintenance &amp; Repairs</h1>
-              <p className={styles.pageSubtitle}>Manage resident requests and facility issues</p>
-            </div>
-          </div>
-          <div className={styles.searchWrap}>
-            <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input className={styles.searchInput} type="text" placeholder="Search tickets, rooms..." aria-label="Search tickets" />
-          </div>
-        </header>
+        <Topbar 
+          title="Maintenance &amp; Repairs" 
+          subtitle="Manage resident requests and facility issues"
+          currentView="maintenance"
+          searchValue={search}
+          onSearchChange={setSearch}
+        />
 
         {/* Content Area */}
         <div className={styles.content}>
@@ -98,7 +114,6 @@ export default function Admin_Maintenance() {
               <h2 className={styles.sectionTitle}>Helpdesk Tickets</h2>
               <p className={styles.sectionDate}>Monday, 24 Feb 2026</p>
             </div>
-            <button className={styles.primaryBtn}>+ Create Ticket</button>
           </div>
 
           {/* Stat cards */}
@@ -135,26 +150,18 @@ export default function Admin_Maintenance() {
               <option value="In Progress">In Progress</option>
               <option value="Resolved">Resolved</option>
             </select>
-            <select className={styles.filterSelect} value={priFilter} onChange={e => setPriFilter(e.target.value)} aria-label="Filter by priority">
-              <option value="All">Priority (All)</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
           </div>
 
-          {/* ── Desktop Table ── */}
+          {/* Desktop Table */}
           <div className={styles.tableCard}>
             <div className={styles.tableScrollWrap}>
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>TICKET ID</th>
                     <th>RESIDENT</th>
                     <th>CATEGORY</th>
                     <th>DESCRIPTION</th>
                     <th>DATE RAISED</th>
-                    <th>PRIORITY</th>
                     <th>STATUS</th>
                     <th>ACTIONS</th>
                   </tr>
@@ -162,10 +169,8 @@ export default function Admin_Maintenance() {
                 <tbody>
                   {filtered.map(t => {
                     const s = STATUS_MAP[t.status];
-                    const p = PRIORITY_MAP[t.priority];
                     return (
                       <tr key={t.id}>
-                        <td className={styles.ticketId}>{t.id}</td>
                         <td>
                           <div className={styles.residentCell}>
                             <span className={styles.avatarSmall}>{t.initials}</span>
@@ -183,28 +188,15 @@ export default function Admin_Maintenance() {
                         </td>
                         <td className={styles.descCell}>{t.desc}</td>
                         <td className={styles.dateCell}>{t.date}</td>
-                        <td><span className={`${styles.priorityPill} ${styles[p.cls]}`}>{p.label}</span></td>
                         <td><span className={`${styles.statusPill} ${styles[s.cls]}`}>{s.label}</span></td>
                         <td>
-                          <div className={styles.actionsCell}>
-                            <button className={styles.assignBtn}>Assign Staff</button>
-                            <div className={styles.kebabWrap}>
-                              <button
-                                className={styles.kebabBtn}
-                                onClick={() => setOpenKebab(openKebab === t.id ? null : t.id)}
-                                aria-label="More actions"
-                              >
-                                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-                              </button>
-                              {openKebab === t.id && (
-                                <div className={styles.kebabMenu} role="menu">
-                                  <button role="menuitem" onClick={() => setOpenKebab(null)}>Update Status</button>
-                                  <button role="menuitem" onClick={() => setOpenKebab(null)}>View Details</button>
-                                  <button role="menuitem" className={styles.deleteItem} onClick={() => setOpenKebab(null)}>Delete</button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                          <button 
+                            className={styles.assignBtn}
+                            onClick={() => handleAssignStaff(t.id)}
+                            disabled={t.status !== "Open"}
+                          >
+                            {t.status === "Open" ? "Assign Staff" : "Staff Assigned"}
+                          </button>
                         </td>
                       </tr>
                     );
@@ -214,11 +206,10 @@ export default function Admin_Maintenance() {
             </div>
           </div>
 
-          {/* ── Mobile Ticket Cards ── */}
+          {/* Mobile Ticket Cards */}
           <div className={styles.mobileCards}>
             {filtered.map(t => {
               const s = STATUS_MAP[t.status];
-              const p = PRIORITY_MAP[t.priority];
               return (
                 <div key={t.id} className={styles.ticketCard}>
                   <div className={styles.tcHeader}>
@@ -226,27 +217,11 @@ export default function Admin_Maintenance() {
                       <span className={styles.avatarSmall}>{t.initials}</span>
                       <div>
                         <div className={styles.residentName}>{t.resident}</div>
-                        <div className={styles.residentRoom}>Room {t.room} &middot; {t.id}</div>
+                        <div className={styles.residentRoom}>Room {t.room}</div>
                       </div>
                     </div>
                     <div className={styles.tcRight}>
                       <span className={`${styles.statusPill} ${styles[s.cls]}`}>{s.label}</span>
-                      <div className={styles.kebabWrap}>
-                        <button
-                          className={styles.kebabBtn}
-                          onClick={() => setOpenKebab(openKebab === t.id ? null : t.id)}
-                          aria-label="More actions"
-                        >
-                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-                        </button>
-                        {openKebab === t.id && (
-                          <div className={styles.kebabMenu} role="menu">
-                            <button role="menuitem" onClick={() => setOpenKebab(null)}>Update Status</button>
-                            <button role="menuitem" onClick={() => setOpenKebab(null)}>View Details</button>
-                            <button role="menuitem" className={styles.deleteItem} onClick={() => setOpenKebab(null)}>Delete</button>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </div>
                   <div className={styles.tcDivider} />
@@ -258,10 +233,6 @@ export default function Admin_Maintenance() {
                       </span>
                     </div>
                     <div className={styles.tcMetaItem}>
-                      <span className={styles.tcMetaLabel}>PRIORITY</span>
-                      <span className={`${styles.priorityPill} ${styles[p.cls]}`}>{p.label}</span>
-                    </div>
-                    <div className={styles.tcMetaItem}>
                       <span className={styles.tcMetaLabel}>DATE RAISED</span>
                       <span className={styles.tcMetaValue}>{t.date}</span>
                     </div>
@@ -270,7 +241,13 @@ export default function Admin_Maintenance() {
                       <span className={styles.tcMetaValue}>{t.desc}</span>
                     </div>
                   </div>
-                  <button className={styles.assignBtnFull}>Assign Staff</button>
+                  <button 
+                    className={styles.assignBtnFull}
+                    onClick={() => handleAssignStaff(t.id)}
+                    disabled={t.status !== "Open"}
+                  >
+                    {t.status === "Open" ? "Assign Staff" : "Staff Assigned"}
+                  </button>
                 </div>
               );
             })}

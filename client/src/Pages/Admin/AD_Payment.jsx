@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import styles from "./AD_Payment.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
+import Topbar from "./Components/Header/Topbar";
+import { useNavigate } from "react-router-dom";
 
 /* ── Mock data ── */
 const TRANSACTIONS = [
@@ -47,21 +49,6 @@ function IconSettings() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3"/>
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </svg>
-  );
-}
-function IconSearch() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-  );
-}
-function IconBell() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
     </svg>
   );
 }
@@ -132,6 +119,9 @@ const STATUS_CLASS = {
 };
 
 export default function Admin_Payment() {
+
+  const navigate = useNavigate();
+
   const [activeNav, setActiveNav] = useState("payments");
   const [search, setSearch]   = useState("");
   const [month, setMonth]     = useState("Feb 2026");
@@ -157,56 +147,32 @@ export default function Admin_Payment() {
 
   return (
     <div className={styles.dashboardWrapper}>
-      {/* ── Floating Background Blobs ── */}
       <div className={styles.backgroundBlobs}>
         <div className={`${styles.blob} ${styles.blob1}`}></div>
         <div className={`${styles.blob} ${styles.blob2}`}></div>
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      {/* ── Desktop Sidebar ── */}
-      <Sidebar currentPath={'payments'} />
+      <Sidebar currentPath="payments" />
 
-      {/* ── Main Content ── */}
       <main className={styles.mainContent}>
 
-        {/* ── Top Nav ── */}
-        <header className={styles.topBar}>
-          <div className={styles.topBarLeft}>
-            <div className={styles.titleSection}>
-              <h1 className={styles.pageTitle}>Payments &amp; Billing</h1>
-            </div>
-          </div>
-          <div className={styles.searchWrap}>
-            <span className={styles.searchIcon}><IconSearch /></span>
-            <input
-              className={styles.searchInput}
-              type="search"
-              placeholder="Search transactions, residents..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              aria-label="Search transactions"
-            />
-          </div>
-          <div className={styles.topNavRight}>
-            <button className={styles.bellBtn} aria-label="Notifications">
-              <IconBell />
-              <span className={styles.bellDot} aria-hidden="true" />
-            </button>
-            <div className={styles.avatar} aria-label="Admin profile">A</div>
-          </div>
-        </header>
+        <Topbar 
+          title="Payments &amp; Billing" 
+          currentView="payment"
+          searchValue={search}
+          onSearchChange={(value) => setSearch(value)}
+        />
 
-        {/* ── Scrollable Content ── */}
         <div className={styles.content}>
 
           {/* Section header */}
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Financial Overview</h2>
-            <button className={styles.btnPrimary}>+ Record Payment</button>
+            <button className={styles.btnPrimary} onClick={() => { navigate('/admin/payments/add') }} >+ Record Payment</button>
           </div>
 
-          {/* ── Summary Cards ── */}
+
           <div className={styles.summaryGrid}>
             <div className={styles.summaryCard}>
               <p className={styles.summaryLabel}>Collected This Month</p>
@@ -225,7 +191,6 @@ export default function Admin_Payment() {
             </div>
           </div>
 
-          {/* ── Filter Row ── */}
           <div className={styles.filterRow}>
             <div className={styles.filterSelects}>
               <div className={styles.selectWrap}>
@@ -347,7 +312,7 @@ export default function Admin_Payment() {
             </div>
           </div>
 
-          {/* ── Mobile transaction cards ── */}
+
           <div className={styles.mobileCards}>
             {filtered.map((t) => (
               <div key={t.id} className={styles.txCard}>
@@ -391,7 +356,6 @@ export default function Admin_Payment() {
         </div>
       </main>
 
-      {/* ── Bottom Nav (mobile) ── */}
       {isMobile && (
         <nav className={styles.bottomNav} aria-label="Mobile navigation">
             <button className={`${styles.bottomNavItem} ${activeNav === 'dashboard' ? styles.bottomNavActive : ""}`} onClick={() => setActiveNav('dashboard')}>

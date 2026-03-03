@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./AD_Kitchen.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
+import Topbar from "./Components/Header/Topbar";
 
 /* ─── Static data ─── */
 const MEALS = [
@@ -30,15 +32,6 @@ const MEALS = [
   },
 ];
 
-const INVENTORY = [
-  { id: 1, item: "Rice", stock: "5 kg", status: "reorder" },
-  { id: 2, item: "Sunflower Oil", stock: "2 L", status: "critical" },
-  { id: 3, item: "Toor Dal", stock: "3 kg", status: "reorder" },
-  { id: 4, item: "Onion", stock: "1 kg", status: "critical" },
-  { id: 5, item: "Milk", stock: "8 L", status: "reorder" },
-  { id: 6, item: "Tomato", stock: "4 kg", status: "reorder" },
-];
-
 const FEEDBACK = [
   { id: 1, initials: "RS", name: "Rahul Sharma", rating: 5, comment: "Breakfast was absolutely delicious today!", time: "9:10 AM" },
   { id: 2, initials: "PP", name: "Priya Patel", rating: 4, comment: "Lunch was good, could use more variety.", time: "2:30 PM" },
@@ -46,6 +39,57 @@ const FEEDBACK = [
   { id: 4, initials: "SR", name: "Sneha Reddy", rating: 5, comment: "Loved the coconut chutney at breakfast!", time: "8:55 AM" },
   { id: 5, initials: "VS", name: "Vikram Singh", rating: 4, comment: "Dal makhani was great at dinner.", time: "9:20 PM" },
 ];
+
+// Meal participation data
+const MEAL_PARTICIPATION = {
+  breakfast: {
+    willing: [
+      { id: 1, name: "Rahul Sharma", room: "101", initials: "RS" },
+      { id: 2, name: "Priya Patel", room: "205", initials: "PP" },
+      { id: 3, name: "Amit Kumar", room: "312", initials: "AK" },
+      { id: 4, name: "Sneha Reddy", room: "108", initials: "SR" },
+      { id: 5, name: "Vikram Singh", room: "201", initials: "VS" },
+      { id: 6, name: "Anita Desai", room: "305", initials: "AD" },
+      { id: 7, name: "Rajesh Kumar", room: "110", initials: "RK" },
+      { id: 8, name: "Meena Iyer", room: "315", initials: "MI" },
+    ],
+    notWilling: [
+      { id: 9, name: "Karan Mehta", room: "407", initials: "KM" },
+      { id: 10, name: "Deepa Nair", room: "502", initials: "DN" },
+    ],
+  },
+  lunch: {
+    willing: [
+      { id: 1, name: "Rahul Sharma", room: "101", initials: "RS" },
+      { id: 2, name: "Priya Patel", room: "205", initials: "PP" },
+      { id: 3, name: "Amit Kumar", room: "312", initials: "AK" },
+      { id: 4, name: "Sneha Reddy", room: "108", initials: "SR" },
+      { id: 5, name: "Vikram Singh", room: "201", initials: "VS" },
+      { id: 6, name: "Anita Desai", room: "305", initials: "AD" },
+      { id: 7, name: "Rajesh Kumar", room: "110", initials: "RK" },
+      { id: 8, name: "Meena Iyer", room: "315", initials: "MI" },
+      { id: 9, name: "Karan Mehta", room: "407", initials: "KM" },
+    ],
+    notWilling: [
+      { id: 10, name: "Deepa Nair", room: "502", initials: "DN" },
+    ],
+  },
+  dinner: {
+    willing: [
+      { id: 1, name: "Rahul Sharma", room: "101", initials: "RS" },
+      { id: 2, name: "Priya Patel", room: "205", initials: "PP" },
+      { id: 3, name: "Amit Kumar", room: "312", initials: "AK" },
+      { id: 4, name: "Sneha Reddy", room: "108", initials: "SR" },
+      { id: 5, name: "Vikram Singh", room: "201", initials: "VS" },
+      { id: 6, name: "Anita Desai", room: "305", initials: "AD" },
+      { id: 7, name: "Rajesh Kumar", room: "110", initials: "RK" },
+      { id: 8, name: "Meena Iyer", room: "315", initials: "MI" },
+      { id: 9, name: "Karan Mehta", room: "407", initials: "KM" },
+      { id: 10, name: "Deepa Nair", room: "502", initials: "DN" },
+    ],
+    notWilling: [],
+  },
+};
 
 function StarRating({ rating }) {
   return (
@@ -69,8 +113,14 @@ function StarRating({ rating }) {
 }
 
 export default function Admin_Kitchen() {
+
+  const navigate = useNavigate();
+
   const [activeNav, setActiveNav] = useState("kitchen");
   const [isMobile, setIsMobile] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
+  const [selectedMeal, setSelectedMeal] = useState(null);
+  const [listType, setListType] = useState(null); // 'willing' or 'notWilling'
 
   useEffect(() => {
     const checkMobile = () => {
@@ -104,14 +154,11 @@ export default function Admin_Kitchen() {
       <main className={styles.mainContent}>
 
         {/* Top Bar */}
-        <header className={styles.topBar}>
-          <div className={styles.topBarLeft}>
-            <div className={styles.titleSection}>
-              <h1 className={styles.pageTitle}>Kitchen Management</h1>
-              <p className={styles.pageSubtitle}>Track meals, inventory, and feedback</p>
-            </div>
-          </div>
-        </header>
+        <Topbar 
+          title="Kitchen Management" 
+          subtitle="Track meals, inventory, and feedback"
+          currentView="kitchen"
+        />
 
         {/* ── Section header ── */}
         <div className={styles.sectionHeader}>
@@ -119,7 +166,7 @@ export default function Admin_Kitchen() {
             <h2 className={styles.sectionTitle}>Today's Menu &amp; Prep</h2>
             <p className={styles.sectionDate}>{today}</p>
           </div>
-          <button className={styles.updateBtn}>+ Update Menu</button>
+          <button className={styles.updateBtn} onClick={() => { navigate('/admin/kitchen/update') }} >+ Update Menu</button>
         </div>
 
         {/* ── Meal service cards ── */}
@@ -149,65 +196,182 @@ export default function Admin_Kitchen() {
           ))}
         </div>
 
-        {/* ── Split layout ── */}
-        <div className={styles.splitLayout}>
+        {/* ── Meal Participation Section ── */}
+        <div className={styles.sectionHeader} style={{ marginTop: '3rem' }}>
+          <div>
+            <h2 className={styles.sectionTitle}>Meal Participation</h2>
+            <p className={styles.sectionDate}>Who's eating today?</p>
+          </div>
+        </div>
 
-          {/* Left – Inventory */}
-          <section className={styles.inventoryCard} aria-labelledby="inventory-title">
-            <div className={styles.cardHeader}>
-              <h3 className={styles.cardTitle} id="inventory-title">Inventory Alerts</h3>
-              <button className={styles.ghostBtn}>Order Supplies</button>
+        {/* ── Participation cards ── */}
+        <div className={styles.participationGrid}>
+          <article className={`${styles.participationCard} ${styles.participationCard_breakfast}`}>
+            <div className={styles.participationIcon}>🌅</div>
+            <div className={styles.participationContent}>
+              <h3 className={styles.participationLabel}>Breakfast</h3>
+              <div className={styles.participationStats}>
+                <div className={styles.participationStat}>
+                  <span className={styles.participationCount}>{MEAL_PARTICIPATION.breakfast.willing.length}</span>
+                  <span className={styles.participationText}>Willing</span>
+                </div>
+                <div className={styles.participationDivider} />
+                <div className={styles.participationStat}>
+                  <span className={styles.participationCountNot}>{MEAL_PARTICIPATION.breakfast.notWilling.length}</span>
+                  <span className={styles.participationText}>Not Willing</span>
+                </div>
+              </div>
+              <button 
+                className={styles.participationDetailBtn}
+                onClick={() => {
+                  setSelectedMeal('breakfast');
+                  setListType('willing');
+                  setShowListModal(true);
+                }}
+              >
+                View Details →
+              </button>
             </div>
-            <div className={styles.tableWrap}>
-              <table className={styles.invTable}>
-                <thead>
-                  <tr>
-                    <th className={styles.th}>Item Name</th>
-                    <th className={styles.th}>Current Stock</th>
-                    <th className={styles.th}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {INVENTORY.map((row) => (
-                    <tr key={row.id} className={styles.tr}>
-                      <td className={styles.td}>{row.item}</td>
-                      <td className={styles.td}>{row.stock}</td>
-                      <td className={styles.td}>
-                        <span className={`${styles.statusPill} ${row.status === "critical" ? styles.pillCritical : styles.pillReorder}`}>
-                          {row.status === "critical" ? "Critical" : "Reorder"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          </article>
 
-          {/* Right – Feedback */}
-          <section className={styles.feedbackCard} aria-labelledby="feedback-title">
-            <div className={styles.cardHeader}>
-              <h3 className={styles.cardTitle} id="feedback-title">Recent Feedback</h3>
+          <article className={`${styles.participationCard} ${styles.participationCard_lunch}`}>
+            <div className={styles.participationIcon}>🍱</div>
+            <div className={styles.participationContent}>
+              <h3 className={styles.participationLabel}>Lunch</h3>
+              <div className={styles.participationStats}>
+                <div className={styles.participationStat}>
+                  <span className={styles.participationCount}>{MEAL_PARTICIPATION.lunch.willing.length}</span>
+                  <span className={styles.participationText}>Willing</span>
+                </div>
+                <div className={styles.participationDivider} />
+                <div className={styles.participationStat}>
+                  <span className={styles.participationCountNot}>{MEAL_PARTICIPATION.lunch.notWilling.length}</span>
+                  <span className={styles.participationText}>Not Willing</span>
+                </div>
+              </div>
+              <button 
+                className={styles.participationDetailBtn}
+                onClick={() => {
+                  setSelectedMeal('lunch');
+                  setListType('willing');
+                  setShowListModal(true);
+                }}
+              >
+                View Details →
+              </button>
             </div>
-            <ul className={styles.feedbackList}>
-              {FEEDBACK.map((f) => (
-                <li key={f.id} className={styles.feedbackItem}>
-                  <div className={styles.feedbackAvatar}>{f.initials}</div>
-                  <div className={styles.feedbackBody}>
-                    <div className={styles.feedbackRow}>
-                      <span className={styles.feedbackName}>{f.name}</span>
-                      <StarRating rating={f.rating} />
-                      <span className={styles.feedbackTime}>{f.time}</span>
-                    </div>
-                    <p className={styles.feedbackComment}>{f.comment}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
+          </article>
 
+          <article className={`${styles.participationCard} ${styles.participationCard_dinner}`}>
+            <div className={styles.participationIcon}>🌙</div>
+            <div className={styles.participationContent}>
+              <h3 className={styles.participationLabel}>Dinner</h3>
+              <div className={styles.participationStats}>
+                <div className={styles.participationStat}>
+                  <span className={styles.participationCount}>{MEAL_PARTICIPATION.dinner.willing.length}</span>
+                  <span className={styles.participationText}>Willing</span>
+                </div>
+                <div className={styles.participationDivider} />
+                <div className={styles.participationStat}>
+                  <span className={styles.participationCountNot}>{MEAL_PARTICIPATION.dinner.notWilling.length}</span>
+                  <span className={styles.participationText}>Not Willing</span>
+                </div>
+              </div>
+              <button 
+                className={styles.participationDetailBtn}
+                onClick={() => {
+                  setSelectedMeal('dinner');
+                  setListType('willing');
+                  setShowListModal(true);
+                }}
+              >
+                View Details →
+              </button>
+            </div>
+          </article>
         </div>
       </main>
+
+      {/* ══════════ PARTICIPATION LIST MODAL ══════════ */}
+      {showListModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowListModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>
+                {listType === 'willing' ? '✅ Willing to Eat' : '🚫 Not Willing to Eat'}
+                {selectedMeal && ` - ${selectedMeal.charAt(0).toUpperCase() + selectedMeal.slice(1)}`}
+              </h3>
+              <button 
+                className={styles.modalCloseBtn}
+                onClick={() => setShowListModal(false)}
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+
+            <div className={styles.modalBody}>
+              {selectedMeal ? (
+                // Show list for selected meal
+                <div className={styles.residentsList}>
+                  {MEAL_PARTICIPATION[selectedMeal][listType].length > 0 ? (
+                    MEAL_PARTICIPATION[selectedMeal][listType].map((resident) => (
+                      <div key={resident.id} className={styles.residentItem}>
+                        <div className={styles.residentAvatar}>{resident.initials}</div>
+                        <div className={styles.residentInfo}>
+                          <span className={styles.residentName}>{resident.name}</span>
+                          <span className={styles.residentRoom}>Room {resident.room}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className={styles.emptyState}>
+                      <span className={styles.emptyIcon}>📭</span>
+                      <p className={styles.emptyText}>No residents in this category</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Show lists for all meals
+                <div className={styles.allMealsView}>
+                  {['breakfast', 'lunch', 'dinner'].map((meal) => (
+                    <div key={meal} className={styles.mealSection}>
+                      <h4 className={styles.mealSectionTitle}>
+                        {meal === 'breakfast' ? '🌅' : meal === 'lunch' ? '🍱' : '🌙'} {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                      </h4>
+                      <div className={styles.residentsList}>
+                        {MEAL_PARTICIPATION[meal][listType].length > 0 ? (
+                          MEAL_PARTICIPATION[meal][listType].map((resident) => (
+                            <div key={resident.id} className={styles.residentItem}>
+                              <div className={styles.residentAvatar}>{resident.initials}</div>
+                              <div className={styles.residentInfo}>
+                                <span className={styles.residentName}>{resident.name}</span>
+                                <span className={styles.residentRoom}>Room {resident.room}</span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className={styles.noResidents}>No residents</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button 
+                className={styles.modalCloseFooterBtn}
+                onClick={() => setShowListModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════ BOTTOM NAV (Mobile Only) ══════════ */}
       {isMobile && (

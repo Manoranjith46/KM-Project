@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../Context/AuthContext";
 import styles from "./AD_Settings.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
+import Topbar from "./Components/Header/Topbar";
 
 const SETTING_TABS = [
   { id: "profile",       label: "My Profile" },
@@ -11,10 +14,22 @@ const SETTING_TABS = [
 ];
 
 export default function Admin_Settings() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const fileInputRef = useRef(null);
   const [activeNav, setActiveNav]     = useState("settings");
   const [activeTab, setActiveTab]     = useState("profile");
   const [creditCards, setCreditCards] = useState(true);
   const [isMobile, setIsMobile]       = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    // Call logout from AuthContext (handles API call, session clearing, and redirect)
+    await logout();
+    // AuthContext now handles redirect via window.location.replace('/login')
+  };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -45,6 +60,22 @@ export default function Admin_Settings() {
   });
   const handleProfile = (e) =>
     setProfile((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  /* ── Photo Upload ── */
+  const handlePhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   /* ── Notifications toggles ── */
   const [notifs, setNotifs] = useState({
@@ -80,51 +111,17 @@ export default function Admin_Settings() {
 
   return (
     <div className={styles.dashboardWrapper}>
-      {/* ── Floating Background Blobs ── */}
+      {/* Floating Background Blobs */}
       <div className={styles.backgroundBlobs}>
         <div className={`${styles.blob} ${styles.blob1}`}></div>
         <div className={`${styles.blob} ${styles.blob2}`}></div>
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      {/* ── Desktop sidebar ── */}
       <Sidebar currentPath={'settings'} />
 
-      {/* ── Main Content ── */}
       <main className={styles.mainContent}>
 
-        {/* ── Top Nav ── */}
-        <header className={styles.topBar}>
-          <div className={styles.topBarLeft}>
-            <div className={styles.titleSection}>
-              <h1 className={styles.pageTitle}>Settings &amp; Preferences</h1>
-            </div>
-          </div>
-
-          <div className={styles.searchWrap}>
-            <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input
-              className={styles.searchInput}
-              type="search"
-              placeholder="Search settings..."
-              aria-label="Search settings"
-            />
-          </div>
-
-          <div className={styles.topNavRight}>
-            <button className={styles.bellBtn} aria-label="Notifications">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
-              <span className={styles.bellDot} aria-hidden="true" />
-            </button>
-            <div className={styles.avatar} aria-label="Admin profile">A</div>
-          </div>
-        </header>
-
-        {/* ── Content ── */}
         <div className={styles.content}>
           
           <div className={styles.contentHeader}>
@@ -151,7 +148,7 @@ export default function Admin_Settings() {
             {/* Form area */}
             <div className={styles.formArea}>
               
-              {/* ── PROPERTY DETAILS ── */}
+              {/* PROPERTY DETAILS */}
               {activeTab === "property" && (
                 <div className={styles.tabContentFade}>
                   <div className={styles.formHeader}>
@@ -218,7 +215,7 @@ export default function Admin_Settings() {
                 </div>
               )}
 
-              {/* ── MY PROFILE ── */}
+              {/* MY PROFILE */}
               {activeTab === "profile" && (
                 <div className={styles.tabContentFade}>
                   <div className={styles.formHeader}>
@@ -227,12 +224,21 @@ export default function Admin_Settings() {
                   </div>
 
                   <div className={styles.avatarRow}>
-                    <div className={styles.profileAvatar}>AK</div>
+                    <div className={styles.profileAvatar} style={profilePhoto ? { backgroundImage: `url(${profilePhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
+                      {!profilePhoto && 'AK'}
+                    </div>
                     <div className={styles.avatarMeta}>
                       <span className={styles.avatarName}>{profile.fullName}</span>
                       <span className={styles.avatarRole}>{profile.role}</span>
                     </div>
-                    <button className={styles.outlineBtn}>Change Photo</button>
+                    <input 
+                      ref={fileInputRef}
+                      type="file" 
+                      accept="image/*" 
+                      style={{ display: 'none' }}
+                      onChange={handlePhotoChange}
+                    />
+                    <button className={styles.outlineBtn} onClick={handlePhotoClick}>Change Photo</button>
                   </div>
 
                   <div className={styles.formGrid}>
@@ -265,10 +271,27 @@ export default function Admin_Settings() {
                       <button className={styles.saveBtn}>Save Profile</button>
                     </div>
                   </div>
+
+                  <div className={styles.logoutSection}>
+                    <hr className={styles.divider} />
+                    <button 
+                      className={styles.logoutBtn} 
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      style={{ opacity: isLoggingOut ? 0.6 : 1, cursor: isLoggingOut ? 'not-allowed' : 'pointer' }}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                      </svg>
+                      {isLoggingOut ? 'Logging out...' : 'Logout'}
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* ── NOTIFICATIONS ── */}
+              {/* NOTIFICATIONS */}
               {activeTab === "notifications" && (
                 <div className={styles.tabContentFade}>
                   <div className={styles.formHeader}>
@@ -322,7 +345,7 @@ export default function Admin_Settings() {
                 </div>
               )}
 
-              {/* ── SECURITY ── */}
+              {/* SECURITY */}
               {activeTab === "security" && (
                 <div className={styles.tabContentFade}>
                   <div className={styles.formHeader}>
@@ -371,7 +394,7 @@ export default function Admin_Settings() {
                 </div>
               )}
 
-              {/* ── BILLING ── */}
+              {/* BILLING */}
               {activeTab === "billing" && (
                 <div className={styles.tabContentFade}>
                   <div className={styles.formHeader}>
@@ -418,7 +441,6 @@ export default function Admin_Settings() {
         </div>
       </main>
 
-      {/* ── Bottom Nav (Mobile Only) ── */}
       {isMobile && (
         <nav className={styles.bottomNav} aria-label="Mobile navigation">
             <button className={`${styles.bottomNavItem} ${activeNav === 'dashboard' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('dashboard')}>

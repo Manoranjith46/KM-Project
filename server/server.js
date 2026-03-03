@@ -1,18 +1,13 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js'; // Ensure .js extension
 import adminRoutes from './routes/adminRoutes.js';
 import residentRoutes from './routes/residentRoutes.js';
 import foodRoutes from './routes/foodRoutes.js';
 import guestRoutes from './routes/guestRoutes.js';
-import dns from 'dns';
-
-// Forces the app to use Google's DNS servers
-dns.setServers(['8.8.8.8', '8.8.4.4']); 
-
-// Also helpful to force IPV4 if you are still getting connection errors
-dns.setDefaultResultOrder('ipv4first');
+import authRoutes from './routes/authRoutes.js';
 
 // Load config
 dotenv.config({ silent: true });
@@ -23,10 +18,18 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true, // Allow credentials (cookies)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json({ limit: '10mb' })); // Increased limit for Base64 images
+app.use(express.urlencoded({ limit: '10mb', extended: true })); // For form data
+app.use(cookieParser()); // Parse cookies from requests
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/residents', residentRoutes);
 app.use('/api/guests', guestRoutes)

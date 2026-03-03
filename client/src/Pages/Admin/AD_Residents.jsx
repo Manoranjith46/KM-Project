@@ -1,18 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./AD_Residents.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
-
-/* ─── Static mock data ─── */
-const RESIDENTS = [
-  { id: 1, name: "Rahul Sharma",  room: "101", phone: "98765 43210", moveIn: "01 Jan 2025", status: "Paid" },
-  { id: 2, name: "Priya Patel",   room: "205", phone: "91234 56789", moveIn: "15 Nov 2024", status: "Pending" },
-  { id: 3, name: "Amit Kumar",    room: "312", phone: "99887 76655", moveIn: "10 Oct 2024", status: "Paid" },
-  { id: 4, name: "Sneha Reddy",   room: "108", phone: "87654 32109", moveIn: "20 Dec 2024", status: "Paid" },
-  { id: 5, name: "Vikram Singh",  room: "204", phone: "76543 21098", moveIn: "05 Sep 2024", status: "Overdue" },
-  { id: 6, name: "Anjali Verma",  room: "301", phone: "65432 10987", moveIn: "12 Feb 2025", status: "Paid" },
-  { id: 7, name: "Karan Mehta",   room: "407", phone: "54321 09876", moveIn: "03 Mar 2025", status: "Pending" },
-  { id: 8, name: "Divya Nair",    room: "502", phone: "43210 98765", moveIn: "22 Jan 2025", status: "Paid" },
-];
+import Topbar from "./Components/Header/Topbar";
+import Popup from "./Components/Popup/Popup";
 
 function getInitials(name) {
   return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
@@ -67,7 +58,6 @@ function ResidentCard({ r }) {
         </div>
         <div className={styles.residentCardRight}>
           <StatusPill status={r.status} />
-          <KebabMenu />
         </div>
       </div>
       <div className={styles.residentCardMeta}>
@@ -76,7 +66,7 @@ function ResidentCard({ r }) {
           <span className={styles.residentCardMetaValue}>{r.phone}</span>
         </div>
         <div className={styles.residentCardMetaItem}>
-          <span className={styles.residentCardMetaLabel}>Move-in</span>
+          <span className={styles.residentCardMetaLabel}>Joining Date</span>
           <span className={styles.residentCardMetaValue}>{r.moveIn}</span>
         </div>
       </div>
@@ -85,12 +75,18 @@ function ResidentCard({ r }) {
 }
 
 export default function AD_Residents() {
+
+  const navigate = useNavigate();
+  const [popupConfig, setPopupConfig] = useState({ isOpen: false, type: '', title: '', message: '' });
+
+  const [residents, setResidents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeNav, setActiveNav] = useState("residents");
-  const [search, setSearch]       = useState("");
-  const [floor, setFloor]         = useState("All");
-  const [roomType, setRoomType]   = useState("All");
-  const [statusFilter, setStatus] = useState("Active");
-  const [isMobile, setIsMobile]   = useState(false);
+  const [roomNumberFilter, setRoomNumberFilter] = useState("All");
+  const [statusFilter, setStatus] = useState("All");
+  const [sortBy, setSortBy] = useState("name");
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -99,66 +95,112 @@ export default function AD_Residents() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const filtered = RESIDENTS.filter((r) => {
-    const q = search.toLowerCase();
-    return (
-      r.name.toLowerCase().includes(q) ||
-      r.room.includes(q) ||
-      r.phone.includes(q)
-    );
-  });
+  useEffect(() => {
+    const fetchResidents = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}api/residents`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          setError('Unauthorized');
+          setResidents([]);
+          setPopupConfig({
+            isOpen: true,
+            type: 'error',
+            title: 'Access Denied',
+            message: 'You do not have permission to view residents. Only owners can access this page.'
+          });
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch residents. Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const normalizedResidents = (Array.isArray(data) ? data : []).map((resident, index) => ({
+          id: resident._id || resident.id || index,
+          name: resident.name || '',
+          room: resident.roomNumber || '-',
+          phone: resident.phoneNumber || '-',
+          moveIn: resident.joiningDate ? new Date(resident.joiningDate).toLocaleDateString('en-GB') : '-',
+          status: 'Active',
+        }));
+
+        setResidents(normalizedResidents);
+      } catch (err) {
+        const errorMsg = err.message || 'Something went wrong while fetching residents.';
+        setError(errorMsg);
+        setResidents([]);
+        setPopupConfig({
+          isOpen: true,
+          type: 'error',
+          title: 'Error Loading Residents',
+          message: errorMsg
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchResidents();
+  }, []);
+
+  // Filter and sort residents
+  const filtered = residents
+    .filter((r) => {
+      const roomMatch = roomNumberFilter === "All" || r.room === roomNumberFilter;
+      const statusMatch = statusFilter === "All" || r.status === statusFilter;
+      return roomMatch && statusMatch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === "room") {
+        return a.room.toString().localeCompare(b.room.toString());
+      }
+      return 0;
+    });
 
   return (
     <div className={styles.dashboardWrapper}>
-      {/* ── Floating Background Blobs ── */}
+      {/* Floating Background Blobs */}
       <div className={styles.backgroundBlobs}>
         <div className={`${styles.blob} ${styles.blob1}`}></div>
         <div className={`${styles.blob} ${styles.blob2}`}></div>
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      {/* ── Sidebar (desktop only) ── */}
       <Sidebar currentPath={'residents'} />
 
-      {/* ── Main Content ── */}
       <main className={styles.mainContent}>
 
-        {/* ── Top Nav ── */}
-        <header className={styles.topBar}>
-          <div className={styles.topBarLeft}>
-            <div className={styles.titleSection}>
-              <h1 className={styles.pageTitle}>Residents Directory</h1>
-            </div>
-          </div>
-          <div className={styles.searchBar}>
-            <span className={styles.searchIcon}><SearchIcon /></span>
-            <input
-              type="text"
-              className={styles.searchInput}
-              placeholder="Search residents..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className={styles.topNavRight}>
-            <div className={styles.avatar}>A</div>
-          </div>
-        </header>
+        <Topbar 
+          title="Residents Directory"
+          currentView="resident"
+        />
 
-        {/* ── Scrollable Content Area ── */}
         <div className={styles.content}>
 
           {/* Header Row */}
           <div className={styles.contentHeader}>
             <h2 className={styles.sectionTitle}>All Residents</h2>
-            <button className={styles.addBtn}>+ Add Resident</button>
+            <button className={styles.addBtn} onClick={() => {navigate('/admin/residents/add')}} >+ Add Resident</button>
           </div>
+
+          {isLoading && <div className={styles.emptyRow}>Loading residents...</div>}
+          {error && <div className={styles.emptyRow}>{error}</div>}
 
           {/* Quick Stats */}
           <div className={styles.statsRow}>
             <div className={styles.statCard}>
               <span className={styles.statLabel}>Total Active</span>
-              <span className={styles.statValue}>124</span>
+              <span className={styles.statValue}>{residents.length}</span>
             </div>
             <div className={styles.statCard}>
               <span className={styles.statLabel}>Moving In</span>
@@ -170,26 +212,37 @@ export default function AD_Residents() {
             </div>
           </div>
 
-          {/* Filters */}
+          {/* Filters & Sorting */}
           <div className={styles.filterRow}>
-            <select className={styles.filterSelect} value={floor} onChange={(e) => setFloor(e.target.value)}>
-              <option value="All">Floor (All)</option>
-              <option value="1">Floor 1</option>
-              <option value="2">Floor 2</option>
-              <option value="3">Floor 3</option>
-              <option value="4">Floor 4</option>
-              <option value="5">Floor 5</option>
-            </select>
-            <select className={styles.filterSelect} value={roomType} onChange={(e) => setRoomType(e.target.value)}>
-              <option value="All">Room Type (All)</option>
-              <option value="Single">Single</option>
-              <option value="Double">Double</option>
-              <option value="Triple">Triple</option>
+            <select className={styles.filterSelect} value={roomNumberFilter} onChange={(e) => setRoomNumberFilter(e.target.value)}>
+              <option value="All">Room Number (All)</option>
+              <option value="101">101</option>
+              <option value="102">102</option>
+              <option value="103">103</option>
+              <option value="104">104</option>
+              <option value="105">105</option>
+              <option value="201">201</option>
+              <option value="202">202</option>
+              <option value="203">203</option>
+              <option value="204">204</option>
+              <option value="205">205</option>
+              <option value="301">301</option>
+              <option value="302">302</option>
+              <option value="303">303</option>
+              <option value="304">304</option>
+              <option value="305">305</option>
             </select>
             <select className={styles.filterSelect} value={statusFilter} onChange={(e) => setStatus(e.target.value)}>
-              <option value="Active">Status (Active)</option>
+              <option value="All">Status (All)</option>
+              <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
-              <option value="Notice">On Notice</option>
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+              <option value="Overdue">Overdue</option>
+            </select>
+            <select className={styles.filterSelect} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="name">Sort by Name (A-Z)</option>
+              <option value="room">Sort by Room Number</option>
             </select>
           </div>
 
@@ -202,7 +255,7 @@ export default function AD_Residents() {
                     <th className={styles.th}>RESIDENT NAME</th>
                     <th className={styles.th}>ROOM NO</th>
                     <th className={styles.th}>PHONE NUMBER</th>
-                    <th className={styles.th}>MOVE-IN DATE</th>
+                    <th className={styles.th}>JOINING DATE</th>
                     <th className={styles.th}>RENT STATUS</th>
                     <th className={styles.th}>ACTIONS</th>
                   </tr>
@@ -225,7 +278,9 @@ export default function AD_Residents() {
                         <td className={styles.td}>{r.phone}</td>
                         <td className={styles.td}>{r.moveIn}</td>
                         <td className={styles.td}><StatusPill status={r.status} /></td>
-                        <td className={styles.td}><KebabMenu /></td>
+                        <td className={styles.td}>
+                          <button className={styles.viewBtn} onClick={() => navigate(`/admin/residents/view/${r.phone}`)}>View</button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -246,7 +301,14 @@ export default function AD_Residents() {
         </div>
       </main>
 
-      {/* ── Bottom Nav (mobile ≤768px) ── */}
+      <Popup 
+        isOpen={popupConfig.isOpen}
+        type={popupConfig.type}
+        title={popupConfig.title}
+        message={popupConfig.message}
+        onClose={() => setPopupConfig({ ...popupConfig, isOpen: false })}
+      />
+
       {isMobile && (
         <nav className={styles.bottomNav} aria-label="Mobile navigation">
             <button className={`${styles.bottomNavItem} ${activeNav === 'dashboard' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('dashboard')}>
@@ -271,7 +333,7 @@ export default function AD_Residents() {
   );
 }
 
-/* ─── SVG Icons ─── */
+/* SVG Icons */
 function BarChartIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

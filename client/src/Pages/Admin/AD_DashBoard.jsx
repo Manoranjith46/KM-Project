@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import styles from './AD_Dashboard.module.css'
 import Sidebar from './Components/Sidebar/Sidebar'
+import Topbar from './Components/Header/Topbar'
 
 export default function Admin_Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -88,8 +89,7 @@ export default function Admin_Dashboard() {
   ]
 
   return (
-    <div className={styles.dashboardWrapper}>
-      {/* Floating Background Blobs */}
+    <div className={`${styles.dashboardWrapper}`}>
       <div className={styles.backgroundBlobs}>
         <div className={`${styles.blob} ${styles.blob1}`}></div>
         <div className={`${styles.blob} ${styles.blob2}`}></div>
@@ -111,14 +111,11 @@ export default function Admin_Dashboard() {
       {/* Main Content */}
       <main className={styles.mainContent}>
         {/* Top Bar */}
-        <header className={styles.topBar}>
-          <div className={styles.topBarLeft}>
-            <div className={styles.titleSection}>
-              <h1 className={styles.pageTitle}>Owner Dashboard</h1>
-              <p className={styles.pageSubtitle}>Welcome back, Admin</p>
-            </div>
-          </div>
-        </header>
+        <Topbar 
+          title="Owner Dashboard" 
+          subtitle="Welcome back, Admin"
+          currentView="dashboard"
+        />
 
         {/* Hero Stats Grid */}
         <section className={styles.heroStats}>
@@ -289,3 +286,5 @@ export default function Admin_Dashboard() {
     </div>
   )
 }
+
+

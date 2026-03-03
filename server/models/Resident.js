@@ -39,6 +39,12 @@ const residentSchema = new mongoose.Schema({
     default: true 
   },
 
+  // --- Document Storage ---
+  document: {
+    type: String, // Base64 encoded image
+    default: null
+  },
+
   // --- Meal Logic (Modified) ---
   leaveSchedule: {
     startDate: { 

@@ -30,6 +30,14 @@ const historySchema = new mongoose.Schema({
   // ------------------------------------
   aadharUrl: { 
     type: String 
+  },
+  archivedData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
+  checkoutSummary: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   }
 }, { timestamps: true });
 

@@ -4,12 +4,33 @@ import History from "../models/History.js";
 // @access  Public (for now)
 export const registerResident = async (req, res) => {
   try {
-    const { name, phoneNumber, guardianDetails, roomNumber } = req.body;
+    const { name, phoneNumber, guardianDetails, roomNumber, document } = req.body;
+
+    console.log('Received registration data:', { 
+      name, 
+      phoneNumber, 
+      guardianDetails, 
+      roomNumber,
+      document: document ? '[Base64 Image Data]' : null 
+    });
+
+    // Validate required fields
+    if (!name || !phoneNumber || !guardianDetails || !guardianDetails.name || !guardianDetails.phone || !roomNumber) {
+      return res.status(400).json({ 
+        message: "Please provide all required fields: name, phoneNumber, guardianDetails (name, phone), and roomNumber" 
+      });
+    }
 
     // 1. Check if resident already exists (Duplicate Check)
     const residentExists = await Resident.findOne({ phoneNumber });
     if (residentExists) {
-      return res.status(400).json({ message: "Resident's or Guardian's phone number already exists" });
+      return res.status(400).json({ message: "Resident's phone number already exists" });
+    }
+
+    // Check if guardian phone already exists
+    const guardianExists = await Resident.findOne({ 'guardianDetails.phone': guardianDetails.phone });
+    if (guardianExists) {
+      return res.status(400).json({ message: "Guardian's phone number already exists" });
     }
 
     // 2. Create the new resident
@@ -18,6 +39,7 @@ export const registerResident = async (req, res) => {
       phoneNumber,
       guardianDetails,
       roomNumber,
+      document: document || null
     });
 
     // 3. Send success response
@@ -26,7 +48,7 @@ export const registerResident = async (req, res) => {
         _id: resident._id,
         name: resident.name,
         roomNumber: resident.roomNumber,
-        msg: "Resident registered successfully"
+        message: "Resident registered successfully"
       });
     } else {
       res.status(400).json({ message: 'Invalid resident data' });
@@ -34,6 +56,7 @@ export const registerResident = async (req, res) => {
 
   } catch (error) {
     // 4. Server Error Handler
+    console.error('Error in registerResident:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -55,21 +78,29 @@ export const getResidents = async (req, res) => {
 // handles query parameters (must come before /:id)
 
 // @desc    Get resident by phone number
-// @route   GET /api/residents/phone/:number
+// @route   GET /api/residents/:phoneNumber
+// @access  Private (Owner only)
 export const getResidentByPhone = async (req, res) => {
     try {
-        // Use query instead of params for URLs with '?'
-        const { phoneNumber } = req.params; 
+        const { phoneNumber } = req.params;
 
+        // Validate input
+        if (!phoneNumber) {
+            return res.status(400).json({ message: "Phone number is required" });
+        }
+
+        // Query resident by phone number
         const resident = await Resident.findOne({ phoneNumber });
 
-        if (resident) {
-            res.status(200).json(resident);
-        } else {
-            res.status(404).json({ message: "No resident found with this number" });
+        if (!resident) {
+            return res.status(404).json({ message: "Resident not found" });
         }
+
+        // Return resident data (including document if stored as base64)
+        res.status(200).json(resident);
     } catch (error) {
-        res.status(500).json({ message: "Server Error" });
+        console.error('Error fetching resident:', error);
+        res.status(500).json({ message: "Server error: " + error.message });
     }
 };
 
@@ -111,16 +142,26 @@ export const deleteResident = async (req, res) => {
 
         const finalBill = Math.round(monthsStayed * monthlyRate);
 
+        const totalExpense = Array.isArray(resident.payments)
+          ? resident.payments
+            .filter((payment) => payment.status === 'Paid')
+            .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0)
+          : 0;
+
         await History.create({
             type: 'Resident',
             name: resident.name,
             phoneNumber: resident.phoneNumber,
             checkInDate: resident.joiningDate,
             checkOutDate: checkOut,
-            monthlyRate: monthlyRate,
-            durationInMonths: parseFloat(monthsStayed.toFixed(2)), // e.g., 1.52 months
-            totalAmountPaid: finalBill,
-            aadharUrl: resident.aadharUrl
+          totalExpense,
+          aadharUrl: resident.document || resident.aadharUrl,
+          checkoutSummary: {
+            monthlyRate,
+            durationInMonths: parseFloat(monthsStayed.toFixed(2)),
+            estimatedFinalBill: finalBill
+          },
+          archivedData: resident.toObject()
         });
 
         // Delete from Active Collection
