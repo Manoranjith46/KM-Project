@@ -1,16 +1,22 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../../../Context/AuthContext'
 import styles from './Sidebar.module.css'
 import { useTheme } from '../../../../Context/ThemeContext'
 
 export default function Sidebar({ currentPath }) {
   const navigate = useNavigate();
-
-
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleNavClick = ( path ) => {
     navigate(`/admin/${path}`);
   }
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logout();
+  }
 
   const { isDarkMode, toggleTheme } = useTheme()
   return (
@@ -48,11 +54,15 @@ export default function Sidebar({ currentPath }) {
           <span className={styles.navText}>Settings</span>
         </a>
       </nav>
-
-      <button className={styles.themeToggle} onClick={toggleTheme}>
-        <span className={styles.themeToggleIcon}>{isDarkMode ? '☀️' : '🌙'}</span>
-        <span className={styles.themeToggleText}>{isDarkMode ? 'Light' : 'Dark'}</span>
+      <button className={styles.logoutBtn} onClick={handleLogout} disabled={isLoggingOut}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span className={styles.logoutText}>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
       </button>
     </aside>
   )
 }
+

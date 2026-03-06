@@ -22,6 +22,7 @@ import AdminEditResident from './Pages/Admin/AD_Edit_Resident';
 import Resident_Dashboard from './Pages/Resident/RD_Dashboard';
 import Resident_ReportIssue from './Pages/Resident/RD_Report_Issue';
 import Resident_Finance from './Pages/Resident/RD_Finance';
+import Resident_NoticeBoard from './Pages/Resident/RD_Notice_Board';
 
 function getDashboardPathByRole(role) {
   return role === 'resident' ? '/resident/dashboard' : '/admin/dashboard';
@@ -69,6 +70,7 @@ function App() {
           <Route path="/resident/dashboard" element={<ProtectedRoute allowedRoles={['resident']}><Resident_Dashboard /></ProtectedRoute>} />
           <Route path="/resident/report" element={<ProtectedRoute allowedRoles={['resident']}><Resident_ReportIssue /></ProtectedRoute>} />
           <Route path="/resident/finance" element={<ProtectedRoute allowedRoles={['resident']}><Resident_Finance /></ProtectedRoute>} />
+          <Route path="/resident/notice" element={<ProtectedRoute allowedRoles={['resident']}><Resident_NoticeBoard /></ProtectedRoute>} />
 
           {/* Fallback Route */}
           <Route path="*" element={<HomeRedirect />} />

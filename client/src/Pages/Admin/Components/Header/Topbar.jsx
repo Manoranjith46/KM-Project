@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../../Context/AuthContext'
+import { useTheme } from '../../../../Context/ThemeContext'
 import styles from './Topbar.module.css'
 
 function SearchIcon() {
@@ -32,6 +33,7 @@ export default function Topbar({
 }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const showSearchBar = ['resident', 'payment', 'maintenance'].includes(currentView);
 
   const handleLogout = () => {
@@ -70,8 +72,8 @@ export default function Topbar({
           </div>
           <span className={styles.username}>{username}</span>
         </div>
-        <button className={styles.logoutBtn} onClick={handleLogout} title="Logout">
-          <LogoutIcon />
+        <button className={styles.themeToggleBtn} onClick={toggleTheme} title={isDarkMode ? 'Light Mode' : 'Dark Mode'}>
+          {isDarkMode ? '☀️' : '🌙'}
         </button>
       </div>
 

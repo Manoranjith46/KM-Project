@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../Context/AuthContext";
+import GateScanner from "./RD_Gate_Scanner";
 import styles from "./RD_Dashboard.module.css";
 
 export default function Resident_Dashboard() {
-  const [user] = useState({
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  const [user, setUser] = useState({
     name: "Mano",
     role: "Resident", 
     room: "A102",
@@ -18,12 +24,65 @@ export default function Resident_Dashboard() {
     dinner: false
   });
 
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [scanAction, setScanAction] = useState("");
+
   const handleMealToggle = (mealType) => {
     if (user.status === "ON LEAVE") return; 
     setMeals((prev) => ({ ...prev, [mealType]: !prev[mealType] }));
   };
 
-  const navigate = useNavigate();
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    // Call logout from AuthContext (handles API call, session clearing, and redirect)
+    await logout();
+  };
+
+  const handleSuccessfulScan = (qrData) => {
+    console.log("=== QR SCAN SUCCESSFUL ===");
+    console.log("Received Data:", qrData);
+    console.log("Data Type:", typeof qrData);
+    
+    // If JSON object was parsed
+    if (typeof qrData === 'object' && qrData !== null) {
+      console.log("📦 JSON Object Detected");
+      console.log("JSON Keys:", Object.keys(qrData));
+      console.log("Full JSON:", JSON.stringify(qrData, null, 2));
+      
+      // Extract specific fields if they exist
+      if (qrData.gateId) console.log("Gate ID:", qrData.gateId);
+      if (qrData.timestamp) console.log("Timestamp:", qrData.timestamp);
+      if (qrData.location) console.log("Location:", qrData.location);
+      if (qrData.type) console.log("Type:", qrData.type);
+    } else {
+      console.log("📝 Plain Text Data:", qrData);
+    }
+    
+    console.log("========================");
+    
+    setIsScannerOpen(false); 
+    
+    // Flip the status
+    const newStatus = user.status === "IN HOSTEL" ? "ON LEAVE" : "IN HOSTEL";
+    const action = newStatus === "ON LEAVE" ? "Leaving" : "Entering";
+    
+    // Apply the update
+    setUser((prev) => ({ ...prev, status: newStatus }));
+    
+    if (newStatus === "ON LEAVE") {
+      setMeals({ breakfast: false, lunch: false, dinner: false }); // Auto-pause!
+    }
+    
+    // Show success popup
+    setScanAction(action);
+    setShowSuccessPopup(true);
+    
+    // Auto-hide popup after 3 seconds
+    setTimeout(() => {
+      setShowSuccessPopup(false);
+    }, 3000);
+  };
 
   return (
     <div className={styles.dashboardWrapper}>
@@ -41,8 +100,13 @@ export default function Resident_Dashboard() {
             <p className={styles.roleText}>Welcome back, {user.name}</p>
           </div>
           <div className={styles.headerRight}>
-             <div className={styles.avatar}>{user.name.charAt(0)}</div>
-             <span className={styles.avatarName}>{user.name}</span>
+            <div className={styles.avatarContainer}>
+              <div className={styles.avatar}>{user.name.charAt(0)}</div>
+              <span className={styles.avatarName}>{user.name}</span>
+            </div>
+            <button className={styles.logoutBtn} onClick={handleLogout} disabled={isLoggingOut}>
+              {isLoggingOut ? 'Logging out...' : 'Logout'}
+            </button>
           </div>
         </header>
 
@@ -62,7 +126,7 @@ export default function Resident_Dashboard() {
               </h2>
             </div>
             
-            <button className={styles.qrButton}>
+            <button className={styles.qrButton} onClick={() => setIsScannerOpen(true)}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7" rx="1"/>
                 <rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -170,7 +234,7 @@ export default function Resident_Dashboard() {
                 <div className={styles.actionIcon}>🛠️</div>
                 <span>Report Issue</span>
               </button>
-              <button className={styles.actionCard}>
+              <button className={styles.actionCard} onClick={() => navigate('/resident/notice')} >
                 <div className={styles.actionIcon}>📢</div>
                 <span>Notice Board</span>
               </button>
@@ -179,6 +243,31 @@ export default function Resident_Dashboard() {
 
         </div> {/* End of Main Grid */}
       </div>
+
+      <GateScanner
+        isOpen={isScannerOpen}
+        currentStatus={user.status}
+        onClose={() => setIsScannerOpen(false)}
+        onScanSuccess={handleSuccessfulScan}
+      />
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className={styles.successOverlay}>
+          <div className={styles.successPopup}>
+            <div className={styles.successIcon}>
+              {scanAction === "Entering" ? "🏠" : "👋"}
+            </div>
+            <h2 className={styles.successTitle}>{scanAction}!</h2>
+            <p className={styles.successMessage}>
+              {scanAction === "Entering" 
+                ? "Welcome back to the hostel" 
+                : "Have a safe journey"}
+            </p>
+            <div className={styles.successCheckmark}>✓</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

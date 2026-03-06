@@ -288,7 +288,7 @@
 
 .ticketItem { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.5); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.8); }
 .ticketLeft { display: flex; align-items: center; gap: 1rem; }
-.ticketIcon { font-size: 1.5rem; background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 12px; }
+.ticketIcon { font-size: 1.5rem; background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 50px; width: 50px;}
 .ticketName { margin: 0; font-weight: 700; color: #0f172a; }
 .ticketDate { color: #64748b; font-weight: 500; }
 .badgeResolved { background: rgba(16, 185, 129, 0.15); color: #059669; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: 700; }

@@ -1,9 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import styles from "./RD_Report_Issue.module.css";
+import API from '../../API/axios';
+import { encodeImageToBase64 } from '../../Components/ImageConverter';
+import { useAuth } from '../../Context/AuthContext';
 
 export default function Resident_ReportIssue() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Category to Icon mapping
+  const categoryIcons = {
+    electrical: "⚡",
+    plumbing: "🚰",
+    cleaning: "🧹",
+    wifi: "📶",
+    furniture: "🪑",
+    other: "❓"
+  };
 
   const [formData, setFormData] = useState({
     category: "",
@@ -14,18 +28,7 @@ export default function Resident_ReportIssue() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
-
-  const mockTickets = [
-    { id: 1, title: "Leaking Tap", date: "28 Feb", status: "Resolved", icon: "🚰" },
-    { id: 2, title: "Wifi Router off", date: "25 Feb", status: "Pending", icon: "📶" },
-    { id: 3, title: "Broken Chair", date: "20 Feb", status: "Resolved", icon: "🪑" },
-    { id: 4, title: "Leaking Tap", date: "28 Feb", status: "Resolved", icon: "🚰" },
-    { id: 5, title: "Wifi Router off", date: "25 Feb", status: "Pending", icon: "📶" },
-    { id: 6, title: "Broken Chair", date: "20 Feb", status: "Resolved", icon: "🪑" },
-    { id: 7, title: "Leaking Tap", date: "28 Feb", status: "Resolved", icon: "🚰" },
-    { id: 8, title: "Wifi Router off", date: "25 Feb", status: "Pending", icon: "📶" },
-    { id: 9, title: "Broken Chair", date: "20 Feb", status: "Resolved", icon: "🪑" }
-  ];
+  const [reports, setReports] = useState([]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -41,21 +44,66 @@ export default function Resident_ReportIssue() {
     setPreviewUrl(null);
   };
 
-  const handleSubmit = (e) => {
+
+// API Call for Submit the Form
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Mock API Call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessMsg("Ticket raised successfully! We will fix this ASAP.");
+    try {
+      const payload = {
+        name: user?.name,
+        phoneNumber: user?.mobileNumber,
+        category: formData.category,
+        description: formData.description,
+        photo: null,
+        status: "Pending"
+      };
+
+      if (formData.photo) {
+        payload.photo = await encodeImageToBase64(formData.photo);
+      }
+
+      const response = await API.post('/residents/report', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setSuccessMsg(response?.data?.message);
       setFormData({ category: "", description: "", photo: null });
       setPreviewUrl(null);
+      await fetchReports();
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMsg(""), 3000);
-    }, 1500);
+
+
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      alert(error.response?.data?.message || 'Failed to submit report. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+// API Call for Get the Report History of Resident
+  const fetchReports = async () => {
+    if (!user?.mobileNumber) return;
+
+    try {
+      const response = await API.get(`/residents/report/${user?.mobileNumber}`);
+      setReports(response?.data || []);
+    } catch (error) {
+      console.error('Error fetching report history:', error);
+      setReports([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, [user?.mobileNumber]);
+
 
   return (
     <div className={styles.pageWrapper}>
@@ -181,20 +229,26 @@ export default function Resident_ReportIssue() {
         {/* RECENT TICKETS SUMMARY (Optional Vibe Addition) */}
         <div className={`${styles.glassCard} ${styles.historyCard}`}>
           <h3 className={styles.historyTitle}>Recent Tickets</h3>
-          <div className={styles.ticketList}>
-            {mockTickets.map((ticket) => (
-              <div key={ticket.id} className={styles.ticketItem}>
-                <div className={styles.ticketLeft}>
-                  <span className={styles.ticketIcon}>{ticket.icon}</span>
-                  <div>
-                    <p className={styles.ticketName}>{ticket.title}</p>
-                    <small className={styles.ticketDate}>Reported on {ticket.date}</small>
+          {reports.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#888', padding: '20px', fontSize: '14px' }}>
+              No reports found. Your reported issues will appear here.
+            </p>
+          ) : (
+            <div className={styles.ticketList}>
+              {reports.map((report) => (
+                <div key={report._id} className={styles.ticketItem}>
+                  <div className={styles.ticketLeft}>
+                    <span className={styles.ticketIcon}>{categoryIcons[report.category] || "❓"}</span>
+                    <div>
+                      <p className={styles.ticketName}>{report.description}</p>
+                      <small className={styles.ticketDate}>Reported on {new Date(report.createdAt).toLocaleDateString()}</small>
+                    </div>
                   </div>
+                  <span className={report.status === 'Resolved' ? styles.badgeResolved : styles.badgePending}>{report.status}</span>
                 </div>
-                <span className={ticket.status === 'Resolved' ? styles.badgeResolved : styles.badgePending}>{ticket.status}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         </div>
