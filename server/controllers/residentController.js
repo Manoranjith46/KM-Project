@@ -1,5 +1,7 @@
 import Resident from "../models/Resident.js";
 import History from "../models/History.js";
+import Report from "../models/Report.js";
+import Announcement from "../models/Announcement.js";
 
 // @access  Public (for now)
 export const registerResident = async (req, res) => {
@@ -176,9 +178,8 @@ export const deleteResident = async (req, res) => {
 // @desc    Get a Resident by Room Number
 // @route   GET /api/resident/room/:roomNumber
 export const getResidentsByRoom = async (req, res) => {
-    try {
-        const { roomNumber } = req.params;
-        
+  try {
+    const { roomNumber } = req.params;        
         // Find all active residents in a specific room
         const residents = await Resident.find({ 
             roomNumber: roomNumber.toUpperCase(), 
@@ -195,3 +196,79 @@ export const getResidentsByRoom = async (req, res) => {
     }
 };
 
+// @desc    Post Report by Resident
+export const registerReport = async (req, res) => {
+  try {
+    const { name, phoneNumber, category, description, photo, status } = req.body;
+    if (!name || !phoneNumber || !category || !description) {
+      return res.status(400).json({ message: "Please provide all required fields: name, phoneNumber, category, and description" });
+    }
+
+
+    // 2. Create the new resident
+    const report = await Report.create({
+      name,
+      phoneNumber,
+      category,
+      description,
+      document: photo || null,
+      status: status
+    });
+
+    // 3. Send success response
+    if (report) {
+      res.status(201).json({
+        _id: report._id,
+        name: report.name,
+        phoneNumber: report.phoneNumber,
+        message: "Report submitted successfully"
+      });
+    } else {
+      res.status(400).json({ message: 'Failed to Report a Complaint' });
+    }
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+// @desc    Get Report by Resident
+export const getReport = async (req, res) => {
+  try {
+
+    const { phoneNumber } = req.params;
+    if (!phoneNumber) {
+      return res.status(400).json({ message: "Phone number is required" });
+    }
+    const reports = await Report.find({ phoneNumber });
+
+    if (!reports || reports.length === 0) {
+      return res.status(404).json({ message: "No reports found for this phone number" });
+    }
+
+    res.status(200).json(reports);
+
+
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+// @desc    Get a Announcement for Residents
+export const getAnnouncements = async (req, res) => {
+  try {
+    console.log('📢 Fetching announcements...');
+    const announcements = await Announcement.find({ isActive: true }).sort({ createdAt: -1 });
+    console.log('📢 Found announcements:', announcements.length);
+
+    res.status(200).json(announcements);
+
+  }catch (error) {
+    console.error('❌ Error in getAnnouncements:', error);
+    res.status(500).json({ message: error.message });
+  }
+}
