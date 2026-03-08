@@ -5,7 +5,8 @@ import {
 	updateCashRentByAdmin, 
 	getPaymentsByPhoneNumber, 
 	getAllPayments,
-	updatePaymentStatus
+	updatePaymentStatus,
+	getDues
 } from '../controllers/paymentController.js';
 import { verifyToken, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -13,6 +14,9 @@ const router = express.Router();
 
 // Admin: Get all payments
 router.get('/', verifyToken, authorizeRoles('owner'), getAllPayments);
+
+// Get current dues by phone number
+router.get('/dues/:phoneNumber', verifyToken, getDues);
 
 // Get payments by phone number
 router.get('/:phoneNumber', verifyToken, getPaymentsByPhoneNumber);

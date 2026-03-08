@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import API from "../../API/axios";
-import GateScanner from "./RD_Gate_Scanner";
 import Loader from "./Components/Loader/Loader";
 import styles from "./RD_Dashboard.module.css";
 
@@ -11,36 +10,105 @@ export default function Resident_Dashboard() {
   const { user, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
-  const [resident, setUser] = useState({
-    name: "Mano",
+  const [resident, setResident] = useState({
+    name: user?.name || "",
     role: "Resident", 
-    room: "A102",
+    room: "",
     status: "IN HOSTEL", 
-    totalSpendings: "₹45,500",
-    dues: "₹2,500"
+    totalSpendings: "₹0",
+    dues: "₹0"
   });
 
   const [meals, setMeals] = useState({});
 
-  useEffect(() => {
-    const fetchFoodStatus = async () => {
-      if (!user?.mobileNumber) {
-        console.log("User not loaded yet");
-        return;
+  const fetchResidentProfile = useCallback(async () => {
+    if (!user?.mobileNumber) return;
+    try {
+      const res = await API.get(`/residents/${user.mobileNumber}`);
+      const data = res.data;
+      setResident((prev) => ({
+        ...prev,
+        name: data.name,
+        room: data.roomNumber,
+        status: data.isActive ? "IN HOSTEL" : "ON LEAVE",
+      }));
+      setMeals(data.dailyMeals || {});
+    } catch (err) {
+      console.error("Error fetching resident profile:", err);
+    }
+  }, [user?.mobileNumber]);
+
+  const fetchFinanceSummary = useCallback(async () => {
+    if (!user?.mobileNumber) {
+      return;
+    }
+
+    try {
+      const [paymentsRes, duesRes] = await Promise.all([
+        API.get(`/payments/${user.mobileNumber}`),
+        API.get(`/payments/dues/${user.mobileNumber}`),
+      ]);
+
+      let payments = [];
+      if (paymentsRes?.data && Array.isArray(paymentsRes.data)) {
+        payments = paymentsRes.data;
+      } else if (paymentsRes?.data?.payments && Array.isArray(paymentsRes.data.payments)) {
+        payments = paymentsRes.data.payments;
       }
-      
-      try {
-        const res = await API.get(`/food/status/${user.mobileNumber}`);
-        setMeals(res.data.dailyMeals);
-      } catch (err) {
-        console.error("Error fetching food status:", err);
-      } 
+
+      const totalApproved = payments.reduce((sum, payment) => {
+        const isApproved = String(payment?.status || "").toLowerCase() === "approved";
+        const amount = Number(payment?.amount) || 0;
+        return isApproved ? sum + amount : sum;
+      }, 0);
+
+      const dueAmount = Number(duesRes?.data?.dueAmount) || 0;
+
+      setResident((prev) => ({
+        ...prev,
+        totalSpendings: `₹${totalApproved.toLocaleString("en-IN")}`,
+        dues: `₹${dueAmount.toLocaleString("en-IN")}`,
+      }));
+    } catch (err) {
+      console.error("Error fetching finance summary:", err);
+    }
+  }, [user?.mobileNumber]);
+
+  useEffect(() => {
+    fetchResidentProfile();
+  }, [fetchResidentProfile]);
+
+  useEffect(() => {
+    fetchFinanceSummary();
+  }, [fetchFinanceSummary]);
+
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      fetchFinanceSummary();
     };
 
-    fetchFoodStatus();
-  }, [user]);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchFinanceSummary();
+      }
+    };
 
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
+    // Keep cards fresh when user comes back from other pages (e.g. finance page)
+    window.addEventListener("focus", handleWindowFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Fallback periodic refresh for long-open dashboard sessions
+    const intervalId = setInterval(() => {
+      fetchFinanceSummary();
+    }, 30000);
+
+    return () => {
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearInterval(intervalId);
+    };
+  }, [fetchFinanceSummary]);
+
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [scanAction, setScanAction] = useState("");
   const [isUpdatingMeal, setIsUpdatingMeal] = useState(false);
@@ -77,51 +145,29 @@ export default function Resident_Dashboard() {
     await logout();
   };
 
+  const [isTogglingGate, setIsTogglingGate] = useState(false);
 
+  const handleGateToggle = async () => {
+    if (isTogglingGate || !user?.mobileNumber) return;
+    try {
+      setIsTogglingGate(true);
+      const res = await API.put(`/residents/gate-toggle/${user.mobileNumber}`);
+      const { isActive, dailyMeals } = res.data;
 
-  const handleSuccessfulScan = (qrData) => {
-    console.log("=== QR SCAN SUCCESSFUL ===");
-    console.log("Received Data:", qrData);
-    console.log("Data Type:", typeof qrData);
-    
-    // If JSON object was parsed
-    if (typeof qrData === 'object' && qrData !== null) {
-      console.log("📦 JSON Object Detected");
-      console.log("JSON Keys:", Object.keys(qrData));
-      console.log("Full JSON:", JSON.stringify(qrData, null, 2));
-      
-      // Extract specific fields if they exist
-      if (qrData.gateId) console.log("Gate ID:", qrData.gateId);
-      if (qrData.timestamp) console.log("Timestamp:", qrData.timestamp);
-      if (qrData.location) console.log("Location:", qrData.location);
-      if (qrData.type) console.log("Type:", qrData.type);
-    } else {
-      console.log("📝 Plain Text Data:", qrData);
+      const newStatus = isActive ? "IN HOSTEL" : "ON LEAVE";
+      const action = isActive ? "Entering" : "Leaving";
+
+      setResident((prev) => ({ ...prev, status: newStatus }));
+      setMeals(dailyMeals);
+
+      setScanAction(action);
+      setShowSuccessPopup(true);
+      setTimeout(() => setShowSuccessPopup(false), 3000);
+    } catch (err) {
+      console.error("Error toggling gate status:", err);
+    } finally {
+      setIsTogglingGate(false);
     }
-    
-    console.log("========================");
-    
-    setIsScannerOpen(false); 
-    
-    // Flip the status
-    const newStatus = resident.status === "IN HOSTEL" ? "ON LEAVE" : "IN HOSTEL";
-    const action = newStatus === "ON LEAVE" ? "Leaving" : "Entering";
-    
-    // Apply the update
-    setUser((prev) => ({ ...prev, status: newStatus }));
-    
-    if (newStatus === "ON LEAVE") {
-      setMeals({ breakfast: false, lunch: false, dinner: false }); // Auto-pause!
-    }
-    
-    // Show success popup
-    setScanAction(action);
-    setShowSuccessPopup(true);
-    
-    // Auto-hide popup after 3 seconds
-    setTimeout(() => {
-      setShowSuccessPopup(false);
-    }, 3000);
   };
 
   return (
@@ -165,15 +211,9 @@ export default function Resident_Dashboard() {
                 {resident.status === "IN HOSTEL" ? "🟢 IN HOSTEL" : "🔴 ON LEAVE"}
               </h2>
             </div>
-            
-            <button className={styles.qrButton} onClick={() => setIsScannerOpen(true)}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="14" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-              </svg>
-              Scan QR at Gate
+
+            <button className={styles.qrButton} onClick={handleGateToggle} disabled={isTogglingGate}>
+              {isTogglingGate ? "Updating..." : resident.status === "IN HOSTEL" ? "Mark OUT" : "Mark IN"}
             </button>
           </section>
 
@@ -295,14 +335,6 @@ export default function Resident_Dashboard() {
 
         </div> {/* End of Main Grid */}
       </div>
-
-      <GateScanner
-        isOpen={isScannerOpen}
-        currentStatus={resident.status}
-        onClose={() => setIsScannerOpen(false)}
-        onScanSuccess={handleSuccessfulScan}
-      />
-
       {isUpdatingMeal && (
         <div className={styles.updateOverlay}>
           <div className={styles.updatePopup}>

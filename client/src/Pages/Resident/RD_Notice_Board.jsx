@@ -61,8 +61,6 @@ export default function Resident_NoticeBoard() {
       setAnnouncements(response?.data || []);
     } catch (error) {
       console.error('Error fetching announcement history:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
       setAnnouncements([]);
     }
   };

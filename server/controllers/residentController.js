@@ -256,12 +256,45 @@ export const getReport = async (req, res) => {
   }
 };
 
+// @desc    Toggle gate status (IN HOSTEL / ON LEAVE)
+// @route   PUT /api/residents/gate-toggle/:phoneNumber
+export const toggleGateStatus = async (req, res) => {
+  try {
+    const { phoneNumber } = req.params;
+
+    const resident = await Resident.findOne({ phoneNumber });
+    if (!resident) {
+      return res.status(404).json({ message: "Resident not found" });
+    }
+
+    // Flip isActive
+    resident.isActive = !resident.isActive;
+
+    // Set meals based on new status
+    if (resident.isActive) {
+      // Coming back → enable all meals
+      resident.dailyMeals = { breakfast: true, lunch: true, dinner: true };
+    } else {
+      // Leaving → disable all meals
+      resident.dailyMeals = { breakfast: false, lunch: false, dinner: false };
+    }
+
+    await resident.save();
+
+    res.status(200).json({
+      message: resident.isActive ? "Welcome back to the hostel" : "Have a safe journey",
+      isActive: resident.isActive,
+      dailyMeals: resident.dailyMeals,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get a Announcement for Residents
 export const getAnnouncements = async (req, res) => {
   try {
-    console.log('📢 Fetching announcements...');
     const announcements = await Announcement.find({ isActive: true }).sort({ createdAt: -1 });
-    console.log('📢 Found announcements:', announcements.length);
 
     res.status(200).json(announcements);
 

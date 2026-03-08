@@ -1,4 +1,6 @@
 import Payment from '../models/Payment.js';
+import Resident from '../models/Resident.js';
+import Info from '../models/Info.js';
 
 // @desc    Create online rent payment (resident)
 // @route   POST /api/payments/online
@@ -180,6 +182,61 @@ export const getAllPayments = async (req, res) => {
 	try {
 		const payments = await Payment.find({}).sort({ date: -1 });
 		return res.status(200).json(payments);
+	} catch (error) {
+		return res.status(500).json({ message: error.message });
+	}
+};
+
+// @desc    Get current dues for a resident
+// @route   GET /api/payments/dues/:phoneNumber
+export const getDues = async (req, res) => {
+	try {
+		const { phoneNumber } = req.params;
+
+		if (!phoneNumber) {
+			return res.status(400).json({ message: 'Phone number is required' });
+		}
+
+		// Check if resident exists
+		const resident = await Resident.findOne({ phoneNumber });
+		
+		if (!resident) {
+			return res.status(404).json({ message: 'Resident not found' });
+		}
+
+		// Get monthly rent from info collection
+		const info = await Info.findOne();
+		
+		if (!info || !info.monthly) {
+			return res.status(404).json({ message: 'Rent information not found' });
+		}
+
+		const monthlyRent = Number(info.monthly);
+
+		// Get current month and year
+		const now = new Date();
+		const currentMonth = now.getMonth(); // 0-11
+		const currentYear = now.getFullYear();
+
+		// Find approved payment for current month
+		const approvedPayment = await Payment.findOne({
+			phoneNumber,
+			status: 'approved',
+			date: {
+				$gte: new Date(currentYear, currentMonth, 1),
+				$lt: new Date(currentYear, currentMonth + 1, 1)
+			}
+		});
+
+		// Calculate dues: if no approved payment this month, return full monthly rent
+		let dueAmount;
+		if (!approvedPayment) {
+			dueAmount = monthlyRent;
+		} else {
+			dueAmount = Math.max(0, monthlyRent - approvedPayment.amount);
+		}
+
+		return res.status(200).json({ dueAmount });
 	} catch (error) {
 		return res.status(500).json({ message: error.message });
 	}

@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerResident, getResidents, updateResident, deleteResident, getResidentByPhone, getResidentsByRoom, registerReport, getReport, getAnnouncements } from '../controllers/residentController.js';
+import { registerResident, getResidents, updateResident, deleteResident, getResidentByPhone, getResidentsByRoom, registerReport, getReport, getAnnouncements, toggleGateStatus } from '../controllers/residentController.js';
 import { verifyToken, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -12,6 +12,9 @@ router.route('/')
 // CRITICAL: More specific routes must come BEFORE generic :id routes!
 // Room route must come before :phoneNumber to avoid route conflicts
 router.get('/room/:roomNumber', verifyToken, authorizeRoles('owner'), getResidentsByRoom);
+
+// Gate toggle route (must come before :phoneNumber)
+router.put('/gate-toggle/:phoneNumber', verifyToken, authorizeRoles('resident'), toggleGateStatus);
 
 // Resident report and announcement routes (must come before :phoneNumber)
 router.post('/report', verifyToken, authorizeRoles('resident'), registerReport);

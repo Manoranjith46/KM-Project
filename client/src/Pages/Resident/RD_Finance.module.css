@@ -98,7 +98,7 @@
 
 .leftCol,
 .rightCol {
-  height: 100vh;
+  height: 105vh;
 }
 
 .leftCol {
@@ -115,29 +115,26 @@
 
 .leftCol .formContainer {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   min-height: 0;
   padding-right: 0.25rem;
 }
 
 .leftCol .formContainer::-webkit-scrollbar {
-  width: 8px;
+  display: none;
 }
 
 .leftCol .formContainer::-webkit-scrollbar-track {
-  background: rgba(241, 245, 249, 0.5);
-  border-radius: 10px;
+  display: none;
 }
 
 .leftCol .formContainer::-webkit-scrollbar-thumb {
-  background-color: #059669;
-  border-radius: 10px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  display: none;
 }
 
 .leftCol .formContainer::-webkit-scrollbar-thumb:hover {
-  background-color: #047857;
+  display: none;
 }
 
 .rightCol {
@@ -344,6 +341,16 @@
 .historyList::-webkit-scrollbar-thumb:hover {
   background-color: #047857;
 }
+
+.historyEmptyText {
+  text-align: center;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 3rem 1rem;
+  margin: 0;
+}
+
 .historyItem { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; transition: background 0.2s; }
 .historyItem:hover { background: white; }
 .historyLeft { display: flex; align-items: center; gap: 1rem; }

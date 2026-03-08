@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./RD_Finance.module.css";
 import API from '../../API/axios';
@@ -14,6 +14,22 @@ export default function Resident_Finance() {
     month: "long",
     year: "numeric",
   });
+
+  // Get payment method icon
+  const getPaymentIcon = (method) => {
+    switch (method?.toLowerCase()) {
+      case 'upi':
+        return '📱';
+      case 'cash':
+        return '💵';
+      case 'bank transfer':
+        return '🏦';
+      case 'card':
+        return '💳';
+      default:
+        return '💰';
+    }
+  };
 
   const monthOptions = Array.from({ length: 12 }, (_, index) => {
     const date = new Date();
@@ -41,15 +57,11 @@ export default function Resident_Finance() {
     message: ''
   });
 
-  // Mock History Data
-  const [history] = useState([
-    { id: 1, month: "February 2026", amount: "₹6,500", date: "02 Feb 2026", paymentMethod: "UPI", status: "Approved" },
-    { id: 2, month: "January 2026", amount: "₹6,500", date: "05 Jan 2026", paymentMethod: "Bank Transfer", status: "Approved" },
-    { id: 3, month: "December 2025", amount: "₹6,500", date: "01 Dec 2025", paymentMethod: "Screenshot Upload", status: "Approved" },
-    { id: 4, month: "February 2026", amount: "₹6,500", date: "02 Feb 2026", paymentMethod: "UPI", status: "Approved" },
-    { id: 5, month: "January 2026", amount: "₹6,500", date: "05 Jan 2026", paymentMethod: "Bank Transfer", status: "Approved" },
-    { id: 6, month: "December 2025", amount: "₹6,500", date: "01 Dec 2025", paymentMethod: "Screenshot Upload", status: "Approved" },
-  ]);
+  // Payment History State
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [totalSpending, setTotalSpending] = useState(0);
+  const [currentDues, setCurrentDues] = useState(0);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -86,9 +98,93 @@ export default function Resident_Finance() {
     };
   }, [receiptPreview]);
 
+
+// Backend Integrations
+
+  // Fetch Due from API
+  const fetchPaymentHistory = useCallback(async () => {
+    if (!user?.mobileNumber) return;
+    
+    setHistoryLoading(true);
+    try {
+      const response = await API.get(`/payments/${user.mobileNumber}`);
+      let payments = [];
+      
+      if (response?.data && Array.isArray(response.data)) {
+        payments = response.data;
+      } else if (response?.data?.payments && Array.isArray(response.data.payments)) {
+        payments = response.data.payments;
+      }
+
+      // Transform data to match UI expectations
+      const formattedPayments = payments.map((payment, index) => ({
+        id: payment._id || index,
+        month: new Date(payment.date).toLocaleString("en-US", { month: "long", year: "numeric" }),
+        amount: `₹${payment.amount.toLocaleString('en-IN')}`,
+        date: new Date(payment.date).toLocaleDateString('en-IN'),
+        paymentMethod: payment.paymentMethod,
+        status: payment.status.charAt(0).toUpperCase() + payment.status.slice(1), // Capitalize first letter
+      }));
+      
+      // Calculate total spending from approved payments only
+      const total = payments.reduce((sum, payment) => {
+        const isApproved = String(payment?.status || '').toLowerCase() === 'approved';
+        const amount = Number(payment?.amount) || 0;
+        return isApproved ? sum + amount : sum;
+      }, 0);
+      setTotalSpending(total);
+      
+      setHistory(formattedPayments);
+    } catch (error) {
+      console.error('Error fetching payment history:', error);
+      setPopup({
+        isOpen: true,
+        type: 'error',
+        title: 'Failed to Load History',
+        message: 'Could not fetch payment history. Please try again later.'
+      });
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [user?.mobileNumber]);
+
+  // Fetch current dues from API
+  const fetchCurrentDues = useCallback(async () => {
+    if (!user?.mobileNumber) return;
+    
+    try {
+      const response = await API.get(`/payments/dues/${user.mobileNumber}`);
+      if (response?.data?.dueAmount !== undefined) {
+        setCurrentDues(response.data.dueAmount);
+      }
+    } catch (error) {
+      console.error('Error fetching current dues:', error);
+    }
+  }, [user?.mobileNumber]);
+
+// Fetch payment history and dues on component mount
+  useEffect(() => {
+    fetchPaymentHistory();
+    fetchCurrentDues();
+  }, [fetchPaymentHistory, fetchCurrentDues]);
+
+
+// API Call for submitting payment data
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validate user
+    if (!user?.name || !user?.mobileNumber) {
+      setWarningMsg("User information not found. Please log in again.");
+      return;
+    }
 
+    // Validate amount
+    if (!paymentData.amount || Number(paymentData.amount) <= 0) {
+      setWarningMsg("Please enter a valid amount.");
+      return;
+    }
+
+    // Validate receipt
     if (!paymentData.receipt) {
       setWarningMsg("Please upload a payment screenshot before submitting.");
       return;
@@ -99,17 +195,13 @@ export default function Resident_Finance() {
     
     try {
       const payload = {
-        name: user?.name,
-        phoneNumber: user?.mobileNumber,
+        name: user.name,
+        phoneNumber: user.mobileNumber,
         amount: Number(paymentData.amount),
         date: new Date(paymentData.date),
         paymentMethod: paymentData.paymentMethod,
-        paymentProof: null,
+        paymentProof: await encodeImageToBase64(paymentData.receipt),
       };
-
-      if (paymentData.receipt) {
-        payload.paymentProof = await encodeImageToBase64(paymentData.receipt);
-      }
 
       const response = await API.post('/payments/online', payload, {
         headers: {
@@ -135,6 +227,10 @@ export default function Resident_Finance() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+
+      // Refresh payment history after successful submission
+      fetchPaymentHistory();
+      fetchCurrentDues();
     } catch (error) {
       console.error('Error submitting payment:', error);
       setPopup({
@@ -147,6 +243,8 @@ export default function Resident_Finance() {
       setIsSubmitting(false);
     }
   };
+
+
 
   return (
     <div className={styles.pageWrapper}>
@@ -311,22 +409,29 @@ export default function Resident_Finance() {
             <div className={styles.statsGrid}>
               <div className={`${styles.glassCard} ${styles.statCard}`}>
                 <p className={styles.statLabel}>Total Spendings</p>
-                <h3 className={styles.statValue}>₹45,500</h3>
+                <h3 className={styles.statValue}>₹{totalSpending.toLocaleString('en-IN')}</h3>
               </div>
               <div className={`${styles.glassCard} ${styles.statCard}`}>
                 <p className={styles.statLabel}>Current Dues</p>
-                <h3 className={`${styles.statValue} ${styles.textGreen}`}>₹0</h3>
+                <h3 className={`${styles.statValue} ${currentDues === 0 ? styles.textGreen : ''}`}>
+                  ₹{currentDues.toLocaleString('en-IN')}
+                </h3>
               </div>
             </div>
 
             <div className={`${styles.glassCard} ${styles.historyCard}`}>
               <h2 className={styles.cardTitle}>Payment History</h2>
               
+              {historyLoading ? (
+                <p className={styles.historyEmptyText}>Loading payment history...</p>
+              ) : history.length === 0 ? (
+                <p className={styles.historyEmptyText}>No payments found</p>
+              ) : (
               <div className={styles.historyList}>
                 {history.map((tx) => (
                   <div key={tx.id} className={styles.historyItem}>
                     <div className={styles.historyLeft}>
-                      <div className={styles.historyIcon}>💸</div>
+                      <div className={styles.historyIcon}>{getPaymentIcon(tx.paymentMethod)}</div>
                       <div>
                         <p className={styles.historyMonth}>{tx.month}</p>
                         <small className={styles.historyDate}>{tx.date}</small>
@@ -334,7 +439,6 @@ export default function Resident_Finance() {
                     </div>
                     <div className={styles.historyRight}>
                       <p className={styles.historyAmount}>{tx.amount}</p>
-                      <span className={styles.methodBadge}>{tx.paymentMethod}</span>
                       <span className={`${styles.statusBadge} ${tx.status === 'Approved' ? styles.badgeGreen : styles.badgePending}`}>
                         {tx.status}
                       </span>
@@ -342,6 +446,7 @@ export default function Resident_Finance() {
                   </div>
                 ))}
               </div>
+              )}
 
             </div>
           </div>
