@@ -4,6 +4,7 @@ import styles from "./RD_Report_Issue.module.css";
 import API from '../../API/axios';
 import { encodeImageToBase64 } from '../../Components/ImageConverter';
 import { useAuth } from '../../Context/AuthContext';
+import Loader from './Components/Loader/Loader';
 
 export default function Resident_ReportIssue() {
   const navigate = useNavigate();
@@ -107,6 +108,13 @@ export default function Resident_ReportIssue() {
 
   return (
     <div className={styles.pageWrapper}>
+      {isSubmitting && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text="Reporting" />
+          </div>
+        </div>
+      )}
       
       {/* THE EMERALD BLOBS (Vibe Match!) */}
       <div className={styles.backgroundBlobs}>
@@ -216,11 +224,7 @@ export default function Resident_ReportIssue() {
 
             {/* Submit Button */}
             <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
-              {isSubmitting ? (
-                <span className={styles.loader}></span>
-              ) : (
-                "Raise Ticket"
-              )}
+              Raise Ticket
             </button>
 
           </form>

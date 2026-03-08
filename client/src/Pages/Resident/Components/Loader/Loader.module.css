@@ -1,0 +1,112 @@
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 250px; /* Gives it some breathing room */
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  
+  /* =========================================
+     CSS VARIABLES (The secret to easy scaling)
+     ========================================= */
+  --ring-size: 260px;
+  --ring-thickness: 8px;
+  --text-size: 1.2rem;
+}
+
+.text {
+  color: #0f172a; /* Dark slate */
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: var(--text-size);
+  display: inline-block;
+  padding: 2rem 2.4rem;
+  margin: 0;
+  z-index: 10;
+  text-align: center;
+}
+
+.ring {
+  width: var(--ring-size);
+  height: var(--ring-size);
+  border: 1px solid transparent;
+  border-radius: 50%;
+  position: absolute;
+}
+
+.ring:nth-child(1) {
+  border-bottom: var(--ring-thickness) solid rgb(255, 141, 249);
+  animation: rotate1 2s linear infinite;
+}
+
+@keyframes rotate1 {
+  from { transform: rotateX(50deg) rotateZ(110deg); }
+  to { transform: rotateX(50deg) rotateZ(470deg); }
+}
+
+.ring:nth-child(2) {
+  border-bottom: var(--ring-thickness) solid rgb(255, 65, 106);
+  animation: rotate2 2s linear infinite;
+}
+
+@keyframes rotate2 {
+  from { transform: rotateX(20deg) rotateY(50deg) rotateZ(20deg); }
+  to { transform: rotateX(20deg) rotateY(50deg) rotateZ(380deg); }
+}
+
+.ring:nth-child(3) {
+  border-bottom: var(--ring-thickness) solid rgb(0, 255, 255);
+  animation: rotate3 2s linear infinite;
+}
+
+@keyframes rotate3 {
+  from { transform: rotateX(40deg) rotateY(130deg) rotateZ(450deg); }
+  to { transform: rotateX(40deg) rotateY(130deg) rotateZ(90deg); }
+}
+
+.ring:nth-child(4) {
+  border-bottom: var(--ring-thickness) solid rgb(252, 183, 55);
+  animation: rotate4 2s linear infinite;
+}
+
+@keyframes rotate4 {
+  from { transform: rotateX(70deg) rotateZ(270deg); }
+  to { transform: rotateX(70deg) rotateZ(630deg); }
+}
+
+/* =========================================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================================= */
+
+/* Tablets & Small Laptops (max-width: 992px) */
+@media (max-width: 992px) {
+  .container {
+    --ring-size: 210px;
+    --ring-thickness: 6px;
+    --text-size: 1.1rem;
+  }
+}
+
+/* Standard Mobile Phones (max-width: 768px) */
+@media (max-width: 768px) {
+  .container {
+    --ring-size: 170px;
+    --ring-thickness: 5px;
+    --text-size: 1rem;
+  }
+}
+
+/* Small Mobile Phones (max-width: 480px) */
+@media (max-width: 480px) {
+  .container {
+    --ring-size: 130px;
+    --ring-thickness: 4px;
+    --text-size: 0.85rem;
+  }
+}

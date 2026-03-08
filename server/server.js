@@ -8,6 +8,7 @@ import residentRoutes from './routes/residentRoutes.js';
 import foodRoutes from './routes/foodRoutes.js';
 import guestRoutes from './routes/guestRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 // Load config
 dotenv.config({ silent: true });
@@ -32,8 +33,9 @@ app.use(cookieParser()); // Parse cookies from requests
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/residents', residentRoutes);
-app.use('/api/guests', guestRoutes)
+app.use('/api/guests', guestRoutes);
 app.use('/api/food', foodRoutes);
+app.use('/api/payments', paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 

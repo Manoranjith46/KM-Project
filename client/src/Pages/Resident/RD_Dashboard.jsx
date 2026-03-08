@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
+import API from "../../API/axios";
 import GateScanner from "./RD_Gate_Scanner";
+import Loader from "./Components/Loader/Loader";
 import styles from "./RD_Dashboard.module.css";
 
 export default function Resident_Dashboard() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
-  const [user, setUser] = useState({
+  const [resident, setUser] = useState({
     name: "Mano",
     role: "Resident", 
     room: "A102",
@@ -18,19 +20,55 @@ export default function Resident_Dashboard() {
     dues: "₹2,500"
   });
 
-  const [meals, setMeals] = useState({
-    breakfast: true,
-    lunch: true,
-    dinner: false
-  });
+  const [meals, setMeals] = useState({});
+
+  useEffect(() => {
+    const fetchFoodStatus = async () => {
+      if (!user?.mobileNumber) {
+        console.log("User not loaded yet");
+        return;
+      }
+      
+      try {
+        const res = await API.get(`/food/status/${user.mobileNumber}`);
+        setMeals(res.data.dailyMeals);
+      } catch (err) {
+        console.error("Error fetching food status:", err);
+      } 
+    };
+
+    fetchFoodStatus();
+  }, [user]);
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [scanAction, setScanAction] = useState("");
+  const [isUpdatingMeal, setIsUpdatingMeal] = useState(false);
 
-  const handleMealToggle = (mealType) => {
-    if (user.status === "ON LEAVE") return; 
-    setMeals((prev) => ({ ...prev, [mealType]: !prev[mealType] }));
+  const handleMealToggle = async (mealType) => {
+    if (isUpdatingMeal) return;
+    if (resident.status === "ON LEAVE") return;
+    
+    if (!user?.mobileNumber) {
+      console.error("User not authenticated");
+      return;
+    }
+
+    try {
+      setIsUpdatingMeal(true);
+      const res = await API.put('/food/toggle', {
+        phoneNumber: user.mobileNumber,
+        mealType
+      });
+      setMeals(res.data.currentStatus);
+    } catch (err) {
+      console.error("Error updating meal preference:", err);
+      if (err.response?.status === 404) {
+        console.error("Resident not found with phone:", user.mobileNumber);
+      }
+    } finally {
+      setIsUpdatingMeal(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -38,6 +76,8 @@ export default function Resident_Dashboard() {
     // Call logout from AuthContext (handles API call, session clearing, and redirect)
     await logout();
   };
+
+
 
   const handleSuccessfulScan = (qrData) => {
     console.log("=== QR SCAN SUCCESSFUL ===");
@@ -64,7 +104,7 @@ export default function Resident_Dashboard() {
     setIsScannerOpen(false); 
     
     // Flip the status
-    const newStatus = user.status === "IN HOSTEL" ? "ON LEAVE" : "IN HOSTEL";
+    const newStatus = resident.status === "IN HOSTEL" ? "ON LEAVE" : "IN HOSTEL";
     const action = newStatus === "ON LEAVE" ? "Leaving" : "Entering";
     
     // Apply the update
@@ -97,12 +137,12 @@ export default function Resident_Dashboard() {
         <header className={styles.headerGlass}>
           <div className={styles.headerLeft}>
             <h1 className={styles.greeting}>Resident Dashboard</h1>
-            <p className={styles.roleText}>Welcome back, {user.name}</p>
+            <p className={styles.roleText}>Welcome back, {resident.name}</p>
           </div>
           <div className={styles.headerRight}>
             <div className={styles.avatarContainer}>
-              <div className={styles.avatar}>{user.name.charAt(0)}</div>
-              <span className={styles.avatarName}>{user.name}</span>
+              <div className={styles.avatar}>{resident.name.charAt(0)}</div>
+              <span className={styles.avatarName}>{resident.name}</span>
             </div>
             <button className={styles.logoutBtn} onClick={handleLogout} disabled={isLoggingOut}>
               {isLoggingOut ? 'Logging out...' : 'Logout'}
@@ -114,15 +154,15 @@ export default function Resident_Dashboard() {
         <div className={styles.mainGrid}>
           
           {/* 1. GATE PASS & STATUS CARD (Desktop: Column 1) */}
-          <section className={`${styles.glassCard} ${user.status === "IN HOSTEL" ? styles.borderGreen : styles.borderRed}`}>
+          <section className={`${styles.glassCard} ${resident.status === "IN HOSTEL" ? styles.borderGreen : styles.borderRed}`}>
             <div className={styles.cardHeader}>
               <h3 className={styles.cardTitle}>Gate Status</h3>
-              <span className={styles.roomBadge}>Room {user.room}</span>
+              <span className={styles.roomBadge}>Room {resident.room}</span>
             </div>
             
             <div className={styles.statusDisplay}>
-              <h2 className={`${styles.statusText} ${user.status === "IN HOSTEL" ? styles.textGreen : styles.textRed}`}>
-                {user.status === "IN HOSTEL" ? "🟢 IN HOSTEL" : "🔴 ON LEAVE"}
+              <h2 className={`${styles.statusText} ${resident.status === "IN HOSTEL" ? styles.textGreen : styles.textRed}`}>
+                {resident.status === "IN HOSTEL" ? "🟢 IN HOSTEL" : "🔴 ON LEAVE"}
               </h2>
             </div>
             
@@ -146,7 +186,7 @@ export default function Resident_Dashboard() {
             <div className={styles.financeDisplay}>
               <div className={styles.financeIcon}>💰</div>
               <div>
-                <h2 className={styles.amountText}>{user.totalSpendings}</h2>
+                <h2 className={styles.amountText}>{resident.totalSpendings}</h2>
                 <p className={styles.subText}>Since joining</p>
               </div>
             </div>
@@ -156,20 +196,20 @@ export default function Resident_Dashboard() {
           <section className={styles.glassCard}>
             <div className={styles.cardHeader}>
               <h3 className={styles.cardTitle}>Current Dues</h3>
-              <span className={user.dues !== "₹0" ? styles.badgeRed : styles.badgeGreen}>
-                {user.dues !== "₹0" ? "Pending" : "Cleared"}
+              <span className={resident.dues !== "₹0" ? styles.badgeRed : styles.badgeGreen}>
+                {resident.dues !== "₹0" ? "Pending" : "Cleared"}
               </span>
             </div>
             <div className={styles.financeDisplay}>
               <div className={styles.financeIcon}>🧾</div>
               <div>
-                <h2 className={`${styles.amountText} ${user.dues !== "₹0" ? styles.textRed : styles.textGreen}`}>
-                  {user.dues}
+                <h2 className={`${styles.amountText} ${resident.dues !== "₹0" ? styles.textRed : styles.textGreen}`}>
+                  {resident.dues}
                 </h2>
                 <p className={styles.subText}>This Month</p>
               </div>
             </div>
-            {user.dues !== "₹0" && (
+            {resident.dues !== "₹0" && (
               <button className={styles.payBtn} onClick={() => navigate('/resident/finance')} >Pay Rent</button>
             )}
           </section>
@@ -178,12 +218,12 @@ export default function Resident_Dashboard() {
           <section className={`${styles.glassCard} ${styles.mealsSection}`}>
             <div className={styles.cardHeader}>
               <h3 className={styles.cardTitle}>Am I Eating Tomorrow?</h3>
-              {user.status === "ON LEAVE" && <span className={styles.badgeRed}>Auto-Paused</span>}
+              {resident.status === "ON LEAVE" && <span className={styles.badgeRed}>Auto-Paused</span>}
             </div>
             
             <div className={styles.mealGrid}>
               {/* Breakfast */}
-              <div className={`${styles.mealRow} ${user.status === "ON LEAVE" ? styles.mealDisabled : ""}`} onClick={() => handleMealToggle("breakfast")}>
+              <div className={styles.mealRow}>
                 <div className={styles.mealInfoBox}>
                   <span className={styles.mealIcon}>🥞</span>
                   <div className={styles.mealText}>
@@ -191,13 +231,17 @@ export default function Resident_Dashboard() {
                     <small>Cut-off: 3:30 AM</small>
                   </div>
                 </div>
-                <div className={`${styles.toggleSwitch} ${meals.breakfast && user.status === "IN HOSTEL" ? styles.toggleOn : ""}`}>
-                  <div className={styles.toggleKnob}></div>
-                </div>
+                <button
+                  className={`${styles.toggleSwitch} ${meals.breakfast && resident.status === "IN HOSTEL" ? styles.toggleOn : ""}`}
+                  onClick={() => handleMealToggle("breakfast")}
+                  disabled={resident.status === "ON LEAVE" || isUpdatingMeal}
+                >
+                  <span className={styles.toggleKnob}></span>
+                </button>
               </div>
 
               {/* Lunch */}
-              <div className={`${styles.mealRow} ${user.status === "ON LEAVE" ? styles.mealDisabled : ""}`} onClick={() => handleMealToggle("lunch")}>
+              <div className={styles.mealRow}>
                 <div className={styles.mealInfoBox}>
                   <span className={styles.mealIcon}>🍛</span>
                   <div className={styles.mealText}>
@@ -205,13 +249,17 @@ export default function Resident_Dashboard() {
                     <small>Cut-off: 3:30 AM</small>
                   </div>
                 </div>
-                <div className={`${styles.toggleSwitch} ${meals.lunch && user.status === "IN HOSTEL" ? styles.toggleOn : ""}`}>
-                  <div className={styles.toggleKnob}></div>
-                </div>
+                <button
+                  className={`${styles.toggleSwitch} ${meals.lunch && resident.status === "IN HOSTEL" ? styles.toggleOn : ""}`}
+                  onClick={() => handleMealToggle("lunch")}
+                  disabled={resident.status === "ON LEAVE" || isUpdatingMeal}
+                >
+                  <span className={styles.toggleKnob}></span>
+                </button>
               </div>
 
               {/* Dinner */}
-              <div className={`${styles.mealRow} ${user.status === "ON LEAVE" ? styles.mealDisabled : ""}`} onClick={() => handleMealToggle("dinner")}>
+              <div className={styles.mealRow}>
                 <div className={styles.mealInfoBox}>
                   <span className={styles.mealIcon}>🍲</span>
                   <div className={styles.mealText}>
@@ -219,9 +267,13 @@ export default function Resident_Dashboard() {
                     <small>Cut-off: 3:30 PM</small>
                   </div>
                 </div>
-                <div className={`${styles.toggleSwitch} ${meals.dinner && user.status === "IN HOSTEL" ? styles.toggleOn : ""}`}>
-                  <div className={styles.toggleKnob}></div>
-                </div>
+                <button
+                  className={`${styles.toggleSwitch} ${meals.dinner && resident.status === "IN HOSTEL" ? styles.toggleOn : ""}`}
+                  onClick={() => handleMealToggle("dinner")}
+                  disabled={resident.status === "ON LEAVE" || isUpdatingMeal}
+                >
+                  <span className={styles.toggleKnob}></span>
+                </button>
               </div>
             </div>
           </section>
@@ -246,10 +298,18 @@ export default function Resident_Dashboard() {
 
       <GateScanner
         isOpen={isScannerOpen}
-        currentStatus={user.status}
+        currentStatus={resident.status}
         onClose={() => setIsScannerOpen(false)}
         onScanSuccess={handleSuccessfulScan}
       />
+
+      {isUpdatingMeal && (
+        <div className={styles.updateOverlay}>
+          <div className={styles.updatePopup}>
+            <Loader text="Updating..." />
+          </div>
+        </div>
+      )}
 
       {/* Success Popup */}
       {showSuccessPopup && (

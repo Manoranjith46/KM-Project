@@ -1,27 +1,45 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./RD_Finance.module.css";
+import API from '../../API/axios';
+import { encodeImageToBase64 } from '../../Components/ImageConverter';
+import { useAuth } from '../../Context/AuthContext';
+import Loader from './Components/Loader/Loader';
+import Popup from './Components/popup/Popup';
 
 export default function Resident_Finance() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const currentMonth = new Date().toLocaleString("en-US", {
     month: "long",
     year: "numeric",
   });
 
-  // --- NEW STATE: Tracks which tab is active ---
-  const [paymentMethod, setPaymentMethod] = useState("manual"); // 'manual' or 'online'
+  const monthOptions = Array.from({ length: 12 }, (_, index) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - index);
+    return date.toLocaleString("en-US", { month: "long", year: "numeric" });
+  });
 
   const [paymentData, setPaymentData] = useState({
     amount: "",
     month: currentMonth,
+    paymentMethod: "UPI",
+    date: new Date().toISOString().split('T')[0],
     receipt: null,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
+  const [warningMsg, setWarningMsg] = useState("");
   const [receiptPreview, setReceiptPreview] = useState("");
   const fileInputRef = useRef(null);
+  
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
 
   // Mock History Data
   const [history] = useState([
@@ -36,6 +54,7 @@ export default function Resident_Finance() {
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
+      setWarningMsg("");
       setPaymentData({ ...paymentData, receipt: selectedFile });
       setReceiptPreview((previousPreview) => {
         if (previousPreview) {
@@ -67,39 +86,77 @@ export default function Resident_Finance() {
     };
   }, [receiptPreview]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!paymentData.receipt) {
+      setWarningMsg("Please upload a payment screenshot before submitting.");
+      return;
+    }
+
+    setWarningMsg("");
     setIsSubmitting(true);
     
-    // Mock API Call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessMsg("Receipt uploaded! Awaiting admin approval.");
-      setPaymentData({ amount: "", month: currentMonth, receipt: null });
+    try {
+      const payload = {
+        name: user?.name,
+        phoneNumber: user?.mobileNumber,
+        amount: Number(paymentData.amount),
+        date: new Date(paymentData.date),
+        paymentMethod: paymentData.paymentMethod,
+        paymentProof: null,
+      };
+
+      if (paymentData.receipt) {
+        payload.paymentProof = await encodeImageToBase64(paymentData.receipt);
+      }
+
+      const response = await API.post('/payments/online', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setPopup({
+        isOpen: true,
+        type: 'success',
+        title: 'Payment Submitted!',
+        message: response?.data?.message || 'Receipt uploaded! Awaiting admin approval.'
+      });
+      
+      setPaymentData({ 
+        amount: "", 
+        month: currentMonth, 
+        paymentMethod: "UPI",
+        date: new Date().toISOString().split('T')[0],
+        receipt: null 
+      });
       setReceiptPreview("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      setTimeout(() => setSuccessMsg(""), 4000);
-    }, 1500);
-  };
-
-  // --- NEW HANDLER: For the Automated Gateway ---
-  const handleOnlinePayment = (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Mock Gateway Call
-    setTimeout(() => {
+    } catch (error) {
+      console.error('Error submitting payment:', error);
+      setPopup({
+        isOpen: true,
+        type: 'error',
+        title: 'Submission Failed',
+        message: error.response?.data?.message || 'Failed to submit payment. Please try again.'
+      });
+    } finally {
       setIsSubmitting(false);
-      setSuccessMsg("Payment successful! Dues cleared instantly.");
-      setPaymentData({ amount: "", month: currentMonth, receipt: null });
-      setTimeout(() => setSuccessMsg(""), 4000);
-    }, 1500);
+    }
   };
 
   return (
     <div className={styles.pageWrapper}>
+      {isSubmitting && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text="Submitting" />
+          </div>
+        </div>
+      )}
       
       {/* THE EMERALD BLOBS */}
       <div className={styles.backgroundBlobs}>
@@ -124,164 +181,126 @@ export default function Resident_Finance() {
           </div>
         </header>
 
-        {successMsg && (
-          <div className={styles.successToast}>
-            <span>✅</span> {successMsg}
-          </div>
-        )}
-
         <div className={styles.mainGrid}>
           
           {/* LEFT COLUMN: UPLOAD FORM */}
           <div className={styles.leftCol}>
             <div className={styles.glassCard}>
               <h2 className={styles.cardTitle}>Pay Rent / Dues</h2>
-              <p className={styles.cardDesc}>Choose your preferred payment method.</p>
+              <p className={styles.cardDesc}>Upload your payment screenshot for verification.</p>
               
-              {/* --- NEW TAB SWITCHER --- */}
-              <div className={styles.paymentTabs}>
-                <button 
-                  className={`${styles.tabButton} ${paymentMethod === 'manual' ? styles.tabActive : ''}`}
-                  onClick={() => setPaymentMethod('manual')}
-                >
-                  Upload Screenshot
-                </button>
-                <button 
-                  className={`${styles.tabButton} ${paymentMethod === 'online' ? styles.tabActive : ''}`}
-                  onClick={() => setPaymentMethod('online')}
-                >
-                  Pay Online (Auto)
-                </button>
-              </div>
-
-              {/* --- CONDITIONAL RENDERING BASED ON TAB --- */}
-              {paymentMethod === 'manual' ? (
-                
-                // EXISTING MANUAL UPLOAD FORM
-                <>
-
-                  <form onSubmit={handleSubmit} className={styles.formContainer}>
-                    <div className={styles.inputRow}>
-                      <div className={styles.inputGroup}>
-                        <label className={styles.label}>Amount Paid (₹)</label>
-                        <input 
-                          type="number" 
-                          className={styles.inputField} 
-                          placeholder="e.g. 6500"
-                          required
-                          value={paymentData.amount}
-                          onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
-                        />
-                      </div>
-                      
-                      <div className={styles.inputGroup}>
-                        <label className={styles.label}>For Month</label>
-                        <div className={styles.selectWrapper}>
-                          <select 
-                            className={styles.inputField} 
-                            required
-                            value={currentMonth}
-                            disabled
-                          >
-                            <option value={currentMonth}>{currentMonth}</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className={styles.inputGroup}>
-                      <label className={styles.label}>Upload Screenshot</label>
-                      <label className={styles.uploadZone}>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className={styles.hiddenInput} 
-                          required
-                          ref={fileInputRef}
-                          onChange={handleFileChange}
-                        />
-                        <div className={styles.uploadContent}>
-                          {receiptPreview ? (
-                            <>
-                              <img
-                                src={receiptPreview}
-                                alt="Uploaded receipt"
-                                className={styles.uploadPreview}
-                              />
-                              <span className={styles.uploadText}>{paymentData.receipt?.name}</span>
-                              <button
-                                type="button"
-                                className={styles.clearPreviewBtn}
-                                onClick={handleClearReceipt}
-                              >
-                                Clear image
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <div className={styles.uploadIcon}>🧾</div>
-                              <span className={styles.uploadText}>Tap to attach screenshot</span>
-                            </>
-                          )}
-                        </div>
-                      </label>
-                    </div>
-
-                    <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
-                      {isSubmitting ? <span className={styles.loader}></span> : "Submit Receipt"}
-                    </button>
-                  </form>
-                </>
-
-              ) : (
-
-                // NEW AUTOMATED GATEWAY FORM
-                <form onSubmit={handleOnlinePayment} className={styles.formContainer}>
+              <form onSubmit={handleSubmit} className={styles.formContainer}>
+                <div className={styles.inputRow}>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>Amount Paid (₹)</label>
+                    <input 
+                      type="number" 
+                      className={styles.inputField} 
+                      placeholder="e.g. 6500"
+                      required
+                      value={paymentData.amount}
+                      onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
+                    />
+                  </div>
                   
-                  <div className={styles.gatewayInfo}>
-                    <span className={styles.gatewayIcon}>⚡</span>
-                    <div>
-                      <p className={styles.gatewayTitle}>Zero Fee UPI Payment</p>
-                      <small className={styles.gatewaySub}>Instant approval via Gateway.</small>
-                    </div>
-                  </div>
-
-                  <div className={styles.inputRow}>
-                    <div className={styles.inputGroup}>
-                      <label className={styles.label}>Amount to Pay (₹)</label>
-                      <input 
-                        type="number" 
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>Payment Method</label>
+                    <div className={styles.selectWrapper}>
+                      <select 
                         className={styles.inputField} 
-                        placeholder="e.g. 6500"
                         required
-                        value={paymentData.amount}
-                        onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div className={styles.inputGroup}>
-                      <label className={styles.label}>For Month</label>
-                      <div className={styles.selectWrapper}>
-                        <select 
-                          className={styles.inputField} 
-                          required
-                          value={currentMonth}
-                          disabled
-                        >
-                          <option value={currentMonth}>{currentMonth}</option>
-                        </select>
-                        <div className={styles.selectArrow}>▼</div>
-                      </div>
+                        value={paymentData.paymentMethod}
+                        onChange={(e) => setPaymentData({ ...paymentData, paymentMethod: e.target.value })}
+                      >
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Card">Card</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      <div className={styles.selectArrow}>▼</div>
                     </div>
                   </div>
+                </div>
 
-                  <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
-                    {isSubmitting ? <span className={styles.loader}></span> : "Pay via Gateway"}
-                  </button>
+                <div className={styles.inputRow}>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>For Month</label>
+                    <div className={styles.selectWrapper}>
+                      <select 
+                        className={styles.inputField} 
+                        required
+                        value={paymentData.month}
+                        onChange={(e) => setPaymentData({ ...paymentData, month: e.target.value })}
+                      >
+                        {monthOptions.map((month) => (
+                          <option key={month} value={month}>{month}</option>
+                        ))}
+                      </select>
+                      <div className={styles.selectArrow}>▼</div>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>Payment Date</label>
+                    <input 
+                      type="date" 
+                      className={styles.inputField}
+                      max={new Date().toISOString().split('T')[0]}
+                      required
+                      value={paymentData.date || new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setPaymentData({...paymentData, date: e.target.value})}
+                    />
+                  </div>
+                </div>
 
-                </form>
+                <div className={styles.inputGroup}>
+                  <div className={styles.labelWithClear}>
+                    <label className={styles.label}>Upload Screenshot</label>
+                    {paymentData.receipt && (
+                      <button 
+                        type="button" 
+                        className={styles.clearPreviewBtn} 
+                        onClick={handleClearReceipt}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <label className={styles.uploadZone}>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className={styles.hiddenInput} 
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                    />
+                    <div className={styles.uploadContent}>
+                      {receiptPreview ? (
+                        <>
+                          <img
+                            src={receiptPreview}
+                            alt="Uploaded receipt"
+                            className={styles.uploadPreview}
+                          />
+                          <span className={styles.uploadText}>{paymentData.receipt?.name}</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className={styles.uploadIcon}>🧾</div>
+                          <span className={styles.uploadText}>Tap to attach screenshot</span>
+                        </>
+                      )}
+                    </div>
+                  </label>
+                  {warningMsg && (
+                    <p className={styles.warningText}>{warningMsg}</p>
+                  )}
+                </div>
 
-              )}
+                <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+                  {isSubmitting ? <span className={styles.loader}></span> : "Submit Receipt"}
+                </button>
+              </form>
 
             </div>
           </div>
@@ -329,6 +348,14 @@ export default function Resident_Finance() {
 
         </div>
       </div>
+      
+      <Popup
+        isOpen={popup.isOpen}
+        onClose={() => setPopup({ ...popup, isOpen: false })}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+      />
     </div>
   );
 }

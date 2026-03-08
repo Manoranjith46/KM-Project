@@ -16,7 +16,7 @@ export const getFoodStatus = async (req, res) => {
             }
             return res.status(200).json({
                 name: guest.name,
-                dailyMeals: { breakfast: false, lunch: false, dinner: false } // Guests don't have meal status
+                dailyMeals: guest.dailyMeals
             });
         }       
 
@@ -30,10 +30,10 @@ export const getFoodStatus = async (req, res) => {
 };
 
 // @desc    QR Code Toggle (Flip In/Out status)
-// @route   POST /api/food/toggle
+// @route   PUT /api/food/toggle
 export const toggleFoodStatus = async (req, res) => {
     try {
-        const { phoneNumber, mealType } = req.body; // mealType: 'breakfast', 'lunch', or 'dinner'
+        const { phoneNumber, mealType } = req.body;
         
         const resident = await Resident.findOne({ phoneNumber });
         if (!resident) return res.status(404).json({ message: "Resident not found" });
@@ -64,6 +64,43 @@ export const getMealCount = async (req, res) => {
         };
 
         res.status(200).json(counts);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getDailyFoodReport = async (req, res) => {
+    try {
+        const today = new Date();
+        
+        // 1. Filtered Residents (Checks leave schedule)
+        const activeResidents = await Resident.find({
+            isActive: true,
+            $or: [
+                { "leaveSchedule.startDate": { $gt: today } },
+                { "leaveSchedule.endDate": { $lt: today } },
+                { "leaveSchedule.startDate": null }
+            ]
+        });
+
+        // 2. Filtered Guests (Checked-in guests only)
+        const activeGuests = await Guest.find({}); 
+
+        const getCounts = (list) => ({
+            breakfast: list.filter(p => p.dailyMeals.breakfast).length,
+            lunch: list.filter(p => p.dailyMeals.lunch).length,
+            dinner: list.filter(p => p.dailyMeals.dinner).length
+        });
+
+        res.status(200).json({
+            residentMeals: getCounts(activeResidents),
+            guestMeals: getCounts(activeGuests),
+            totalMealCount: {
+                breakfast: getCounts(activeResidents).breakfast + getCounts(activeGuests).breakfast,
+                lunch: getCounts(activeResidents).lunch + getCounts(activeGuests).lunch,
+                dinner: getCounts(activeResidents).dinner + getCounts(activeGuests).dinner
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

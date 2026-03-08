@@ -1,0 +1,204 @@
+/* Overlay Background - Tinted slightly to match the resident emerald theme */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 120, 87, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Glassmorphism Popup Box */
+.popupBox {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 24px;
+  /* Using emerald shadow matching resident pages */
+  box-shadow: 
+    0 12px 40px rgba(4, 120, 87, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  overflow: hidden; /* Needed for the accent bar */
+  transform-origin: center;
+  animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9) translateY(15px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Colorful Top Accent Line */
+.accentBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+}
+.accent_success { background: linear-gradient(90deg, #10b981, #34d399); }
+.accent_error   { background: linear-gradient(90deg, #ef4444, #f87171); }
+.accent_warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.accent_confirm { background: linear-gradient(90deg, #ef4444, #f87171); }
+.accent_info    { background: linear-gradient(90deg, #10b981, #059669); }
+
+/* Close 'X' Button */
+.closeBtn {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.closeBtn svg { width: 20px; height: 20px; }
+.closeBtn:hover {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  transform: rotate(90deg);
+}
+
+/* Content Layout */
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  padding: 2.5rem 2rem 1.5rem;
+}
+
+/* Vibrant Floating Icons */
+.iconWrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+}
+.iconWrap svg { width: 36px; height: 36px; }
+
+.iconSuccess {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+}
+.iconError {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+}
+.iconWarning {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35);
+}
+.iconConfirm {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+}
+.iconInfo {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 8px 24px rgba(4, 120, 87, 0.35);
+}
+
+/* Text Container */
+.textContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.message {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Action Buttons */
+.actions {
+  display: flex;
+  gap: 1rem;
+  padding: 0 2rem 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cancelBtn, .btnBase {
+  flex: 1;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Ghost Cancel Button */
+.cancelBtn {
+  background: transparent;
+  border: 1.5px solid var(--glass-border);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+.cancelBtn:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--text-primary);
+}
+
+/* Solid Gradient Buttons */
+.btnBase {
+  border: none;
+  color: #fff;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+/* Matches resident pages emerald theme */
+.btnPrimary {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.35);
+}
+.btnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(4, 120, 87, 0.45);
+}
+
+/* Red button for destructive actions */
+.btnDanger {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+.btnDanger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.45);
+}

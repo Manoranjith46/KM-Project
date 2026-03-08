@@ -256,8 +256,6 @@ export const getReport = async (req, res) => {
   }
 };
 
-
-
 // @desc    Get a Announcement for Residents
 export const getAnnouncements = async (req, res) => {
   try {
