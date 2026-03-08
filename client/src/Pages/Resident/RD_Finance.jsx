@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./RD_Finance.module.css";
 import API from '../../API/axios';
-import { encodeImageToBase64 } from '../../Components/ImageConverter';
 import { useAuth } from '../../Context/AuthContext';
 import Loader from './Components/Loader/Loader';
 import Popup from './Components/popup/Popup';
+import { FinanceSkeleton } from './Components/Skeleton/Skeleton';
 
 export default function Resident_Finance() {
   const navigate = useNavigate();
@@ -60,6 +60,7 @@ export default function Resident_Finance() {
   // Payment History State
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [totalSpending, setTotalSpending] = useState(0);
   const [currentDues, setCurrentDues] = useState(0);
 
@@ -164,8 +165,7 @@ export default function Resident_Finance() {
 
 // Fetch payment history and dues on component mount
   useEffect(() => {
-    fetchPaymentHistory();
-    fetchCurrentDues();
+    Promise.all([fetchPaymentHistory(), fetchCurrentDues()]).finally(() => setPageLoading(false));
   }, [fetchPaymentHistory, fetchCurrentDues]);
 
 
@@ -194,20 +194,15 @@ export default function Resident_Finance() {
     setIsSubmitting(true);
     
     try {
-      const payload = {
-        name: user.name,
-        phoneNumber: user.mobileNumber,
-        amount: Number(paymentData.amount),
-        date: new Date(paymentData.date),
-        paymentMethod: paymentData.paymentMethod,
-        paymentProof: await encodeImageToBase64(paymentData.receipt),
-      };
+      const formData = new FormData();
+      formData.append('name', user.name);
+      formData.append('phoneNumber', user.mobileNumber);
+      formData.append('amount', Number(paymentData.amount));
+      formData.append('date', new Date(paymentData.date).toISOString());
+      formData.append('paymentMethod', paymentData.paymentMethod);
+      formData.append('paymentProof', paymentData.receipt);
 
-      const response = await API.post('/payments/online', payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await API.post('/payments/online', formData);
 
       setPopup({
         isOpen: true,
@@ -279,6 +274,7 @@ export default function Resident_Finance() {
           </div>
         </header>
 
+        {pageLoading ? <FinanceSkeleton /> : (
         <div className={styles.mainGrid}>
           
           {/* LEFT COLUMN: UPLOAD FORM */}
@@ -452,6 +448,7 @@ export default function Resident_Finance() {
           </div>
 
         </div>
+        )}
       </div>
       
       <Popup

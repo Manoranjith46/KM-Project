@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../API/axios";
+import { useAuth } from "../../Context/AuthContext";
+import useSocket from "../../hooks/useSocket";
+import { NoticeSkeleton } from "./Components/Skeleton/Skeleton";
 import styles from "./RD_Notice_Board.module.css";
 
 export default function Resident_NoticeBoard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Mock Data: Array of Announcements. 
   // In a real app, you would fetch this from your backend (e.g., GET /api/Announcements)
@@ -44,6 +48,8 @@ export default function Resident_NoticeBoard() {
   // ]);
 
   const [Announcements, setAnnouncements] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const socketRef = useSocket(user?.mobileNumber);
 
   const sortedNotices = [...Announcements].sort((a, b) => {
     const aIsUrgent = a.type === "urgent";
@@ -62,12 +68,24 @@ export default function Resident_NoticeBoard() {
     } catch (error) {
       console.error('Error fetching announcement history:', error);
       setAnnouncements([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchAnnouncements();
   }, []);
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    const onUpdated = () => fetchAnnouncements();
+    socket.on('announcements:updated', onUpdated);
+
+    return () => socket.off('announcements:updated', onUpdated);
+  }, [socketRef]);
 
   
 
@@ -98,6 +116,7 @@ export default function Resident_NoticeBoard() {
         </header>
 
         {/* Announcements LIST */}
+        {isLoading ? <NoticeSkeleton /> : (
         <div className={`${styles.noticeList} ${Announcements.length === 0 ? styles.noticeListEmpty : ""}`}>
           {Announcements.length === 0 ? (
             <div className={styles.emptyState}>
@@ -128,6 +147,7 @@ export default function Resident_NoticeBoard() {
             ))
           )}
         </div>
+        )}
 
       </div>
     </div>

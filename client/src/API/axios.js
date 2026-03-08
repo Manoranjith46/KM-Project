@@ -24,7 +24,10 @@ const processQueue = (error, token = null) => {
 
 // Request interceptor
 API.interceptors.request.use((config) => {
-    config.headers['Content-Type'] = 'application/json';
+    // Don't set Content-Type for FormData — browser sets it with boundary
+    if (!(config.data instanceof FormData)) {
+        config.headers['Content-Type'] = 'application/json';
+    }
     return config;
 });
 

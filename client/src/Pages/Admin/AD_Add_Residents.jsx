@@ -4,7 +4,6 @@ import Cropper from "react-easy-crop";
 import styles from './AD_Add_Residents.module.css';
 import Sidebar from "./Components/Sidebar/Sidebar";
 import { getCroppedImg, handleFileChange, handleCropUpload, handleClearPreview, handleCloseCropModal, handleResetCrop } from "../../Components/ImageCrop";
-import { encodeImageToBase64 } from "../../Components/ImageConverter";
 import Popup from "./Components/Popup/Popup";
 import API from "../../API/axios";
 
@@ -41,15 +40,14 @@ export default function Admin_AddResident() {
     firstName: "",
     lastName: "",
     phone: "",
-    email: "",
     dob: "",
     gender: "Male",
     bloodGroup: "",
     emerName: "",
     emerRelation: "",
     emerPhone: "",
+    type: "Resident",
     roomNo: "",
-    bedType: "Single",
     joiningDate: "",
     rentAmount: "",
     depositAmount: "",
@@ -87,13 +85,6 @@ export default function Admin_AddResident() {
         }
         return '';
 
-      case 'email':
-        if (!value.trim()) return 'Email is required';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return 'Enter a valid email address';
-        }
-        return '';
-
       case 'dob':
         if (!value) return 'Date of birth is required';
         const birthDate = new Date(value);
@@ -122,6 +113,10 @@ export default function Admin_AddResident() {
         if (!value) return 'Please select a room';
         return '';
 
+      case 'type':
+        if (!value) return 'Please select a type';
+        return '';
+
       case 'joiningDate':
         if (!value) return 'Joining date is required';
         const moveDate = new Date(value);
@@ -132,6 +127,7 @@ export default function Admin_AddResident() {
         return '';
 
       case 'rentAmount':
+        if (form.type === 'Guest') return '';
         if (!value) return 'Rent amount is required';
         if (isNaN(value) || Number(value) <= 0) {
           return 'Enter a valid amount greater than 0';
@@ -139,6 +135,7 @@ export default function Admin_AddResident() {
         return '';
 
       case 'depositAmount':
+        if (form.type === 'Guest') return '';
         if (!value) return 'Deposit amount is required';
         if (isNaN(value) || Number(value) <= 0) {
           return 'Enter a valid amount greater than 0';
@@ -228,9 +225,10 @@ export default function Admin_AddResident() {
     // Validate all fields before submission
     const newErrors = {};
     const fieldsToValidate = [
-      'firstName', 'lastName', 'phone', 'email', 'dob',
+      'firstName', 'lastName', 'phone', 'dob',
       'bloodGroup', 'emerName', 'emerRelation', 'emerPhone',
-      'roomNo', 'joiningDate', 'rentAmount', 'depositAmount', 'document'
+      'type', 'roomNo', 'joiningDate', 'document',
+      ...(form.type !== 'Guest' ? ['rentAmount', 'depositAmount'] : [])
     ];
 
     fieldsToValidate.forEach(field => {
@@ -256,28 +254,31 @@ export default function Admin_AddResident() {
     }
 
     try {
-      // 1. Convert document to base64 if exists
-      let documentBase64 = null;
+      // 1. Build FormData for multipart upload
+      const formData = new FormData();
+      formData.append('name', `${form.firstName} ${form.lastName}`.trim());
+      formData.append('phoneNumber', form.phone);
+      formData.append('type', form.type);
+      formData.append('dob', form.dob);
+      formData.append('gender', form.gender);
+      formData.append('bloodGroup', form.bloodGroup);
+      formData.append('guardianDetails', JSON.stringify({
+        name: form.emerName,
+        phone: form.emerPhone,
+        relation: form.emerRelation
+      }));
+      formData.append('roomNumber', form.roomNo);
+      formData.append('joiningDate', form.joiningDate);
+      if (form.type !== 'Guest') {
+        formData.append('monthlyRent', form.rentAmount);
+        formData.append('securityDeposit', form.depositAmount);
+      }
       if (form.document) {
-        documentBase64 = await encodeImageToBase64(form.document);
+        formData.append('document', form.document);
       }
 
-      // 2. Map frontend form data to backend schema
-      const residentData = {
-        name: `${form.firstName} ${form.lastName}`.trim(),
-        phoneNumber: form.phone,
-        guardianDetails: {
-          name: form.emerName,
-          phone: form.emerPhone
-        },
-        roomNumber: form.roomNo,
-        document: documentBase64
-      };
-
-      console.log('Sending data to backend:', { ...residentData, document: documentBase64 ? '[Base64 Image Data]' : null });
-
-      // 3. Send the data to your backend
-      const response = await API.post('/residents', residentData);
+      // 2. Send the data to your backend
+      const response = await API.post('/residents', formData);
 
       // 3. Parse the response from the backend
       const data = response.data;
@@ -297,15 +298,14 @@ export default function Admin_AddResident() {
           firstName: "",
           lastName: "",
           phone: "",
-          email: "",
           dob: "",
           gender: "Male",
           bloodGroup: "",
           emerName: "",
           emerRelation: "",
           emerPhone: "",
+          type: "Resident",
           roomNo: "",
-          bedType: "Single",
           joiningDate: "",
           rentAmount: "",
           depositAmount: "",
@@ -454,24 +454,6 @@ export default function Admin_AddResident() {
                   )}
                 </div>
                 <div className={styles.fieldGroup}>
-                  <label className={styles.label} htmlFor="email">
-                    Email Address <span className={styles.required}>*</span>
-                  </label>
-                  <input 
-                    id="email" 
-                    name="email" 
-                    type="email" 
-                    className={`${styles.input} ${errors.email && touched.email ? styles.inputError : ''}`}
-                    placeholder="name@example.com" 
-                    value={form.email} 
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                  />
-                  {errors.email && touched.email && (
-                    <span className={styles.errorText}>{errors.email}</span>
-                  )}
-                </div>
-                <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="dob">
                     Date of Birth <span className={styles.required}>*</span>
                   </label>
@@ -607,18 +589,23 @@ export default function Admin_AddResident() {
                   )}
                 </div>
                 <div className={styles.fieldGroup}>
-                  <label className={styles.label} htmlFor="bedType">Bed/Sharing Type</label>
+                  <label className={styles.label} htmlFor="type">
+                    Type <span className={styles.required}>*</span>
+                  </label>
                   <select 
-                    id="bedType" 
-                    name="bedType" 
-                    className={styles.select} 
-                    value={form.bedType} 
+                    id="type" 
+                    name="type" 
+                    className={`${styles.select} ${errors.type && touched.type ? styles.inputError : ''}`}
+                    value={form.type} 
                     onChange={handleChange}
+                    onBlur={handleBlur}
                   >
-                    <option value="Single">Single Room</option>
-                    <option value="Double">Double Sharing</option>
-                    <option value="Triple">Triple Sharing</option>
+                    <option value="Resident">Resident</option>
+                    <option value="Guest">Guest</option>
                   </select>
+                  {errors.type && touched.type && (
+                    <span className={styles.errorText}>{errors.type}</span>
+                  )}
                 </div>
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="joiningDate">
@@ -637,44 +624,48 @@ export default function Admin_AddResident() {
                     <span className={styles.errorText}>{errors.joiningDate}</span>
                   )}
                 </div>
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label} htmlFor="rentAmount">
-                    Monthly Rent (₹) <span className={styles.required}>*</span>
-                  </label>
-                  <input 
-                    id="rentAmount" 
-                    name="rentAmount" 
-                    type="number" 
-                    className={`${styles.input} ${errors.rentAmount && touched.rentAmount ? styles.inputError : ''}`}
-                    placeholder="5000" 
-                    value={form.rentAmount} 
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    min="0"
-                  />
-                  {errors.rentAmount && touched.rentAmount && (
-                    <span className={styles.errorText}>{errors.rentAmount}</span>
-                  )}
-                </div>
-                <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                  <label className={styles.label} htmlFor="depositAmount">
-                    Security Deposit (₹) <span className={styles.required}>*</span>
-                  </label>
-                  <input 
-                    id="depositAmount" 
-                    name="depositAmount" 
-                    type="number" 
-                    className={`${styles.input} ${errors.depositAmount && touched.depositAmount ? styles.inputError : ''}`}
-                    placeholder="10000" 
-                    value={form.depositAmount} 
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    min="0"
-                  />
-                  {errors.depositAmount && touched.depositAmount && (
-                    <span className={styles.errorText}>{errors.depositAmount}</span>
-                  )}
-                </div>
+                {form.type !== 'Guest' && (
+                  <>
+                    <div className={styles.fieldGroup}>
+                      <label className={styles.label} htmlFor="rentAmount">
+                        Monthly Rent (₹) <span className={styles.required}>*</span>
+                      </label>
+                      <input 
+                        id="rentAmount" 
+                        name="rentAmount" 
+                        type="number" 
+                        className={`${styles.input} ${errors.rentAmount && touched.rentAmount ? styles.inputError : ''}`}
+                        placeholder="5000" 
+                        value={form.rentAmount} 
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        min="0"
+                      />
+                      {errors.rentAmount && touched.rentAmount && (
+                        <span className={styles.errorText}>{errors.rentAmount}</span>
+                      )}
+                    </div>
+                    <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                      <label className={styles.label} htmlFor="depositAmount">
+                        Security Deposit (₹) <span className={styles.required}>*</span>
+                      </label>
+                      <input 
+                        id="depositAmount" 
+                        name="depositAmount" 
+                        type="number" 
+                        className={`${styles.input} ${errors.depositAmount && touched.depositAmount ? styles.inputError : ''}`}
+                        placeholder="10000" 
+                        value={form.depositAmount} 
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        min="0"
+                      />
+                      {errors.depositAmount && touched.depositAmount && (
+                        <span className={styles.errorText}>{errors.depositAmount}</span>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </section>
 

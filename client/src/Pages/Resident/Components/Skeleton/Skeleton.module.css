@@ -1,0 +1,229 @@
+/* =========================================================
+   BASE SKELETON SHIMMER
+   ========================================================= */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0.06) 25%,
+    rgba(16, 185, 129, 0.14) 50%,
+    rgba(16, 185, 129, 0.06) 75%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* =========================================================
+   SKELETON CARD (Glass Match)
+   ========================================================= */
+
+.skeletonCard {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* =========================================================
+   LAYOUT HELPERS
+   ========================================================= */
+
+.skeletonRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.skeletonRowCenter {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* =========================================================
+   DASHBOARD SKELETON
+   ========================================================= */
+
+.skeletonHeader {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  padding: 1.5rem 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skeletonHeader > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeletonHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.skeletonGrid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.skeletonSpan2 {
+  grid-column: span 2;
+}
+
+.skeletonMealGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.skeletonMealRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+}
+
+.skeletonToggle {
+  align-self: flex-end;
+}
+
+/* =========================================================
+   FINANCE SKELETON
+   ========================================================= */
+
+.skeletonFinanceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.skeletonFinanceForm {
+  gap: 1.25rem;
+}
+
+.skeletonFinanceRight {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.skeletonStatsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.skeletonHistoryItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 16px;
+}
+
+/* =========================================================
+   NOTICE SKELETON
+   ========================================================= */
+
+.skeletonNoticeList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* =========================================================
+   REPORT SKELETON
+   ========================================================= */
+
+.skeletonReportGrid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 2rem;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1200px) {
+  .skeletonGrid3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .skeletonSpan2 {
+    grid-column: span 2;
+  }
+  .skeletonMealGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .skeletonMealGrid {
+    grid-template-columns: 1fr;
+  }
+  .skeletonMealRow {
+    flex-direction: row;
+    align-items: center;
+  }
+  .skeletonToggle {
+    align-self: center;
+    margin-left: auto;
+  }
+  .skeletonFinanceGrid {
+    grid-template-columns: 1fr;
+  }
+  .skeletonReportGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .skeletonGrid3 {
+    grid-template-columns: 1fr;
+  }
+  .skeletonSpan2 {
+    grid-column: span 1;
+  }
+  .skeletonHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+  }
+  .skeletonHeaderRight {
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding-top: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .skeletonCard {
+    padding: 1.25rem;
+    border-radius: 20px;
+  }
+}

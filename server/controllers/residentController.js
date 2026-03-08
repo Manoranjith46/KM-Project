@@ -2,19 +2,16 @@ import Resident from "../models/Resident.js";
 import History from "../models/History.js";
 import Report from "../models/Report.js";
 import Announcement from "../models/Announcement.js";
+import { getIO } from "../socket.js";
+import { uploadToGridFS } from "../config/gridfs.js";
 
 // @access  Public (for now)
 export const registerResident = async (req, res) => {
   try {
-    const { name, phoneNumber, guardianDetails, roomNumber, document } = req.body;
-
-    console.log('Received registration data:', { 
-      name, 
-      phoneNumber, 
-      guardianDetails, 
-      roomNumber,
-      document: document ? '[Base64 Image Data]' : null 
-    });
+    const { name, phoneNumber, roomNumber, type, dob, gender, bloodGroup, joiningDate, monthlyRent, securityDeposit } = req.body;
+    const guardianDetails = typeof req.body.guardianDetails === 'string'
+      ? JSON.parse(req.body.guardianDetails)
+      : req.body.guardianDetails;
 
     // Validate required fields
     if (!name || !phoneNumber || !guardianDetails || !guardianDetails.name || !guardianDetails.phone || !roomNumber) {
@@ -35,13 +32,26 @@ export const registerResident = async (req, res) => {
       return res.status(400).json({ message: "Guardian's phone number already exists" });
     }
 
+    // Upload document to GridFS if provided
+    let documentId = null;
+    if (req.file) {
+      documentId = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
+    }
+
     // 2. Create the new resident
     const resident = await Resident.create({
       name,
       phoneNumber,
+      type: type || 'Resident',
+      dob: dob || null,
+      gender: gender || 'Male',
+      bloodGroup: bloodGroup || null,
       guardianDetails,
+      joiningDate: joiningDate || Date.now(),
       roomNumber,
-      document: document || null
+      monthlyRent: (type !== 'Guest' && monthlyRent) ? Number(monthlyRent) : 0,
+      securityDeposit: (type !== 'Guest' && securityDeposit) ? Number(securityDeposit) : 0,
+      document: documentId ? documentId.toString() : null
     });
 
     // 3. Send success response
@@ -57,7 +67,6 @@ export const registerResident = async (req, res) => {
     }
 
   } catch (error) {
-    // 4. Server Error Handler
     console.error('Error in registerResident:', error);
     res.status(500).json({ message: error.message });
   }
@@ -199,11 +208,16 @@ export const getResidentsByRoom = async (req, res) => {
 // @desc    Post Report by Resident
 export const registerReport = async (req, res) => {
   try {
-    const { name, phoneNumber, category, description, photo, status } = req.body;
+    const { name, phoneNumber, category, description, status } = req.body;
     if (!name || !phoneNumber || !category || !description) {
       return res.status(400).json({ message: "Please provide all required fields: name, phoneNumber, category, and description" });
     }
 
+    // Upload photo to GridFS if provided
+    let documentId = null;
+    if (req.file) {
+      documentId = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
+    }
 
     // 2. Create the new resident
     const report = await Report.create({
@@ -211,12 +225,14 @@ export const registerReport = async (req, res) => {
       phoneNumber,
       category,
       description,
-      document: photo || null,
+      document: documentId ? documentId.toString() : null,
       status: status
     });
 
     // 3. Send success response
     if (report) {
+      getIO().to(phoneNumber).emit('resident:reports-updated');
+
       res.status(201).json({
         _id: report._id,
         name: report.name,
@@ -281,6 +297,11 @@ export const toggleGateStatus = async (req, res) => {
 
     await resident.save();
 
+    getIO().to(phoneNumber).emit('resident:gate-updated', {
+      isActive: resident.isActive,
+      dailyMeals: resident.dailyMeals,
+    });
+
     res.status(200).json({
       message: resident.isActive ? "Welcome back to the hostel" : "Have a safe journey",
       isActive: resident.isActive,
@@ -302,4 +323,26 @@ export const getAnnouncements = async (req, res) => {
     console.error('❌ Error in getAnnouncements:', error);
     res.status(500).json({ message: error.message });
   }
-}
+};
+
+// @desc    Create announcement (admin)
+export const createAnnouncement = async (req, res) => {
+  try {
+    const announcement = await Announcement.create(req.body);
+    getIO().to('residents').emit('announcements:updated');
+    res.status(201).json(announcement);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete announcement (admin)
+export const deleteAnnouncement = async (req, res) => {
+  try {
+    await Announcement.findByIdAndDelete(req.params.id);
+    getIO().to('residents').emit('announcements:updated');
+    res.status(200).json({ message: 'Announcement deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

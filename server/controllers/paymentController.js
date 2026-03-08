@@ -1,12 +1,14 @@
 import Payment from '../models/Payment.js';
 import Resident from '../models/Resident.js';
 import Info from '../models/Info.js';
+import { getIO } from '../socket.js';
+import { uploadToGridFS } from '../config/gridfs.js';
 
 // @desc    Create online rent payment (resident)
 // @route   POST /api/payments/online
 export const createOnlineRentPayment = async (req, res) => {
 	try {
-		const { name, phoneNumber, amount, date, paymentMethod, paymentProof } = req.body;
+		const { name, phoneNumber, amount, date, paymentMethod } = req.body;
 
 		if (!name || !phoneNumber || !amount || !paymentMethod) {
 			return res.status(400).json({
@@ -14,7 +16,7 @@ export const createOnlineRentPayment = async (req, res) => {
 			});
 		}
 
-		if (!paymentProof) {
+		if (!req.file) {
 			return res.status(400).json({
 				message: 'Payment proof is required for online payments',
 			});
@@ -26,13 +28,16 @@ export const createOnlineRentPayment = async (req, res) => {
 			});
 		}
 
+		// Upload payment proof to GridFS
+		const proofId = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
+
 		const payment = await Payment.create({
 			name,
 			phoneNumber,
 			amount,
 			date: date || new Date(),
 			paymentMethod,
-			paymentProof,
+			paymentProof: proofId.toString(),
 			status: 'pending',
 		});
 
@@ -67,6 +72,8 @@ export const updatePaymentStatus = async (req, res) => {
 		if (!payment) {
 			return res.status(404).json({ message: 'Payment not found' });
 		}
+
+		getIO().to(payment.phoneNumber).emit('resident:payment-updated');
 
 		return res.status(200).json({
 			message: `Payment updated successfully`,
@@ -218,8 +225,8 @@ export const getDues = async (req, res) => {
 		const currentMonth = now.getMonth(); // 0-11
 		const currentYear = now.getFullYear();
 
-		// Find approved payment for current month
-		const approvedPayment = await Payment.findOne({
+		// Find all approved payments for current month
+		const approvedPayments = await Payment.find({
 			phoneNumber,
 			status: 'approved',
 			date: {
@@ -228,13 +235,9 @@ export const getDues = async (req, res) => {
 			}
 		});
 
-		// Calculate dues: if no approved payment this month, return full monthly rent
-		let dueAmount;
-		if (!approvedPayment) {
-			dueAmount = monthlyRent;
-		} else {
-			dueAmount = Math.max(0, monthlyRent - approvedPayment.amount);
-		}
+		// Sum all approved payments this month
+		const totalPaid = approvedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+		const dueAmount = Math.max(0, monthlyRent - totalPaid);
 
 		return res.status(200).json({ dueAmount });
 	} catch (error) {

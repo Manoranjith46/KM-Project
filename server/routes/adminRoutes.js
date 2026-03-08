@@ -1,12 +1,21 @@
 import express from 'express';
 const router = express.Router();
-import { getPendingPayments, getRevenueSummary } from '../controllers/adminController.js';
+import { getPendingPayments, getRevenueSummary, getAllOccupants } from '../controllers/adminController.js';
+import { createAnnouncement, deleteAnnouncement } from '../controllers/residentController.js';
+import { verifyToken, authorizeRoles } from '../middleware/authMiddleware.js';
 
 // Aggregate revenue from both Active Residents and History
 router.get('/revenue-summary', getRevenueSummary);
 
+// Get all occupants (residents + guests)
+router.get('/occupants', verifyToken, authorizeRoles('owner'), getAllOccupants);
+
 // Find all residents with 'Pending' status in their latest payment
 router.get('/pending-payments', getPendingPayments);
+
+// Announcement management
+router.post('/announcements', verifyToken, authorizeRoles('owner'), createAnnouncement);
+router.delete('/announcements/:id', verifyToken, authorizeRoles('owner'), deleteAnnouncement);
 
 
 

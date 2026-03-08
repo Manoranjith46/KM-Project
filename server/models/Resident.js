@@ -12,6 +12,24 @@ const residentSchema = new mongoose.Schema({
     required: true, 
     unique: true 
   },
+  dob: {
+    type: Date,
+    default: null
+  },
+  gender: {
+    type: String,
+    enum: ['Male', 'Female', 'Other'],
+    default: 'Male'
+  },
+  bloodGroup: {
+    type: String,
+    default: null
+  },
+  type: {
+    type: String,
+    enum: ['Resident', 'Guest'],
+    default: 'Resident'
+  },
   guardianDetails: {
     name: { 
       type: String, 
@@ -21,6 +39,10 @@ const residentSchema = new mongoose.Schema({
       type: String, 
       required: true, 
       unique: true
+    },
+    relation: {
+      type: String,
+      default: null
     }
   },
   joiningDate: { 
@@ -36,7 +58,10 @@ const residentSchema = new mongoose.Schema({
   },
   monthlyRent: {
     type: Number,
-    required: true,
+    default: 0
+  },
+  securityDeposit: {
+    type: Number,
     default: 0
   },
   isActive: { 
@@ -46,7 +71,7 @@ const residentSchema = new mongoose.Schema({
 
   // --- Document Storage ---
   document: {
-    type: String, // Base64 encoded image
+    type: String, // GridFS file ID
     default: null
   },
 

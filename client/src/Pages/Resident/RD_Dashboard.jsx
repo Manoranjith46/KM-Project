@@ -2,13 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import API from "../../API/axios";
+import useSocket from "../../hooks/useSocket";
 import Loader from "./Components/Loader/Loader";
+import { DashboardSkeleton } from "./Components/Skeleton/Skeleton";
 import styles from "./RD_Dashboard.module.css";
 
 export default function Resident_Dashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [resident, setResident] = useState({
     name: user?.name || "",
@@ -20,6 +23,7 @@ export default function Resident_Dashboard() {
   });
 
   const [meals, setMeals] = useState({});
+  const socketRef = useSocket(user?.mobileNumber);
 
   const fetchResidentProfile = useCallback(async () => {
     if (!user?.mobileNumber) return;
@@ -35,6 +39,8 @@ export default function Resident_Dashboard() {
       setMeals(data.dailyMeals || {});
     } catch (err) {
       console.error("Error fetching resident profile:", err);
+    } finally {
+      setIsLoading(false);
     }
   }, [user?.mobileNumber]);
 
@@ -82,32 +88,37 @@ export default function Resident_Dashboard() {
     fetchFinanceSummary();
   }, [fetchFinanceSummary]);
 
+  // Socket.IO real-time listeners
   useEffect(() => {
-    const handleWindowFocus = () => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    const onGateUpdated = ({ isActive, dailyMeals }) => {
+      setResident((prev) => ({
+        ...prev,
+        status: isActive ? "IN HOSTEL" : "ON LEAVE",
+      }));
+      setMeals(dailyMeals);
+    };
+
+    const onMealsUpdated = (updatedMeals) => {
+      setMeals(updatedMeals);
+    };
+
+    const onPaymentUpdated = () => {
       fetchFinanceSummary();
     };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchFinanceSummary();
-      }
-    };
-
-    // Keep cards fresh when user comes back from other pages (e.g. finance page)
-    window.addEventListener("focus", handleWindowFocus);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Fallback periodic refresh for long-open dashboard sessions
-    const intervalId = setInterval(() => {
-      fetchFinanceSummary();
-    }, 30000);
+    socket.on('resident:gate-updated', onGateUpdated);
+    socket.on('resident:meals-updated', onMealsUpdated);
+    socket.on('resident:payment-updated', onPaymentUpdated);
 
     return () => {
-      window.removeEventListener("focus", handleWindowFocus);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      clearInterval(intervalId);
+      socket.off('resident:gate-updated', onGateUpdated);
+      socket.off('resident:meals-updated', onMealsUpdated);
+      socket.off('resident:payment-updated', onPaymentUpdated);
     };
-  }, [fetchFinanceSummary]);
+  }, [socketRef, fetchFinanceSummary]);
 
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [scanAction, setScanAction] = useState("");
@@ -179,6 +190,7 @@ export default function Resident_Dashboard() {
       </div>
       <div className={styles.hubContainer}>
         
+        {isLoading ? <DashboardSkeleton /> : (<>
         {/* HEADER SECTION (Full Width) */}
         <header className={styles.headerGlass}>
           <div className={styles.headerLeft}>
@@ -334,6 +346,7 @@ export default function Resident_Dashboard() {
           </section>
 
         </div> {/* End of Main Grid */}
+        </>)}
       </div>
       {isUpdatingMeal && (
         <div className={styles.updateOverlay}>

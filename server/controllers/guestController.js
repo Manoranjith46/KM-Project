@@ -1,13 +1,17 @@
 import Guest from '../models/Guest.js';
 import History from '../models/History.js';
+import { uploadToGridFS } from '../config/gridfs.js';
 
 // @desc    Check-in a temporary guest
 // @route   POST /api/guests
 export const checkInGuest = async (req, res) => {
     try {
-        const { name, phoneNumber, aadharUrl, roomNumber } = req.body;
-        if(!name || !phoneNumber || !aadharUrl || !roomNumber) {
-            return res.status(400).json({ message: "All fields are required" });
+        const { name, phoneNumber, roomNumber } = req.body;
+        if(!name || !phoneNumber || !roomNumber) {
+            return res.status(400).json({ message: "Name, phone number, and room number are required" });
+        }
+        if (!req.file) {
+            return res.status(400).json({ message: "Aadhar document is required" });
         }
         try{
             const existingGuest = await Guest.findOne({ phoneNumber });
@@ -17,11 +21,14 @@ export const checkInGuest = async (req, res) => {
         } catch (error) {
             return res.status(500).json({ message: "Error checking existing guest" });
         }
+
+        // Upload aadhar to GridFS
+        const aadharId = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
         
         const guest = await Guest.create({
             name,
             phoneNumber,
-            aadharUrl,
+            aadharUrl: aadharId.toString(),
             roomNumber,
             checkInDate: new Date()
         });

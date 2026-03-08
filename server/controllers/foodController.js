@@ -1,5 +1,6 @@
 import Resident from '../models/Resident.js';
 import Guest from '../models/Guest.js';
+import { getIO } from '../socket.js';
 
 // @desc    Check if a resident is "In" or "Out" for meals
 // @route   GET /api/food/status
@@ -41,6 +42,8 @@ export const toggleFoodStatus = async (req, res) => {
         // Logic to flip the boolean value
         resident.dailyMeals[mealType] = !resident.dailyMeals[mealType];
         await resident.save();
+
+        getIO().to(phoneNumber).emit('resident:meals-updated', resident.dailyMeals);
 
         res.status(200).json({
             message: `${mealType} is now set to ${resident.dailyMeals[mealType] ? 'IN' : 'OUT'}`,

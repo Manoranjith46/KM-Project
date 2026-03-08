@@ -2,6 +2,35 @@ import Resident from '../models/Resident.js';
 import History from '../models/History.js';
 import Guest from '../models/Guest.js';
 
+// @desc    Get all occupants (residents + guests) for admin directory
+// @route   GET /api/admin/occupants
+export const getAllOccupants = async (req, res) => {
+    try {
+        const all = await Resident.find().lean();
+
+        const residents = all.filter(r => r.type !== 'Guest');
+        const guests = all.filter(r => r.type === 'Guest');
+
+        const occupants = all.map(r => ({
+            _id: r._id,
+            name: r.name,
+            phoneNumber: r.phoneNumber,
+            roomNumber: r.roomNumber,
+            type: r.type || 'Resident',
+            joiningDate: r.joiningDate,
+        }));
+
+        res.status(200).json({
+            total: all.length,
+            totalResidents: residents.length,
+            totalGuests: guests.length,
+            occupants,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const getRevenueSummary = async (req, res) => {
     try {
         // Resident Revenue (Active + Archived)

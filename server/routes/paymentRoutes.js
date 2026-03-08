@@ -9,6 +9,7 @@ import {
 	getDues
 } from '../controllers/paymentController.js';
 import { verifyToken, authorizeRoles } from '../middleware/authMiddleware.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.get('/dues/:phoneNumber', verifyToken, getDues);
 router.get('/:phoneNumber', verifyToken, getPaymentsByPhoneNumber);
 
 // Resident: Submit online payment with proof
-router.post('/online', verifyToken, authorizeRoles('resident'), createOnlineRentPayment);
+router.post('/online', verifyToken, authorizeRoles('resident'), upload.single('paymentProof'), createOnlineRentPayment);
 
 // Admin: Add cash payment
 router.post('/cash', verifyToken, authorizeRoles('owner'), createCashRentPayment);

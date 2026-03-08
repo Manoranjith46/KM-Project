@@ -206,15 +206,18 @@ export default function Admin_View_Resident() {
           </div>
         </div>
 
-        {/* Right Card: Identity Document (Base64 Render) */}
+        {/* Right Card: Identity Document */}
         <div className={styles.glassCard}>
           <h3 className={styles.sectionTitle}>Identity Document</h3>
           
           <div className={styles.documentViewer}>
             {resident.documentImage ? (
-              // This is where the magic Base64 decoding happens!
               <img 
-                src={resident.documentImage} 
+                src={
+                  resident.documentImage.startsWith('data:')
+                    ? resident.documentImage
+                    : `${import.meta.env.VITE_API_URL}api/uploads/${resident.documentImage}`
+                }
                 alt={`${resident.displayName || resident.firstName || "Resident"}'s Document`} 
                 className={styles.documentImage} 
               />

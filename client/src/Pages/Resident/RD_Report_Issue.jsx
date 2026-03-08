@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import styles from "./RD_Report_Issue.module.css";
 import API from '../../API/axios';
-import { encodeImageToBase64 } from '../../Components/ImageConverter';
 import { useAuth } from '../../Context/AuthContext';
+import useSocket from '../../hooks/useSocket';
 import Loader from './Components/Loader/Loader';
+import { ReportSkeleton } from './Components/Skeleton/Skeleton';
 
 export default function Resident_ReportIssue() {
   const navigate = useNavigate();
@@ -30,6 +31,8 @@ export default function Resident_ReportIssue() {
   const [successMsg, setSuccessMsg] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
   const [reports, setReports] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const socketRef = useSocket(user?.mobileNumber);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -52,24 +55,17 @@ export default function Resident_ReportIssue() {
     setIsSubmitting(true);
     
     try {
-      const payload = {
-        name: user?.name,
-        phoneNumber: user?.mobileNumber,
-        category: formData.category,
-        description: formData.description,
-        photo: null,
-        status: "Pending"
-      };
-
+      const uploadData = new FormData();
+      uploadData.append('name', user?.name);
+      uploadData.append('phoneNumber', user?.mobileNumber);
+      uploadData.append('category', formData.category);
+      uploadData.append('description', formData.description);
+      uploadData.append('status', 'Pending');
       if (formData.photo) {
-        payload.photo = await encodeImageToBase64(formData.photo);
+        uploadData.append('photo', formData.photo);
       }
 
-      const response = await API.post('/residents/report', payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await API.post('/residents/report', uploadData);
 
       setSuccessMsg(response?.data?.message);
       setFormData({ category: "", description: "", photo: null });
@@ -98,12 +94,24 @@ export default function Resident_ReportIssue() {
     } catch (error) {
       console.error('Error fetching report history:', error);
       setReports([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchReports();
   }, [user?.mobileNumber]);
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    const onUpdated = () => fetchReports();
+    socket.on('resident:reports-updated', onUpdated);
+
+    return () => socket.off('resident:reports-updated', onUpdated);
+  }, [socketRef]);
 
 
   return (
@@ -145,6 +153,7 @@ export default function Resident_ReportIssue() {
           </div>
         )}
 
+        {isLoading ? <ReportSkeleton /> : (
         <div className={styles.mainGrid}>
           {/* COMPLAINT FORM CARD */}
           <div className={`${styles.glassCard} ${styles.formCard}`}>
@@ -256,6 +265,7 @@ export default function Resident_ReportIssue() {
         </div>
 
         </div>
+        )}
 
       </div>
     </div>
