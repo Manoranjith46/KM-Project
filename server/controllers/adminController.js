@@ -1,6 +1,5 @@
 import Resident from '../models/Resident.js';
 import History from '../models/History.js';
-import Guest from '../models/Guest.js';
 
 // @desc    Get all occupants (residents + guests) for admin directory
 // @route   GET /api/admin/occupants
@@ -35,15 +34,18 @@ export const getRevenueSummary = async (req, res) => {
     try {
         // Resident Revenue (Active + Archived)
         const activeResRev = await Resident.aggregate([
+            { $match: { type: { $ne: 'Guest' } } },
             { $unwind: "$payments" },
             { $match: { "payments.status": "Paid" } },
             { $group: { _id: null, total: { $sum: "$payments.amount" } } }
         ]);
 
-        // Guest Revenue (Active + Archived)
-        const activeGuestRev = await Guest.aggregate([
-            { $match: { paymentStatus: "Paid" } },
-            { $group: { _id: null, total: { $sum: "$amountPaid" } } }
+        // Guest Revenue (from Resident collection, type=Guest)
+        const activeGuestRev = await Resident.aggregate([
+            { $match: { type: 'Guest' } },
+            { $unwind: "$payments" },
+            { $match: { "payments.status": "Paid" } },
+            { $group: { _id: null, total: { $sum: "$payments.amount" } } }
         ]);
 
         const historyRev = await History.aggregate([
@@ -68,13 +70,13 @@ export const getRevenueSummary = async (req, res) => {
 export const getPendingPayments = async (req, res) => {
     try {
         const pendingResidents = await Resident.find(
-            { "payments.status": "Pending" },
+            { type: { $ne: 'Guest' }, "payments.status": "Pending" },
             { name: 1, phoneNumber: 1, roomNumber: 1, "payments.$": 1 }
         );
 
-        const pendingGuests = await Guest.find(
-            { paymentStatus: "Pending" },
-            { name: 1, phoneNumber: 1, amountPaid: 1 }
+        const pendingGuests = await Resident.find(
+            { type: 'Guest', "payments.status": "Pending" },
+            { name: 1, phoneNumber: 1, roomNumber: 1, "payments.$": 1 }
         );
 
         res.status(200).json({

@@ -1,5 +1,4 @@
 import Resident from '../models/Resident.js';
-import Guest from '../models/Guest.js';
 import { getIO } from '../socket.js';
 
 // @desc    Check if a resident is "In" or "Out" for meals
@@ -7,23 +6,15 @@ import { getIO } from '../socket.js';
 export const getFoodStatus = async (req, res) => {
     try {
         const { phoneNumber } = req.params;
-        const resident = await Resident.findOne({ phoneNumber });
+        const person = await Resident.findOne({ phoneNumber });
 
-        if (!resident) {
-            // If no resident found, check if it's a guest
-            const guest = await Guest.findOne({ phoneNumber, checkOutDate: null });
-            if (!guest) {
-                return res.status(404).json({ message: "Resident or Guest not found" });
-            }
-            return res.status(200).json({
-                name: guest.name,
-                dailyMeals: guest.dailyMeals
-            });
-        }       
+        if (!person) {
+            return res.status(404).json({ message: "Resident or Guest not found" });
+        }
 
         res.status(200).json({
-            name: resident.name,
-            dailyMeals: resident.dailyMeals
+            name: person.name,
+            dailyMeals: person.dailyMeals
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -86,8 +77,8 @@ export const getDailyFoodReport = async (req, res) => {
             ]
         });
 
-        // 2. Filtered Guests (Checked-in guests only)
-        const activeGuests = await Guest.find({}); 
+        // 2. Filtered Guests (type=Guest in Resident collection)
+        const activeGuests = await Resident.find({ type: 'Guest' }); 
 
         const getCounts = (list) => ({
             breakfast: list.filter(p => p.dailyMeals.breakfast).length,
