@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import API from "../../API/axios";
 import styles from "./AD_Edit_Resident.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
+import { EditResidentSkeleton } from "./Components/Skeleton/Skeleton";
+import Loader from "../Resident/Components/Loader/Loader";
 
 const toInputDate = (dateValue) => {
   if (!dateValue) return "";
@@ -145,10 +147,10 @@ export default function Admin_EditResident() {
             <button className={styles.backBtn} onClick={() => navigate(-1)}>
               Back to Profile
             </button>
-            <h2 className={styles.sectionTitle}>Resident Details</h2>
+            <h2 className={styles.sectionTitle}>Edit Resident Details</h2>
           </div>
 
-          {loading ? <div className={styles.messageBox}>Loading resident details...</div> : null}
+          {loading ? <EditResidentSkeleton /> : null}
 
           {!loading ? (
             <form className={styles.formCard} onSubmit={handleSubmit}>
@@ -216,6 +218,14 @@ export default function Admin_EditResident() {
           ) : null}
         </div>
       </main>
+
+      {saving && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text="Updating..." />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

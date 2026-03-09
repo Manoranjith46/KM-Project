@@ -239,6 +239,27 @@
 	background: var(--glass-bg);
 }
 
+.loaderOverlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.28);
+	backdrop-filter: blur(3px);
+	-webkit-backdrop-filter: blur(3px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1100;
+}
+
+.loaderPopup {
+	width: min(92vw, 420px);
+	padding: 0.5rem;
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.92);
+	border: 1px solid rgba(255, 255, 255, 0.95);
+	box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
+}
+
 @media (max-width: 768px) {
 	.mainContent {
 		margin-left: 0;

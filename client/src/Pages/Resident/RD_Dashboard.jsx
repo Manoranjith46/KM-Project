@@ -23,6 +23,7 @@ export default function Resident_Dashboard() {
   });
 
   const [meals, setMeals] = useState({});
+  const [tomorrowMenu, setTomorrowMenu] = useState(null);
   const socketRef = useSocket(user?.mobileNumber);
 
   const fetchResidentProfile = useCallback(async () => {
@@ -88,6 +89,23 @@ export default function Resident_Dashboard() {
     fetchFinanceSummary();
   }, [fetchFinanceSummary]);
 
+  // Fetch tomorrow's menu
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const tomorrowDay = DAYS[(new Date().getDay() + 1) % 7];
+
+  const fetchTomorrowMenu = useCallback(async () => {
+    try {
+      const { data } = await API.get(`/kitchen/menu?day=${tomorrowDay}`);
+      setTomorrowMenu(data);
+    } catch (err) {
+      console.error("Error fetching tomorrow menu:", err);
+    }
+  }, [tomorrowDay]);
+
+  useEffect(() => {
+    fetchTomorrowMenu();
+  }, [fetchTomorrowMenu]);
+
   // Socket.IO real-time listeners
   useEffect(() => {
     const socket = socketRef.current;
@@ -112,13 +130,15 @@ export default function Resident_Dashboard() {
     socket.on('resident:gate-updated', onGateUpdated);
     socket.on('resident:meals-updated', onMealsUpdated);
     socket.on('resident:payment-updated', onPaymentUpdated);
+    socket.on('menu:updated', fetchTomorrowMenu);
 
     return () => {
       socket.off('resident:gate-updated', onGateUpdated);
       socket.off('resident:meals-updated', onMealsUpdated);
       socket.off('resident:payment-updated', onPaymentUpdated);
+      socket.off('menu:updated', fetchTomorrowMenu);
     };
-  }, [socketRef, fetchFinanceSummary]);
+  }, [socketRef, fetchFinanceSummary, fetchTomorrowMenu]);
 
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [scanAction, setScanAction] = useState("");
@@ -344,6 +364,49 @@ export default function Resident_Dashboard() {
               </button>
             </div>
           </section>
+
+          {/* 6. TOMORROW'S MENU (Full width) */}
+          {tomorrowMenu && (
+            <section className={`${styles.glassCard} ${styles.tomorrowMenuSection}`}>
+              <div className={styles.cardHeader}>
+                <h3 className={styles.cardTitle}>Tomorrow's Menu</h3>
+                <span className={styles.badgeGreen}>{tomorrowDay}</span>
+              </div>
+              <div className={styles.tomorrowMenuGrid}>
+                {[
+                  { key: 'breakfast', label: 'Breakfast', icon: '🥞' },
+                  { key: 'lunch', label: 'Lunch', icon: '🍛' },
+                  { key: 'dinner', label: 'Dinner', icon: '🍲' },
+                ].map((meal) => {
+                  const mealData = tomorrowMenu[meal.key];
+                  const hasItems = mealData?.items?.length > 0;
+                  return (
+                    <div key={meal.key} className={styles.tomorrowMealCard}>
+                      <div className={styles.tomorrowMealHeader}>
+                        <span className={styles.tomorrowMealIcon}>{meal.icon}</span>
+                        <div>
+                          <p className={styles.tomorrowMealLabel}>{meal.label}</p>
+                          {mealData?.time && <small className={styles.tomorrowMealTime}>{mealData.time}</small>}
+                        </div>
+                      </div>
+                      {hasItems ? (
+                        <ul className={styles.tomorrowMealItems}>
+                          {mealData.items.map((item, i) => (
+                            <li key={i} className={styles.tomorrowMealItem}>
+                              <span className={styles.tomorrowMealDot} />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className={styles.tomorrowMealEmpty}>Menu not set yet</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
         </div> {/* End of Main Grid */}
         </>)}

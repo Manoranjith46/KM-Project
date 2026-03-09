@@ -1,95 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import styles from "./AD_Kitchen.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Topbar from "./Components/Header/Topbar";
+import { KitchenSkeleton } from "./Components/Skeleton/Skeleton";
+import API from "../../API/axios";
+import { useAuth } from "../../Context/AuthContext";
 
-/* ─── Static data ─── */
-const MEALS = [
-  {
-    id: "breakfast",
-    label: "Breakfast",
-    time: "7:00 AM – 9:00 AM",
-    servings: 42,
-    color: "orange",
-    items: ["Idli & Sambar", "Coconut Chutney", "Poha", "Tea / Coffee"],
-  },
-  {
-    id: "lunch",
-    label: "Lunch",
-    time: "12:00 PM – 2:00 PM",
-    servings: 45,
-    color: "purple",
-    items: ["Dal Tadka", "Jeera Rice", "Roti", "Mixed Veg Sabzi", "Salad"],
-  },
-  {
-    id: "dinner",
-    label: "Dinner",
-    time: "7:00 PM – 9:00 PM",
-    servings: 48,
-    color: "indigo",
-    items: ["Paneer Butter Masala", "Steamed Rice", "Roti", "Dal Makhani", "Sweet"],
-  },
-];
-
-const FEEDBACK = [
-  { id: 1, initials: "RS", name: "Rahul Sharma", rating: 5, comment: "Breakfast was absolutely delicious today!", time: "9:10 AM" },
-  { id: 2, initials: "PP", name: "Priya Patel", rating: 4, comment: "Lunch was good, could use more variety.", time: "2:30 PM" },
-  { id: 3, initials: "AK", name: "Amit Kumar", rating: 3, comment: "Dinner okay, paneer was slightly cold.", time: "9:05 PM" },
-  { id: 4, initials: "SR", name: "Sneha Reddy", rating: 5, comment: "Loved the coconut chutney at breakfast!", time: "8:55 AM" },
-  { id: 5, initials: "VS", name: "Vikram Singh", rating: 4, comment: "Dal makhani was great at dinner.", time: "9:20 PM" },
-];
-
-// Meal participation data
-const MEAL_PARTICIPATION = {
-  breakfast: {
-    willing: [
-      { id: 1, name: "Rahul Sharma", room: "101", initials: "RS" },
-      { id: 2, name: "Priya Patel", room: "205", initials: "PP" },
-      { id: 3, name: "Amit Kumar", room: "312", initials: "AK" },
-      { id: 4, name: "Sneha Reddy", room: "108", initials: "SR" },
-      { id: 5, name: "Vikram Singh", room: "201", initials: "VS" },
-      { id: 6, name: "Anita Desai", room: "305", initials: "AD" },
-      { id: 7, name: "Rajesh Kumar", room: "110", initials: "RK" },
-      { id: 8, name: "Meena Iyer", room: "315", initials: "MI" },
-    ],
-    notWilling: [
-      { id: 9, name: "Karan Mehta", room: "407", initials: "KM" },
-      { id: 10, name: "Deepa Nair", room: "502", initials: "DN" },
-    ],
-  },
-  lunch: {
-    willing: [
-      { id: 1, name: "Rahul Sharma", room: "101", initials: "RS" },
-      { id: 2, name: "Priya Patel", room: "205", initials: "PP" },
-      { id: 3, name: "Amit Kumar", room: "312", initials: "AK" },
-      { id: 4, name: "Sneha Reddy", room: "108", initials: "SR" },
-      { id: 5, name: "Vikram Singh", room: "201", initials: "VS" },
-      { id: 6, name: "Anita Desai", room: "305", initials: "AD" },
-      { id: 7, name: "Rajesh Kumar", room: "110", initials: "RK" },
-      { id: 8, name: "Meena Iyer", room: "315", initials: "MI" },
-      { id: 9, name: "Karan Mehta", room: "407", initials: "KM" },
-    ],
-    notWilling: [
-      { id: 10, name: "Deepa Nair", room: "502", initials: "DN" },
-    ],
-  },
-  dinner: {
-    willing: [
-      { id: 1, name: "Rahul Sharma", room: "101", initials: "RS" },
-      { id: 2, name: "Priya Patel", room: "205", initials: "PP" },
-      { id: 3, name: "Amit Kumar", room: "312", initials: "AK" },
-      { id: 4, name: "Sneha Reddy", room: "108", initials: "SR" },
-      { id: 5, name: "Vikram Singh", room: "201", initials: "VS" },
-      { id: 6, name: "Anita Desai", room: "305", initials: "AD" },
-      { id: 7, name: "Rajesh Kumar", room: "110", initials: "RK" },
-      { id: 8, name: "Meena Iyer", room: "315", initials: "MI" },
-      { id: 9, name: "Karan Mehta", room: "407", initials: "KM" },
-      { id: 10, name: "Deepa Nair", room: "502", initials: "DN" },
-    ],
-    notWilling: [],
-  },
-};
+const MEAL_COLORS = { breakfast: "orange", lunch: "purple", dinner: "indigo" };
 
 function StarRating({ rating }) {
   return (
@@ -115,12 +34,21 @@ function StarRating({ rating }) {
 export default function Admin_Kitchen() {
 
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [activeNav, setActiveNav] = useState("kitchen");
   const [isMobile, setIsMobile] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [listType, setListType] = useState(null); // 'willing' or 'notWilling'
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [menu, setMenu] = useState(null);
+  const [participation, setParticipation] = useState({
+    breakfast: { willing: [], notWilling: [] },
+    lunch: { willing: [], notWilling: [] },
+    dinner: { willing: [], notWilling: [] },
+  });
 
   useEffect(() => {
     const checkMobile = () => {
@@ -131,12 +59,67 @@ export default function Admin_Kitchen() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayDay = DAYS[new Date().getDay()];
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [menuRes, participationRes] = await Promise.allSettled([
+        API.get(`/kitchen/menu?day=${todayDay}`),
+        API.get('/kitchen/participation'),
+      ]);
+      if (menuRes.status === 'fulfilled') setMenu(menuRes.value.data);
+      if (participationRes.status === 'fulfilled') setParticipation(participationRes.value.data);
+    } catch (err) {
+      console.error('Failed to fetch kitchen data', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Socket.IO – listen for real-time menu updates
+  useEffect(() => {
+    const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const socket = io(socketUrl, {
+      query: { phoneNumber: user?.mobileNumber, role: user?.role },
+      withCredentials: true,
+    });
+
+    socket.on('menu:updated', () => {
+      fetchData();
+    });
+
+    return () => socket.disconnect();
+  }, [user, fetchData]);
+
   const today = new Date().toLocaleDateString("en-IN", {
     weekday: "long",
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrow = tomorrowDate.toLocaleDateString("en-IN", {
+    weekday: "long",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+  // Build meals array from API data
+  const meals = menu ? ['breakfast', 'lunch', 'dinner'].map((key) => ({
+    id: key,
+    label: key.charAt(0).toUpperCase() + key.slice(1),
+    time: menu[key]?.time || '—',
+    color: MEAL_COLORS[key],
+    items: menu[key]?.items || [],
+  })) : [];
 
   return (
     <div className={styles.dashboardWrapper}>
@@ -169,18 +152,16 @@ export default function Admin_Kitchen() {
           <button className={styles.updateBtn} onClick={() => { navigate('/admin/kitchen/update') }} >+ Update Menu</button>
         </div>
 
+        {isLoading ? <KitchenSkeleton /> : (
+        <>
         {/* ── Meal service cards ── */}
         <div className={styles.mealGrid}>
-          {MEALS.map((meal) => (
+          {meals.map((meal) => (
             <article key={meal.id} className={`${styles.mealCard} ${styles[`mealCard_${meal.color}`]}`}>
               <div className={styles.mealCardTop}>
                 <div>
                   <h3 className={styles.mealLabel}>{meal.label}</h3>
                   <p className={styles.mealTime}>{meal.time}</p>
-                </div>
-                <div className={styles.mealServingsBadge}>
-                  <span className={styles.mealServingsNum}>{meal.servings}</span>
-                  <span className={styles.mealServingsText}>Servings</span>
                 </div>
               </div>
               <div className={styles.mealDivider} aria-hidden="true" />
@@ -196,11 +177,11 @@ export default function Admin_Kitchen() {
           ))}
         </div>
 
-        {/* ── Meal Participation Section ── */}
+        {/* ── Meal Participation Section (Tomorrow) ── */}
         <div className={styles.sectionHeader} style={{ marginTop: '3rem' }}>
           <div>
-            <h2 className={styles.sectionTitle}>Meal Participation</h2>
-            <p className={styles.sectionDate}>Who's eating today?</p>
+            <h2 className={styles.sectionTitle}>Tomorrow's Meal Participation</h2>
+            <p className={styles.sectionDate}>{tomorrow}</p>
           </div>
         </div>
 
@@ -212,12 +193,12 @@ export default function Admin_Kitchen() {
               <h3 className={styles.participationLabel}>Breakfast</h3>
               <div className={styles.participationStats}>
                 <div className={styles.participationStat}>
-                  <span className={styles.participationCount}>{MEAL_PARTICIPATION.breakfast.willing.length}</span>
+                  <span className={styles.participationCount}>{participation.breakfast.willing.length}</span>
                   <span className={styles.participationText}>Willing</span>
                 </div>
                 <div className={styles.participationDivider} />
                 <div className={styles.participationStat}>
-                  <span className={styles.participationCountNot}>{MEAL_PARTICIPATION.breakfast.notWilling.length}</span>
+                  <span className={styles.participationCountNot}>{participation.breakfast.notWilling.length}</span>
                   <span className={styles.participationText}>Not Willing</span>
                 </div>
               </div>
@@ -240,12 +221,12 @@ export default function Admin_Kitchen() {
               <h3 className={styles.participationLabel}>Lunch</h3>
               <div className={styles.participationStats}>
                 <div className={styles.participationStat}>
-                  <span className={styles.participationCount}>{MEAL_PARTICIPATION.lunch.willing.length}</span>
+                  <span className={styles.participationCount}>{participation.lunch.willing.length}</span>
                   <span className={styles.participationText}>Willing</span>
                 </div>
                 <div className={styles.participationDivider} />
                 <div className={styles.participationStat}>
-                  <span className={styles.participationCountNot}>{MEAL_PARTICIPATION.lunch.notWilling.length}</span>
+                  <span className={styles.participationCountNot}>{participation.lunch.notWilling.length}</span>
                   <span className={styles.participationText}>Not Willing</span>
                 </div>
               </div>
@@ -268,12 +249,12 @@ export default function Admin_Kitchen() {
               <h3 className={styles.participationLabel}>Dinner</h3>
               <div className={styles.participationStats}>
                 <div className={styles.participationStat}>
-                  <span className={styles.participationCount}>{MEAL_PARTICIPATION.dinner.willing.length}</span>
+                  <span className={styles.participationCount}>{participation.dinner.willing.length}</span>
                   <span className={styles.participationText}>Willing</span>
                 </div>
                 <div className={styles.participationDivider} />
                 <div className={styles.participationStat}>
-                  <span className={styles.participationCountNot}>{MEAL_PARTICIPATION.dinner.notWilling.length}</span>
+                  <span className={styles.participationCountNot}>{participation.dinner.notWilling.length}</span>
                   <span className={styles.participationText}>Not Willing</span>
                 </div>
               </div>
@@ -290,6 +271,8 @@ export default function Admin_Kitchen() {
             </div>
           </article>
         </div>
+        </>
+        )}
       </main>
 
       {/* ══════════ PARTICIPATION LIST MODAL ══════════ */}
@@ -298,8 +281,7 @@ export default function Admin_Kitchen() {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>
-                {listType === 'willing' ? '✅ Willing to Eat' : '🚫 Not Willing to Eat'}
-                {selectedMeal && ` - ${selectedMeal.charAt(0).toUpperCase() + selectedMeal.slice(1)}`}
+                {selectedMeal && `${selectedMeal.charAt(0).toUpperCase() + selectedMeal.slice(1)}`} — Participation
               </h3>
               <button 
                 className={styles.modalCloseBtn}
@@ -310,13 +292,29 @@ export default function Admin_Kitchen() {
               </button>
             </div>
 
+            {/* Willing / Not Willing toggle */}
+            <div className={styles.modalTabs}>
+              <button
+                className={`${styles.modalTab} ${listType === 'willing' ? styles.modalTabActive : ''}`}
+                onClick={() => setListType('willing')}
+              >
+                ✅ Willing ({selectedMeal ? participation[selectedMeal].willing.length : 0})
+              </button>
+              <button
+                className={`${styles.modalTab} ${listType === 'notWilling' ? styles.modalTabActive : ''}`}
+                onClick={() => setListType('notWilling')}
+              >
+                🚫 Not Willing ({selectedMeal ? participation[selectedMeal].notWilling.length : 0})
+              </button>
+            </div>
+
 
             <div className={styles.modalBody}>
               {selectedMeal ? (
                 // Show list for selected meal
                 <div className={styles.residentsList}>
-                  {MEAL_PARTICIPATION[selectedMeal][listType].length > 0 ? (
-                    MEAL_PARTICIPATION[selectedMeal][listType].map((resident) => (
+                  {participation[selectedMeal][listType].length > 0 ? (
+                    participation[selectedMeal][listType].map((resident) => (
                       <div key={resident.id} className={styles.residentItem}>
                         <div className={styles.residentAvatar}>{resident.initials}</div>
                         <div className={styles.residentInfo}>
@@ -341,8 +339,8 @@ export default function Admin_Kitchen() {
                         {meal === 'breakfast' ? '🌅' : meal === 'lunch' ? '🍱' : '🌙'} {meal.charAt(0).toUpperCase() + meal.slice(1)}
                       </h4>
                       <div className={styles.residentsList}>
-                        {MEAL_PARTICIPATION[meal][listType].length > 0 ? (
-                          MEAL_PARTICIPATION[meal][listType].map((resident) => (
+                        {participation[meal][listType].length > 0 ? (
+                          participation[meal][listType].map((resident) => (
                             <div key={resident.id} className={styles.residentItem}>
                               <div className={styles.residentAvatar}>{resident.initials}</div>
                               <div className={styles.residentInfo}>

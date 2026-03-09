@@ -2,12 +2,27 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AD_Update_Menu.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
+import Loader from "../Resident/Components/Loader/Loader";
+import API from "../../API/axios";
+
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function Admin_UpdateMenu() {
   const navigate = useNavigate(); 
   
   const [activeNav, setActiveNav] = useState("kitchen");
   const [isMobile, setIsMobile] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const todayDay = DAYS[new Date().getDay()];
+  const [selectedDay, setSelectedDay] = useState(todayDay);
+
+  // Per-day form state: { Sunday: { breakfastTime, breakfastItems, ... }, ... }
+  const emptyForm = { breakfastTime: "", breakfastItems: "", lunchTime: "", lunchItems: "", dinnerTime: "", dinnerItems: "" };
+  const [weekForms, setWeekForms] = useState(
+    Object.fromEntries(DAYS.map((d) => [d, { ...emptyForm }]))
+  );
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -16,25 +31,63 @@ export default function Admin_UpdateMenu() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Today's date formatted for the date input default
-  const todayDate = new Date().toISOString().split('T')[0];
+  // Fetch all 7 days on mount
+  useEffect(() => {
+    const fetchWeek = async () => {
+      try {
+        const { data } = await API.get('/kitchen/menu/week');
+        const forms = {};
+        for (const menu of data) {
+          forms[menu.day] = {
+            breakfastTime: menu.breakfast?.time || "",
+            breakfastItems: (menu.breakfast?.items || []).join("\n"),
+            lunchTime: menu.lunch?.time || "",
+            lunchItems: (menu.lunch?.items || []).join("\n"),
+            dinnerTime: menu.dinner?.time || "",
+            dinnerItems: (menu.dinner?.items || []).join("\n"),
+          };
+        }
+        setWeekForms((prev) => ({ ...prev, ...forms }));
+      } catch (err) {
+        console.error("Failed to fetch week menu", err);
+      } finally {
+        setLoaded(true);
+      }
+    };
+    fetchWeek();
+  }, []);
 
-  const [form, setForm] = useState({
-    menuDate: todayDate,
-    breakfastTime: "07:00 AM - 09:00 AM",
-    breakfastItems: "Idli & Sambar\nCoconut Chutney\nPoha\nTea / Coffee",
-    lunchTime: "12:00 PM - 02:00 PM",
-    lunchItems: "Dal Tadka\nJeera Rice\nRoti\nMixed Veg Sabzi\nSalad",
-    dinnerTime: "07:00 PM - 09:00 PM",
-    dinnerItems: "Paneer Butter Masala\nSteamed Rice\nRoti\nDal Makhani\nSweet",
-  });
+  const form = weekForms[selectedDay];
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setWeekForms((prev) => ({
+      ...prev,
+      [selectedDay]: { ...prev[selectedDay], [e.target.name]: e.target.value },
+    }));
   };
 
   const handleGoBack = () => {
     navigate('/admin/kitchen');
+  };
+
+  const handlePublish = async () => {
+    setIsSubmitting(true);
+    try {
+      const toItems = (str) => str.split("\n").map((s) => s.trim()).filter(Boolean);
+
+      await API.put("/kitchen/menu", {
+        day: selectedDay,
+        breakfast: { time: form.breakfastTime, items: toItems(form.breakfastItems) },
+        lunch: { time: form.lunchTime, items: toItems(form.lunchItems) },
+        dinner: { time: form.dinnerTime, items: toItems(form.dinnerItems) },
+      });
+
+      navigate("/admin/kitchen");
+    } catch (err) {
+      console.error("Failed to publish menu", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -71,16 +124,17 @@ export default function Admin_UpdateMenu() {
           <div className={styles.formContainer}>
             
             <div className={styles.formHeaderRow}>
-              <div className={styles.fieldGroupDate}>
-                <label className={styles.label} htmlFor="menuDate">Select Date</label>
-                <input 
-                  id="menuDate" 
-                  name="menuDate" 
-                  type="date" 
-                  className={styles.input} 
-                  value={form.menuDate} 
-                  onChange={handleChange} 
-                />
+              <div className={styles.dayTabsContainer}>
+                {DAYS.map((day) => (
+                  <button
+                    key={day}
+                    className={`${styles.dayTab} ${selectedDay === day ? styles.dayTabActive : ''} ${day === todayDay ? styles.dayTabToday : ''}`}
+                    onClick={() => setSelectedDay(day)}
+                  >
+                    <span className={styles.dayTabShort}>{day.slice(0, 3)}</span>
+                    <span className={styles.dayTabFull}>{day}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -159,13 +213,22 @@ export default function Admin_UpdateMenu() {
             <div className={styles.formFooter}>
               <div className={styles.footerActions}>
                 <button className={styles.cancelBtn} onClick={handleGoBack}>Cancel</button>
-                <button className={styles.saveBtn}>Publish Menu</button>
+                <button className={styles.saveBtn} onClick={handlePublish} disabled={isSubmitting}>Publish Menu</button>
               </div>
             </div>
 
           </div>
         </div>
       </main>
+
+      {/* ══════════ LOADER OVERLAY ══════════ */}
+      {isSubmitting && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text="Publishing..." />
+          </div>
+        </div>
+      )}
 
       {/* Bottom Nav (mobile <=768px) */}
       {isMobile && (

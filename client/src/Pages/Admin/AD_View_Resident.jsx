@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./AD_View_Resident.module.css";
 import Popup from "./Components/Popup/Popup";
+import { ViewResidentSkeleton } from "./Components/Skeleton/Skeleton";
 
 export default function Admin_View_Resident() {
   // useParams grabs the ID from the URL (e.g., /admin/residents/:phone)
@@ -133,9 +134,8 @@ export default function Admin_View_Resident() {
     });
   };
 
-  if (isLoading) return <div className={styles.loadingMessage}>Loading profile...</div>;
   if (error) return <div className={styles.errorMessage}>{error}</div>;
-  if (!resident) return <div className={styles.errorMessage}>Resident not found.</div>;
+  if (!isLoading && !resident) return <div className={styles.errorMessage}>Resident not found.</div>;
 
   return (
     <div className={styles.pageContainer}>
@@ -151,6 +151,7 @@ export default function Admin_View_Resident() {
         <h1 className={styles.pageTitle}>Resident Profile</h1>
       </div>
 
+      {isLoading ? <ViewResidentSkeleton /> : (
       <div className={styles.gridContainer}>
         
         {/* Left Card: Basic Information */}
@@ -237,6 +238,7 @@ export default function Admin_View_Resident() {
         </div>
 
       </div>
+      )}
 
       <Popup
         isOpen={popupConfig.isOpen}

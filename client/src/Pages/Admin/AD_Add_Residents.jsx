@@ -5,11 +5,13 @@ import styles from './AD_Add_Residents.module.css';
 import Sidebar from "./Components/Sidebar/Sidebar";
 import { getCroppedImg, handleFileChange, handleCropUpload, handleClearPreview, handleCloseCropModal, handleResetCrop } from "../../Components/ImageCrop";
 import Popup from "./Components/Popup/Popup";
+import Loader from "../Resident/Components/Loader/Loader";
 import API from "../../API/axios";
 
 export default function Admin_AddResident() {
   const navigate = useNavigate(); 
   const [popupConfig, setPopupConfig] = useState({ isOpen: false, type: '', title: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   
   const [activeNav, setActiveNav] = useState("residents");
@@ -253,6 +255,7 @@ export default function Admin_AddResident() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       // 1. Build FormData for multipart upload
       const formData = new FormData();
@@ -348,6 +351,8 @@ export default function Admin_AddResident() {
         title: 'Error',
         message: errorMessage
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -737,8 +742,6 @@ export default function Admin_AddResident() {
 
           </div>
         </div>
-
-        {/* Document Crop Modal */}
         {showCropModal && (
           <div className={styles.cropModalOverlay}>
             <div className={styles.cropModal}>
@@ -840,6 +843,13 @@ export default function Admin_AddResident() {
                 <span className={styles.bottomNavLabel}>More</span>
             </button>
         </nav>
+      )}
+      {isSubmitting && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text="Creating..." />
+          </div>
+        </div>
       )}
       <Popup 
         isOpen={popupConfig.isOpen}

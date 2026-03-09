@@ -169,12 +169,66 @@
   flex-wrap: wrap;
 }
 
-.fieldGroupDate {
+/* Day Tabs */
+.dayTabsContainer {
   display: flex;
-  flex-direction: column;
   gap: 0.5rem;
-  min-width: 200px;
+  flex-wrap: wrap;
+  width: 100%;
 }
+
+.dayTab {
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--background);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+  position: relative;
+}
+
+.dayTab:hover {
+  background: var(--pg-purple-light);
+  color: var(--pg-purple);
+  border-color: var(--pg-purple);
+}
+
+.dayTabActive {
+  background: linear-gradient(135deg, #7c3aed, #4F46E5);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+}
+
+.dayTabActive:hover {
+  background: linear-gradient(135deg, #7c3aed, #4F46E5);
+  color: #fff;
+}
+
+.dayTabToday::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--pg-purple);
+}
+
+.dayTabActive.dayTabToday::after {
+  background: #fff;
+}
+
+.dayTabFull { display: inline; }
+.dayTabShort { display: none; }
 
 .ghostBtn {
   padding: 0.85rem 1.2rem;
@@ -420,9 +474,17 @@
     align-items: flex-start;
   }
 
-  .fieldGroupDate {
-    width: 100%;
+  .dayTabsContainer {
+    gap: 0.35rem;
   }
+
+  .dayTab {
+    padding: 0.6rem 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .dayTabFull { display: none; }
+  .dayTabShort { display: inline; }
 
   .ghostBtn {
     width: 100%;
@@ -439,4 +501,29 @@
 
 @media (max-width: 320px) {
   .mainContent { padding: 0.75rem; }
+}
+
+/* ============================================
+   LOADER OVERLAY
+   ============================================ */
+.loaderOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.loaderPopup {
+  background: #fff;
+  border-radius: 20px;
+  padding: 2.5rem 3rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

@@ -11,6 +11,7 @@ import foodRoutes from './routes/foodRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import kitchenRoutes from './routes/kitchenRoutes.js';
 
 // Load config
 dotenv.config({ silent: true });
@@ -44,6 +45,7 @@ app.use('/api/residents', residentRoutes);
 app.use('/api/food', foodRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/kitchen', kitchenRoutes);
 
 const PORT = process.env.PORT || 5000;
 

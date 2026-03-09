@@ -4,6 +4,7 @@ import styles from "./AD_Residents.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Topbar from "./Components/Header/Topbar";
 import Popup from "./Components/Popup/Popup";
+import { ResidentsSkeleton } from "./Components/Skeleton/Skeleton";
 import API from "../../API/axios";
 
 function getInitials(name) {
@@ -162,6 +163,8 @@ export default function AD_Residents() {
           {isLoading && <div className={styles.emptyRow}>Loading occupants...</div>}
           {error && <div className={styles.emptyRow}>{error}</div>}
 
+          {isLoading ? <ResidentsSkeleton /> : (
+          <>
           {/* Quick Stats */}
           <div className={styles.statsRow}>
             <div className={`${styles.statCard} ${styles.statTotal}`}>
@@ -254,7 +257,6 @@ export default function AD_Residents() {
               </table>
             </div>
           </div>
-
           {/* Mobile Card List */}
           <div className={styles.mobileCardList}>
             {filtered.length === 0 ? (
@@ -263,6 +265,8 @@ export default function AD_Residents() {
               filtered.map((r) => <OccupantCard key={r.id} r={r} navigate={navigate} />)
             )}
           </div>
+          </>
+          )}
 
         </div>
       </main>
