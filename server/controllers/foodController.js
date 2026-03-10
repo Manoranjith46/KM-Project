@@ -35,6 +35,7 @@ export const toggleFoodStatus = async (req, res) => {
         await resident.save();
 
         getIO().to(phoneNumber).emit('resident:meals-updated', resident.dailyMeals);
+        getIO().emit('participation:updated');
 
         res.status(200).json({
             message: `${mealType} is now set to ${resident.dailyMeals[mealType] ? 'IN' : 'OUT'}`,

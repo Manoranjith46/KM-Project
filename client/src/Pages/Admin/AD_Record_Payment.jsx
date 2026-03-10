@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import styles from "./AD_Record_Payment.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
+import Loader from "./Components/Loader/Loader";
 import { useNavigate } from "react-router-dom";
+import API from "../../API/axios";
 
 export default function Admin_Record_Payment() {
 
@@ -9,7 +11,8 @@ export default function Admin_Record_Payment() {
 
   const [activeNav, setActiveNav] = useState("payments");
   const [isMobile, setIsMobile] = useState(false);
-  const [activeTab, setActiveTab] = useState("manual"); // 'manual' or 'verify'
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -34,68 +37,38 @@ export default function Admin_Record_Payment() {
     navigate('/admin/payments');
   };
 
-  const handleViewPayment = (txn) => {
-    navigate('/admin/payments/view', { state: { payment: txn } });
+  const handleSubmitCash = async () => {
+    setError("");
+    if (!cashForm.resident || !cashForm.amount) {
+      setError("Mobile number and amount are required.");
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      // Look up resident name by phone number
+      const { data: occData } = await API.get("/admin/occupants");
+      const match = (occData.occupants || []).find(
+        (r) => r.phoneNumber === cashForm.resident
+      );
+      if (!match) {
+        setError("No resident found with this mobile number.");
+        return;
+      }
+      await API.post("/payments/cash", {
+        name: match.name,
+        phoneNumber: cashForm.resident,
+        amount: Number(cashForm.amount),
+        date: cashForm.date || new Date().toISOString(),
+      });
+      navigate("/admin/payments");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to record payment.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Mock data for pending UPI verifications
-  const pendingUPIList = [
-    {
-      id: "TXN-84729",
-      residentName: "Priya Patel",
-      room: "205",
-      mobile: "9876543210",
-      amount: "8,500",
-      date: "27 Feb 2026",
-      time: "10:35 AM",
-      appName: "Google Pay",
-      utr: "305819283746",
-    },
-    {
-      id: "TXN-86211",
-      residentName: "Rahul Sharma",
-      room: "101",
-      mobile: "9123456789",
-      amount: "7,200",
-      date: "26 Feb 2026",
-      time: "7:18 PM",
-      appName: "PhonePe",
-      utr: "998173552901",
-    },
-    {
-      id: "TXN-87003",
-      residentName: "Vikram Singh",
-      room: "204",
-      mobile: "9988776655",
-      amount: "9,000",
-      date: "25 Feb 2026",
-      time: "9:04 AM",
-      appName: "Paytm",
-      utr: "443901225871",
-    },
-    {
-      id: "TXN-86212",
-      residentName: "Rahul Sharma",
-      room: "101",
-      mobile: "9123456789",
-      amount: "7,200",
-      date: "26 Feb 2026",
-      time: "7:18 PM",
-      appName: "PhonePe",
-      utr: "998173552901",
-    },
-    {
-      id: "TXN-87004",
-      residentName: "Vikram Singh",
-      room: "204",
-      mobile: "9988776655",
-      amount: "9,000",
-      date: "25 Feb 2026",
-      time: "9:04 AM",
-      appName: "Paytm",
-      utr: "443901225871",
-    },
-  ];
+
 
   return (
     <div className={styles.dashboardWrapper}>
@@ -126,25 +99,6 @@ export default function Admin_Record_Payment() {
         <div className={styles.content}>
           <div className={styles.formContainer}>
             
-            {/* Mode Tabs */}
-            <div className={styles.tabsRow}>
-              <button 
-                className={`${styles.tabBtn} ${activeTab === "manual" ? styles.tabBtnActive : ""}`}
-                onClick={() => setActiveTab("manual")}
-              >
-                Log Cash Payment
-              </button>
-              <button 
-                className={`${styles.tabBtn} ${activeTab === "verify" ? styles.tabBtnActive : ""}`}
-                onClick={() => setActiveTab("verify")}
-              >
-                Verify UPI Payments
-                <span className={styles.badgeCount}>{pendingUPIList.length}</span>
-              </button>
-            </div>
-
-            {/* TAB 1: MANUAL CASH ENTRY */}
-            {activeTab === "manual" && (
               <div className={styles.tabContentFade}>
                 <div className={styles.formHeader}>
                   <h3 className={styles.formTitle}>Manual Cash Entry</h3>
@@ -182,57 +136,16 @@ export default function Admin_Record_Payment() {
                 </div>
 
                 <div className={styles.formFooter}>
+                  {error && <p className={styles.errorText}>{error}</p>}
                   <hr className={styles.divider} />
                   <div className={styles.footerActions}>
                     <button className={styles.cancelBtn} onClick={handleGoBack}>Cancel</button>
-                    <button className={styles.saveBtn}>Record Cash Payment</button>
+                    <button className={styles.saveBtn} onClick={handleSubmitCash} disabled={isSubmitting}>
+                      {isSubmitting ? "Recording..." : "Record Cash Payment"}
+                    </button>
                   </div>
                 </div>
               </div>
-            )}
-
-            {/* TAB 2: UPI VERIFICATION */}
-            {activeTab === "verify" && (
-              <div className={styles.tabContentFade}>
-                <div className={styles.formHeader}>
-                  <h3 className={styles.formTitle}>Pending UPI Verifications</h3>
-                  <p className={styles.formSubtext}>Review screenshots uploaded by residents to approve their payments.</p>
-                </div>
-
-                <div className={styles.tableContainer}>
-                  <table className={styles.paymentsTable}>
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Mobile Number</th>
-                        <th>Room</th>
-                        <th>Amount Paid</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pendingUPIList.map((txn) => (
-                        <tr key={txn.id}>
-                          <td>{txn.residentName}</td>
-                          <td>{txn.mobile}</td>
-                          <td>Room {txn.room}</td>
-                          <td>₹{txn.amount}</td>
-                          <td>
-                            <button 
-                              className={styles.btnView}
-                              onClick={() => handleViewPayment(txn)}
-                            >
-                              View
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-              </div>
-            )}
 
           </div>
         </div>
@@ -253,6 +166,13 @@ export default function Admin_Record_Payment() {
                 <span className={styles.bottomNavLabel}>Payments</span>
             </button>
         </nav>
+      )}
+      {isSubmitting && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text="Recording..." />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -128,6 +128,107 @@ export function EditResidentSkeleton() {
   );
 }
 
+/* ── Payments Page Skeleton ── */
+export function PaymentSkeleton() {
+  return (
+    <>
+      {/* Summary Cards */}
+      <div className={styles.skeletonStatsRow}>
+        {[1, 2, 3].map((i) => (
+          <SkeletonCard key={i}>
+            <Skeleton width="140px" height="14px" radius="4px" />
+            <Skeleton width="100px" height="32px" radius="6px" />
+            <Skeleton width="90px" height="24px" radius="20px" />
+          </SkeletonCard>
+        ))}
+      </div>
+
+      {/* Filter Row */}
+      <div className={styles.skeletonFilterRow}>
+        <Skeleton width="100%" height="44px" radius="12px" />
+        <Skeleton width="100%" height="44px" radius="12px" />
+        <Skeleton width="100%" height="44px" radius="12px" />
+        <Skeleton width="100px" height="44px" radius="12px" />
+      </div>
+
+      {/* Table */}
+      <SkeletonCard className={styles.skeletonTableCard}>
+        <div className={styles.skeletonTableHeader}>
+          <Skeleton width="100px" height="12px" radius="4px" />
+          <Skeleton width="70px" height="12px" radius="4px" />
+          <Skeleton width="70px" height="12px" radius="4px" />
+          <Skeleton width="70px" height="12px" radius="4px" />
+          <Skeleton width="60px" height="12px" radius="4px" />
+          <Skeleton width="90px" height="12px" radius="4px" />
+          <Skeleton width="70px" height="12px" radius="4px" />
+          <Skeleton width="50px" height="12px" radius="4px" />
+        </div>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className={styles.skeletonTableRow}>
+            <div className={styles.skeletonRowCenter}>
+              <Skeleton width="36px" height="36px" radius="50%" />
+              <Skeleton width="110px" height="16px" radius="4px" />
+            </div>
+            <Skeleton width="50px" height="16px" radius="4px" />
+            <Skeleton width="90px" height="16px" radius="4px" />
+            <Skeleton width="70px" height="16px" radius="4px" />
+            <Skeleton width="80px" height="16px" radius="4px" />
+            <Skeleton width="60px" height="24px" radius="8px" />
+            <Skeleton width="80px" height="28px" radius="20px" />
+            <Skeleton width="32px" height="32px" radius="8px" />
+          </div>
+        ))}
+      </SkeletonCard>
+
+      {/* Mobile cards skeleton (hidden on desktop via CSS) */}
+      <div className={styles.skeletonMobileCards}>
+        {[1, 2, 3].map((i) => (
+          <SkeletonCard key={i}>
+            <div className={styles.skeletonRowCenter}>
+              <Skeleton width="40px" height="40px" radius="50%" />
+              <div>
+                <Skeleton width="120px" height="16px" radius="4px" />
+                <Skeleton width="70px" height="12px" radius="4px" />
+              </div>
+            </div>
+            <Skeleton width="100%" height="1px" radius="0" />
+            <div className={styles.skeletonRowBetween}>
+              <Skeleton width="70px" height="14px" radius="4px" />
+              <Skeleton width="70px" height="14px" radius="4px" />
+              <Skeleton width="70px" height="14px" radius="4px" />
+            </div>
+            <Skeleton width="100%" height="36px" radius="10px" />
+          </SkeletonCard>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* ── Verify Payments Skeleton ── */
+export function VerifyPaymentSkeleton() {
+  return (
+    <SkeletonCard className={styles.skeletonTableCard}>
+      <div className={styles.skeletonTableHeader}>
+        <Skeleton width="80px" height="12px" radius="4px" />
+        <Skeleton width="100px" height="12px" radius="4px" />
+        <Skeleton width="90px" height="12px" radius="4px" />
+        <Skeleton width="60px" height="12px" radius="4px" />
+        <Skeleton width="60px" height="12px" radius="4px" />
+      </div>
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className={styles.skeletonTableRow}>
+          <Skeleton width="120px" height="16px" radius="4px" />
+          <Skeleton width="100px" height="16px" radius="4px" />
+          <Skeleton width="80px" height="16px" radius="4px" />
+          <Skeleton width="90px" height="16px" radius="4px" />
+          <Skeleton width="60px" height="32px" radius="8px" />
+        </div>
+      ))}
+    </SkeletonCard>
+  );
+}
+
 /* ── Kitchen Page Skeleton ── */
 export function KitchenSkeleton() {
   return (

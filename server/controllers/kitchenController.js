@@ -82,8 +82,8 @@ export const upsertMenu = async (req, res) => {
 // @route   GET /api/kitchen/participation
 export const getParticipation = async (req, res) => {
   try {
-    const residents = await Resident.find({ isActive: true })
-      .select('name phoneNumber roomNumber dailyMeals')
+    const residents = await Resident.find()
+      .select('name phoneNumber roomNumber dailyMeals isActive')
       .lean();
 
     const getInitials = (name) =>

@@ -201,6 +201,20 @@
   margin-top: 0.4rem;
 }
 
+/* =========================================================
+   PAYMENT SKELETON – MOBILE CARDS
+   ========================================================= */
+
+.skeletonMobileCards {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
 @media (max-width: 768px) {
   .skeletonFilterRow {
     flex-direction: column;
@@ -208,6 +222,10 @@
 
   .skeletonTableCard {
     display: none;
+  }
+
+  .skeletonMobileCards {
+    display: flex;
   }
 
   .skeletonViewGrid {

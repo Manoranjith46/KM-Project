@@ -10,43 +10,6 @@ export default function Resident_NoticeBoard() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Mock Data: Array of Announcements. 
-  // In a real app, you would fetch this from your backend (e.g., GET /api/Announcements)
-  // const [Announcements] = useState([
-  //       {
-  //     id: 1,
-  //     type: "urgent",
-  //     title: "Water Supply Interruption",
-  //     message: "Please note that there will be no water supply tomorrow from 10:00 AM to 2:00 PM due to municipal maintenance. Please store water accordingly.",
-  //     date: "04 March 2026",
-  //     icon: "💧",
-  //   },
-  //   {
-  //     id: 2,
-  //     type: "info",
-  //     title: "Updated Wi-Fi Password",
-  //     message: "The Wi-Fi password for the Ground and First floors has been updated. The new network password is 'PGEase@2026'.",
-  //     date: "01 March 2026",
-  //     icon: "📶",
-  //   },
-  //   {
-  //     id: 3,
-  //     type: "rule",
-  //     title: "Meal Cut-off Timings Reminder",
-  //     message: "A strict reminder: To avoid food waste, you must toggle your dinner status by 3:30 PM. Breakfast and Lunch cut-offs are strictly 10:00 PM the night before.",
-  //     date: "26 Feb 2026",
-  //     icon: "⏰",
-  //   },
-  //   {
-  //     id: 4,
-  //     type: "general",
-  //     title: "Laundry Room Timings",
-  //     message: "The washing machines are operational only between 8:00 AM and 8:00 PM. Please do not run the machines late at night as it disturbs other residents.",
-  //     date: "15 Feb 2026",
-  //     icon: "👕",
-  //   }
-  // ]);
-
   const [Announcements, setAnnouncements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const socketRef = useSocket(user?.mobileNumber);

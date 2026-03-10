@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import styles from "./AD_View_Payment.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
+import Loader from "./Components/Loader/Loader";
 import { useNavigate, useLocation } from "react-router-dom";
+import API from "../../API/axios";
 
 export default function Admin_View_Payment() {
   const navigate = useNavigate();
@@ -18,36 +20,51 @@ export default function Admin_View_Payment() {
   }, []);
 
   const handleGoBack = () => {
-    navigate('/admin/record-payment');
+    navigate(-1);
   };
 
   // Get payment data from navigation state or use mock data
-  const payment = location.state?.payment || {
-    id: "TXN-84729",
-    residentName: "Priya Patel",
-    room: "205",
-    mobile: "9876543210",
-    amount: "8,500",
-    date: "27 Feb 2026",
-    time: "10:35 AM",
-    appName: "Google Pay",
-    utr: "305819283746",
-    screenshotUrl: null, // Would contain actual image URL
+  const raw = location.state?.payment || {};
+  const payment = {
+    id: raw.id || raw._id || "TXN-00000",
+    residentName: raw.residentName || raw.name || "Unknown",
+    room: raw.room || "-",
+    mobile: raw.mobile || raw.phoneNumber || "-",
+    amount: raw.amount != null ? raw.amount : "-",
+    date: raw.date || "-",
+    time: raw.time || "",
+    appName: raw.appName || raw.paymentMethod || raw.mode || "-",
+    utr: raw.utr || "-",
+    status: raw.status || "pending",
+    screenshotUrl: raw.screenshotUrl || null,
+    paymentProof: raw.paymentProof || null,
+    paymentMethod: raw.paymentMethod || raw.appName || "-",
   };
 
-  const handleApprove = () => {
-    // Handle approve logic
-    console.log("Payment approved:", payment.id);
-    alert("Payment approved successfully!");
-    navigate('/admin/record-payment');
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const handleApprove = async () => {
+    try {
+      setActionLoading(true);
+      await API.patch(`/payments/${payment.id}/status`, { status: "approved" });
+      navigate('/admin/payments');
+    } catch {
+      // silent
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleDiscard = () => {
-    // Handle discard logic
-    console.log("Payment discarded:", payment.id);
-    if (confirm("Are you sure you want to discard this payment?")) {
-      alert("Payment discarded!");
-      navigate('/admin/record-payment');
+  const handleDiscard = async () => {
+    if (!confirm("Are you sure you want to reject this payment?")) return;
+    try {
+      setActionLoading(true);
+      await API.patch(`/payments/${payment.id}/status`, { status: "rejected" });
+      navigate('/admin/payments');
+    } catch {
+      // silent
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -84,7 +101,9 @@ export default function Admin_View_Payment() {
             <div className={styles.detailsCard}>
               <div className={styles.cardHeader}>
                 <h3 className={styles.cardTitle}>Payment Information</h3>
-                <span className={styles.statusBadge}>Pending Verification</span>
+                <span className={styles.statusBadge} data-status={payment.status}>
+                  {payment.status === "approved" ? "✓ Approved" : payment.status === "rejected" ? "✕ Rejected" : "⏳ Pending Verification"}
+                </span>
               </div>
 
               <div className={styles.residentSection}>
@@ -139,7 +158,13 @@ export default function Admin_View_Payment() {
               </div>
 
               <div className={styles.screenshotWrapper}>
-                {/* Mock Receipt */}
+                {payment.paymentProof ? (
+                  <img
+                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/'}api/uploads/${payment.paymentProof}`}
+                    alt="Payment proof"
+                    className={styles.proofImage}
+                  />
+                ) : (
                 <div className={styles.mockReceipt}>
                   <div className={styles.mockReceiptHeader}>
                     <span>{payment.appName}</span>
@@ -153,8 +178,13 @@ export default function Admin_View_Payment() {
                     <p className={styles.receiptDate}>{payment.date} at {payment.time}</p>
                   </div>
                 </div>
+                )}
 
-                <button className={styles.enlargeBtn}>
+                {payment.paymentProof && (
+                <button
+                  className={styles.enlargeBtn}
+                  onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/'}api/uploads/${payment.paymentProof}`, '_blank')}
+                >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 3 21 3 21 9"/>
                     <polyline points="9 21 3 21 3 15"/>
@@ -163,24 +193,46 @@ export default function Admin_View_Payment() {
                   </svg>
                   View Full Size
                 </button>
+                )}
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className={styles.actionsFooter}>
-              <button className={styles.btnDiscard} onClick={handleDiscard}>
+              {payment.status === "pending" && (
+                <>
+                  <button className={styles.btnDiscard} onClick={handleDiscard} disabled={actionLoading}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"/>
                   <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
                 Discard & Reject
               </button>
-              <button className={styles.btnApprove} onClick={handleApprove}>
+              <button className={styles.btnApprove} onClick={handleApprove} disabled={actionLoading}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
                 Approve Payment
               </button>
+                </>
+              )}
+              {payment.status === "approved" && (
+                <button className={styles.btnDiscard} onClick={handleDiscard} disabled={actionLoading}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                  Reject Payment
+                </button>
+              )}
+              {payment.status === "rejected" && (
+                <button className={styles.btnApprove} onClick={handleApprove} disabled={actionLoading}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Approve Payment
+                </button>
+              )}
             </div>
 
           </div>
@@ -210,6 +262,13 @@ export default function Admin_View_Payment() {
             <span className={styles.bottomNavLabel}>Payments</span>
           </button>
         </nav>
+      )}
+      {actionLoading && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text="Processing..." />
+          </div>
+        </div>
       )}
     </div>
   );

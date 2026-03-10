@@ -302,6 +302,8 @@ export const toggleGateStatus = async (req, res) => {
       dailyMeals: resident.dailyMeals,
     });
 
+    getIO().emit('participation:updated');
+
     res.status(200).json({
       message: resident.isActive ? "Welcome back to the hostel" : "Have a safe journey",
       isActive: resident.isActive,

@@ -15,6 +15,7 @@ import Admin_AddResident from './Pages/Admin/AD_Add_Residents';
 import Admin_UpdateMenu from './Pages/Admin/AD_Update_Menu';
 import Admin_Record_Payment from './Pages/Admin/AD_Record_Payment';
 import Admin_View_Payment from './Pages/Admin/AD_View_Payment';
+import Admin_Verify_Payment from './Pages/Admin/AD_Verify_Payment';
 import Admin_View_Resident from './Pages/Admin/AD_View_Resident';
 import AdminEditResident from './Pages/Admin/AD_Edit_Resident';
 
@@ -63,6 +64,7 @@ function App() {
           <Route path="/admin/payments" element={<ProtectedRoute allowedRoles={['owner', 'admin']}><Admin_Payment /></ProtectedRoute>} />
           <Route path="/admin/payments/add" element={<ProtectedRoute allowedRoles={['owner', 'admin']}><Admin_Record_Payment /></ProtectedRoute>} />
           <Route path="/admin/payments/view" element={<ProtectedRoute allowedRoles={['owner', 'admin']}><Admin_View_Payment /></ProtectedRoute>} />
+          <Route path="/admin/payments/verify" element={<ProtectedRoute allowedRoles={['owner', 'admin']}><Admin_Verify_Payment /></ProtectedRoute>} />
           <Route path="/admin/maintenance" element={<ProtectedRoute allowedRoles={['owner', 'admin']}><Admin_Maintenance /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['owner', 'admin']}><Admin_Settings /></ProtectedRoute>} />
 

@@ -83,6 +83,8 @@
   gap: 1.5rem;
   height: 100vh;
   scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mainContent::-webkit-scrollbar {
@@ -334,6 +336,13 @@
   justify-content: center;
   padding: 2rem;
   min-height: 500px;
+}
+
+.proofImage {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  object-fit: contain;
 }
 
 /* Mock Receipt */
@@ -650,4 +659,25 @@
   .receiptAmount {
     font-size: 1.75rem;
   }
+}
+
+.loaderOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.loaderPopup {
+  width: min(92vw, 420px);
+  padding: 0.5rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
 }

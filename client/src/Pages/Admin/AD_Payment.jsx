@@ -1,22 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styles from "./AD_Payment.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Topbar from "./Components/Header/Topbar";
+import { PaymentSkeleton } from "./Components/Skeleton/Skeleton";
+import exportPDF from "../../Components/exportCSV";
 import { useNavigate } from "react-router-dom";
-
-/* ── Mock data ── */
-const TRANSACTIONS = [
-  { id: 1,  name: "Rahul Sharma",  initials: "RS", room: "101", amount: 8500,  date: "01 Feb 2026", mode: "UPI",           status: "Paid"    },
-  { id: 2,  name: "Priya Patel",   initials: "PP", room: "205", amount: 8500,  date: "Due",          mode: "Cash",          status: "Pending" },
-  { id: 3,  name: "Amit Kumar",    initials: "AK", room: "312", amount: 8500,  date: "28 Jan 2026",  mode: "Bank Transfer", status: "Paid"    },
-  { id: 4,  name: "Sneha Reddy",   initials: "SR", room: "108", amount: 8500,  date: "30 Jan 2026",  mode: "UPI",           status: "Paid"    },
-  { id: 5,  name: "Vikram Singh",  initials: "VS", room: "204", amount: 8500,  date: "15 Jan 2026",  mode: "Cash",          status: "Overdue" },
-  { id: 6,  name: "Anjali Verma",  initials: "AV", room: "301", amount: 8500,  date: "02 Feb 2026",  mode: "Bank Transfer", status: "Paid"    },
-  { id: 7,  name: "Karan Mehta",   initials: "KM", room: "407", amount: 8500,  date: "Due",          mode: "UPI",           status: "Pending" },
-  { id: 8,  name: "Deepa Nair",    initials: "DN", room: "502", amount: 8500,  date: "10 Jan 2026",  mode: "Cash",          status: "Overdue" },
-  { id: 9,  name: "Rohan Gupta",   initials: "RG", room: "210", amount: 8500,  date: "05 Feb 2026",  mode: "UPI",           status: "Paid"    },
-  { id: 10, name: "Meena Iyer",    initials: "MI", room: "315", amount: 8500,  date: "Due",          mode: "Bank Transfer", status: "Pending" },
-];
+import API from "../../API/axios";
 
 /* ── SVG Icons ── */
 function IconDashboard() {
@@ -109,14 +98,45 @@ function IconChevronDown() {
 const PAYMENT_MODE_ICON = {
   "UPI": <IconUPI />,
   "Cash": <IconCash />,
-  "Bank Transfer": <IconBank />,
+  "Other": <IconBank />,
 };
 
 const STATUS_CLASS = {
-  Paid:    "paid",
-  Pending: "pending",
-  Overdue: "overdue",
+  approved: "paid",
+  pending:  "pending",
+  rejected: "overdue",
 };
+
+const STATUS_LABEL = {
+  approved: "Approved",
+  pending:  "Pending",
+  rejected: "Rejected",
+};
+
+/* helpers */
+function getInitials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  return (parts[0]?.[0] || "") + (parts[1]?.[0] || "");
+}
+
+function formatDate(d) {
+  if (!d) return "-";
+  return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function buildMonthOptions() {
+  const opts = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    opts.push({
+      value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      label: d.toLocaleDateString("en-IN", { month: "short", year: "numeric" }),
+    });
+  }
+  return opts;
+}
 
 export default function Admin_Payment() {
 
@@ -124,11 +144,40 @@ export default function Admin_Payment() {
 
   const [activeNav, setActiveNav] = useState("payments");
   const [search, setSearch]   = useState("");
-  const [month, setMonth]     = useState("Feb 2026");
+  const [month, setMonth]     = useState(() => {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [status, setStatus]   = useState("All");
   const [mode, setMode]       = useState("All");
-  const [openKebab, setOpenKebab] = useState(null);
+  const [tab, setTab]         = useState("residents");
+  const [showNotPaid, setShowNotPaid] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const [payments, setPayments] = useState([]);
+  const [residents, setResidents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const monthOptions = buildMonthOptions();
+
+  /* Fetch payments + residents */
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [payRes, resRes] = await Promise.all([
+        API.get("/payments"),
+        API.get("/admin/occupants"),
+      ]);
+      setPayments(payRes.data || []);
+      setResidents(resRes.data?.occupants || []);
+    } catch {
+      // silent
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -137,13 +186,77 @@ export default function Admin_Payment() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const filtered = TRANSACTIONS.filter((t) => {
+  /* Build a phone→resident lookup */
+  const residentMap = {};
+  residents.forEach((r) => { residentMap[r.phoneNumber] = r; });
+
+  /* Merge payment data with resident info */
+  const enriched = payments.map((p) => {
+    const r = residentMap[p.phoneNumber] || {};
+    return {
+      id: p._id,
+      name: p.name || r.name || "Unknown",
+      initials: getInitials(p.name || r.name),
+      room: r.roomNumber || "-",
+      amount: p.amount || 0,
+      rawDate: p.date,
+      date: formatDate(p.date),
+      mode: p.paymentMethod || "Cash",
+      status: p.status || "pending",
+      type: r.type || "Resident",
+      phoneNumber: p.phoneNumber,
+    };
+  });
+
+  /* Filter by selected month */
+  const [selYear, selMonth] = month.split("-").map(Number);
+
+  const inMonth = enriched.filter((t) => {
+    if (!t.rawDate) return true;
+    const d = new Date(t.rawDate);
+    if (isNaN(d.getTime())) return true;
+    return d.getFullYear() === selYear && d.getMonth() + 1 === selMonth;
+  });
+
+  /* Split by type */
+  const residentPayments = inMonth.filter((t) => t.type === "Resident");
+  const guestPayments    = inMonth.filter((t) => t.type === "Guest");
+  const activeList = tab === "residents" ? residentPayments : guestPayments;
+
+  /* Apply filters */
+  const filtered = activeList.filter((t) => {
     const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) ||
-                        t.room.includes(search);
+                        t.room.toLowerCase().includes(search.toLowerCase()) ||
+                        t.phoneNumber?.includes(search);
     const matchStatus = status === "All" || t.status === status;
     const matchMode   = mode   === "All" || t.mode   === mode;
     return matchSearch && matchStatus && matchMode;
   });
+
+  /* Summary computations */
+  const computeSummary = (list) => {
+    const approved = list.filter((t) => t.status === "approved");
+    const pending  = list.filter((t) => t.status === "pending");
+    const rejected = list.filter((t) => t.status === "rejected");
+    return {
+      collected: approved.reduce((s, t) => s + t.amount, 0),
+      collectedCount: approved.length,
+      pendingAmt: pending.reduce((s, t) => s + t.amount, 0),
+      pendingCount: pending.length,
+      rejectedAmt: rejected.reduce((s, t) => s + t.amount, 0),
+      rejectedCount: rejected.length,
+    };
+  };
+  const summary = computeSummary(activeList);
+
+  /* Compute who hasn't paid: residents in active tab with no approved payment this month */
+  const paidPhones = new Set(
+    activeList.filter((t) => t.status === "approved").map((t) => t.phoneNumber)
+  );
+  const tabType = tab === "residents" ? "Resident" : "Guest";
+  const notPaidList = residents.filter(
+    (r) => (r.type || "Resident") === tabType && !paidPhones.has(r.phoneNumber)
+  );
 
   return (
     <div className={styles.dashboardWrapper}>
@@ -169,25 +282,51 @@ export default function Admin_Payment() {
           {/* Section header */}
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Financial Overview</h2>
-            <button className={styles.btnPrimary} onClick={() => { navigate('/admin/payments/add') }} >+ Record Payment</button>
+            <div className={styles.headerActions}>
+              <button className={styles.btnGhost} onClick={() => { navigate('/admin/payments/verify') }}>Verify Payments</button>
+              <button className={styles.btnPrimary} onClick={() => { navigate('/admin/payments/add') }}>+ Record Payment</button>
+            </div>
           </div>
 
+          {isLoading ? (
+            <PaymentSkeleton />
+          ) : (
+          <>
+          {/* Tabs: Residents / Guests */}
+          <div className={styles.tabRow}>
+            <button
+              className={`${styles.tabBtn} ${tab === "residents" ? styles.tabActive : ""}`}
+              onClick={() => setTab("residents")}
+            >
+              Residents ({residentPayments.length})
+            </button>
+            <button
+              className={`${styles.tabBtn} ${tab === "guests" ? styles.tabActive : ""}`}
+              onClick={() => setTab("guests")}
+            >
+              Guests ({guestPayments.length})
+            </button>
+          </div>
 
           <div className={styles.summaryGrid}>
             <div className={styles.summaryCard}>
               <p className={styles.summaryLabel}>Collected This Month</p>
-              <p className={styles.summaryValue}>&#8377;1,85,000</p>
-              <p className={`${styles.summaryBadge} ${styles.badgeGreen}`}>+15% vs last month</p>
+              <p className={styles.summaryValue}>&#8377;{summary.collected.toLocaleString("en-IN")}</p>
+              <p className={`${styles.summaryBadge} ${styles.badgeGreen}`}>{summary.collectedCount} Payment{summary.collectedCount !== 1 ? "s" : ""}</p>
             </div>
             <div className={styles.summaryCard}>
-              <p className={styles.summaryLabel}>Pending Dues</p>
-              <p className={styles.summaryValue}>&#8377;42,500</p>
-              <p className={`${styles.summaryBadge} ${styles.badgeYellow}`}>12 Residents</p>
+              <p className={styles.summaryLabel}>Pending Approval</p>
+              <p className={styles.summaryValue}>&#8377;{summary.pendingAmt.toLocaleString("en-IN")}</p>
+              <p className={`${styles.summaryBadge} ${styles.badgeYellow}`}>{summary.pendingCount} Payment{summary.pendingCount !== 1 ? "s" : ""}</p>
             </div>
             <div className={styles.summaryCard}>
-              <p className={styles.summaryLabel}>Overdue (Critical)</p>
-              <p className={styles.summaryValue}>&#8377;17,000</p>
-              <p className={`${styles.summaryBadge} ${styles.badgeRed}`}>3 Residents</p>
+              <p className={styles.summaryLabel}>Not Paid</p>
+              <p className={styles.summaryValue}>{notPaidList.length}</p>
+              <div className={styles.notPaidFooter}>
+                {notPaidList.length > 0 && (
+                  <button className={styles.viewListBtn} onClick={() => setShowNotPaid(true)}>View List</button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -200,9 +339,9 @@ export default function Admin_Payment() {
                   onChange={(e) => setMonth(e.target.value)}
                   aria-label="Filter by month"
                 >
-                  <option>Feb 2026</option>
-                  <option>Jan 2026</option>
-                  <option>Dec 2025</option>
+                  {monthOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
                 </select>
                 <span className={styles.selectChevron}><IconChevronDown /></span>
               </div>
@@ -215,9 +354,9 @@ export default function Admin_Payment() {
                   aria-label="Filter by status"
                 >
                   <option value="All">Status (All)</option>
-                  <option value="Paid">Paid</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Overdue">Overdue</option>
+                  <option value="approved">Approved</option>
+                  <option value="pending">Pending</option>
+                  <option value="rejected">Rejected</option>
                 </select>
                 <span className={styles.selectChevron}><IconChevronDown /></span>
               </div>
@@ -232,13 +371,25 @@ export default function Admin_Payment() {
                   <option value="All">Payment Mode (All)</option>
                   <option value="UPI">UPI</option>
                   <option value="Cash">Cash</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Other">Other</option>
                 </select>
                 <span className={styles.selectChevron}><IconChevronDown /></span>
               </div>
             </div>
 
-            <button className={styles.btnGhost}>Export CSV</button>
+            <button className={styles.btnGhost} onClick={() => exportPDF(
+              filtered,
+              [
+                { label: "Name", accessor: "name" },
+                { label: "Room", accessor: "room" },
+                { label: "Phone", accessor: "phoneNumber" },
+                { label: "Amount", accessor: (r) => `₹${r.amount.toLocaleString("en-IN")}` },
+                { label: "Date", accessor: "date" },
+                { label: "Payment Mode", accessor: "mode" },
+                { label: "Status", accessor: "status" },
+              ],
+              `payments-${tab}-${month || "all"}.pdf`
+            )}>Export PDF</button>
           </div>
 
           {/* ── Transaction Table (desktop) ── */}
@@ -247,8 +398,9 @@ export default function Admin_Payment() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th className={styles.th}>Resident</th>
+                    <th className={styles.th}>{tab === "residents" ? "Resident" : "Guest"}</th>
                     <th className={styles.th}>Room No</th>
+                    <th className={styles.th}>Phone</th>
                     <th className={styles.th}>Amount</th>
                     <th className={styles.th}>Date</th>
                     <th className={styles.th}>Payment Mode</th>
@@ -257,7 +409,9 @@ export default function Admin_Payment() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((t) => (
+                  {filtered.length === 0 ? (
+                    <tr><td className={styles.td} colSpan={8} style={{ textAlign: "center", padding: "2rem", color: "var(--text-secondary)" }}>No payments found</td></tr>
+                  ) : filtered.map((t) => (
                     <tr key={t.id} className={styles.tr}>
                       <td className={styles.td}>
                         <div className={styles.residentCell}>
@@ -266,6 +420,7 @@ export default function Admin_Payment() {
                         </div>
                       </td>
                       <td className={styles.td}>{t.room}</td>
+                      <td className={styles.td}>{t.phoneNumber}</td>
                       <td className={styles.td}>&#8377;{t.amount.toLocaleString("en-IN")}</td>
                       <td className={styles.td}>{t.date}</td>
                       <td className={styles.td}>
@@ -276,33 +431,24 @@ export default function Admin_Payment() {
                       </td>
                       <td className={styles.td}>
                         <span className={`${styles.pill} ${styles[STATUS_CLASS[t.status]]}`}>
-                          {t.status === "Paid" && "\u2713 "}
-                          {t.status === "Pending" && "\u23F3 "}
-                          {t.status === "Overdue" && "\u26A0 "}
-                          {t.status}
+                          {t.status === "approved" && "\u2713 "}
+                          {t.status === "pending" && "\u23F3 "}
+                          {t.status === "rejected" && "\u26A0 "}
+                          {STATUS_LABEL[t.status]}
                         </span>
                       </td>
                       <td className={styles.td}>
                         <div className={styles.actions}>
-                          <button className={styles.actionBtn} aria-label="Download receipt">
-                            <IconDownload />
-                          </button>
-                          <div className={styles.kebabWrap}>
-                            <button
-                              className={styles.actionBtn}
-                              aria-label="More options"
-                              onClick={() => setOpenKebab(openKebab === t.id ? null : t.id)}
-                            >
-                              <IconKebab />
-                            </button>
-                            {openKebab === t.id && (
-                              <div className={styles.kebabMenu}>
-                                <button className={styles.kebabItem}>View Details</button>
-                                <button className={styles.kebabItem}>Send Reminder</button>
-                                <button className={styles.kebabItem}>Mark as Paid</button>
-                              </div>
-                            )}
-                          </div>
+                        <button
+                          className={styles.actionBtn}
+                          aria-label="View details"
+                          onClick={() => navigate('/admin/payments/view', { state: { payment: t } })}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
+                        </button>
                         </div>
                       </td>
                     </tr>
@@ -314,7 +460,9 @@ export default function Admin_Payment() {
 
 
           <div className={styles.mobileCards}>
-            {filtered.map((t) => (
+            {filtered.length === 0 ? (
+              <p style={{ textAlign: "center", padding: "2rem", color: "var(--text-secondary)" }}>No payments found</p>
+            ) : filtered.map((t) => (
               <div key={t.id} className={styles.txCard}>
                 <div className={styles.txCardTop}>
                   <div className={styles.residentCell}>
@@ -325,10 +473,10 @@ export default function Admin_Payment() {
                     </div>
                   </div>
                   <span className={`${styles.pill} ${styles[STATUS_CLASS[t.status]]}`}>
-                    {t.status === "Paid" && "\u2713 "}
-                    {t.status === "Pending" && "\u23F3 "}
-                    {t.status === "Overdue" && "\u26A0 "}
-                    {t.status}
+                    {t.status === "approved" && "\u2713 "}
+                    {t.status === "pending" && "\u23F3 "}
+                    {t.status === "rejected" && "\u26A0 "}
+                    {STATUS_LABEL[t.status]}
                   </span>
                 </div>
                 <div className={styles.txCardDivider} />
@@ -349,12 +497,53 @@ export default function Admin_Payment() {
                     </span>
                   </div>
                 </div>
+                <div className={styles.txCardActions}>
+                  <button className={styles.viewBtn} onClick={() => navigate('/admin/payments/view', { state: { payment: t } })}>View Details</button>
+                </div>
               </div>
             ))}
           </div>
 
+          </>
+          )}
+
         </div>
       </main>
+
+      {/* Not Paid Modal */}
+      {showNotPaid && (
+        <div className={styles.modalOverlay} onClick={() => setShowNotPaid(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Not Paid — {tab === "residents" ? "Residents" : "Guests"}</h3>
+              <button className={styles.modalClose} onClick={() => setShowNotPaid(false)}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              {notPaidList.length === 0 ? (
+                <p className={styles.modalEmpty}>Everyone has paid!</p>
+              ) : (
+                <ul className={styles.notPaidUl}>
+                  {notPaidList.map((r) => (
+                    <li key={r.phoneNumber || r._id} className={styles.notPaidLi}>
+                      <div className={styles.notPaidInfo}>
+                        <div className={styles.avatarSmall}>{getInitials(r.name)}</div>
+                        <div>
+                          <p className={styles.notPaidName}>{r.name}</p>
+                          <p className={styles.notPaidMeta}>Room {r.roomNumber} &middot; {r.phoneNumber}</p>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {isMobile && (
         <nav className={styles.bottomNav} aria-label="Mobile navigation">

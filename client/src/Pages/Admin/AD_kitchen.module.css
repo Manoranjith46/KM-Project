@@ -76,6 +76,8 @@
   gap: 1.5rem;
   height: 100vh;
   scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mainContent::-webkit-scrollbar {
@@ -616,6 +618,26 @@
   flex: 1;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(249, 250, 251, 0.8) 100%);
   scroll-behavior: smooth;
+}
+
+.modalBody::-webkit-scrollbar {
+  width: 11px;
+}
+
+.modalBody::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.modalBody::-webkit-scrollbar-thumb {
+  background-color: #6366F1;
+  border-radius: 10px;
+  border: 3px solid #f1f5f9;
+}
+
+.modalBody::-webkit-scrollbar-thumb:hover {
+  background-color: #6366F1;
 }
 
 .residentsList {

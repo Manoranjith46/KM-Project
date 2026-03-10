@@ -160,7 +160,6 @@ export default function AD_Residents() {
             <button className={styles.addBtn} onClick={() => {navigate('/admin/residents/add')}} >+ Add Resident</button>
           </div>
 
-          {isLoading && <div className={styles.emptyRow}>Loading occupants...</div>}
           {error && <div className={styles.emptyRow}>{error}</div>}
 
           {isLoading ? <ResidentsSkeleton /> : (

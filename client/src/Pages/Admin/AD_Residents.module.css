@@ -70,6 +70,8 @@
   flex-direction: column;
   gap: 1.5rem;
   scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mainContent::-webkit-scrollbar {

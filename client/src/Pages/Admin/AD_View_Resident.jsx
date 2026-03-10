@@ -33,7 +33,6 @@ export default function Admin_View_Resident() {
       displayName: fullName,
       roomNo: data.roomNo || data.roomNumber || "N/A",
       phone: data.phone || data.phoneNumber || "N/A",
-      email: data.email || "N/A",
       joiningDate: data.joiningDate || null,
       status: data.status || (data.isActive === false ? "Inactive" : "Active"),
       documentImage: data.documentImage || data.document || data.aadharUrl || null,
@@ -173,8 +172,14 @@ export default function Admin_View_Resident() {
               <span className={styles.value}>{resident.phone || "N/A"}</span>
             </div>
             <div className={styles.detailItem}>
-              <span className={styles.label}>Email Address</span>
-              <span className={styles.value}>{resident.email || "N/A"}</span>
+              <span className={styles.label}>Date of Birth</span>
+              <span className={styles.value}>
+                {resident.dob ? new Date(resident.dob).toLocaleDateString() : "N/A"}
+              </span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.label}>Blood Group</span>
+              <span className={styles.value}>{resident.bloodGroup || "N/A"}</span>
             </div>
             <div className={styles.detailItem}>
               <span className={styles.label}>Guardian Name</span>
@@ -183,6 +188,14 @@ export default function Admin_View_Resident() {
             <div className={styles.detailItem}>
               <span className={styles.label}>Guardian Phone</span>
               <span className={styles.value}>{resident.guardianPhone || "N/A"}</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.label}>Monthly Rent</span>
+              <span className={styles.value}>₹{resident.monthlyRent ?? "N/A"}</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.label}>Security Deposit</span>
+              <span className={styles.value}>₹{resident.securityDeposit ?? "N/A"}</span>
             </div>
             <div className={styles.detailItem}>
               <span className={styles.label}>Joining Date</span>

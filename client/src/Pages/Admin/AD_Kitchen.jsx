@@ -93,6 +93,10 @@ export default function Admin_Kitchen() {
       fetchData();
     });
 
+    socket.on('participation:updated', () => {
+      fetchData();
+    });
+
     return () => socket.disconnect();
   }, [user, fetchData]);
 
