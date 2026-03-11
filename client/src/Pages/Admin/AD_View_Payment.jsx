@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import styles from "./AD_View_Payment.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
-import Loader from "./Components/Loader/Loader";
+import Loader from "../Resident/Components/Loader/Loader";
+import Popup from "./Components/Popup/Popup";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../../API/axios";
+import { minDelay } from "../../utils/minDelay";
 
 export default function Admin_View_Payment() {
   const navigate = useNavigate();
@@ -42,27 +44,32 @@ export default function Admin_View_Payment() {
   };
 
   const [actionLoading, setActionLoading] = useState(false);
+  const [popup, setPopup] = useState({ isOpen: false, type: "info", title: "", message: "" });
 
   const handleApprove = async () => {
     try {
       setActionLoading(true);
-      await API.patch(`/payments/${payment.id}/status`, { status: "approved" });
+      await minDelay(API.patch(`/payments/${payment.id}/status`, { status: "approved" }));
       navigate('/admin/payments');
     } catch {
-      // silent
+      setPopup({ isOpen: true, type: "error", title: "Action Failed", message: "Could not approve payment. Please try again." });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleDiscard = async () => {
-    if (!confirm("Are you sure you want to reject this payment?")) return;
+  const handleDiscard = () => {
+    setPopup({ isOpen: true, type: "confirm", title: "Reject Payment?", message: "Are you sure you want to reject this payment? This action cannot be undone." });
+  };
+
+  const confirmReject = async () => {
+    setPopup({ ...popup, isOpen: false });
     try {
       setActionLoading(true);
-      await API.patch(`/payments/${payment.id}/status`, { status: "rejected" });
+      await minDelay(API.patch(`/payments/${payment.id}/status`, { status: "rejected" }));
       navigate('/admin/payments');
     } catch {
-      // silent
+      setPopup({ isOpen: true, type: "error", title: "Action Failed", message: "Could not reject payment. Please try again." });
     } finally {
       setActionLoading(false);
     }
@@ -270,6 +277,16 @@ export default function Admin_View_Payment() {
           </div>
         </div>
       )}
+      <Popup
+        isOpen={popup.isOpen}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        onClose={() => setPopup({ ...popup, isOpen: false })}
+        onConfirm={confirmReject}
+        confirmText="Reject"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

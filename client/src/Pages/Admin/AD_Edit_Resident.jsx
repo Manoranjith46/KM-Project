@@ -5,6 +5,7 @@ import styles from "./AD_Edit_Resident.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import { EditResidentSkeleton } from "./Components/Skeleton/Skeleton";
 import Loader from "../Resident/Components/Loader/Loader";
+import { minDelay } from "../../utils/minDelay";
 
 const toInputDate = (dateValue) => {
   if (!dateValue) return "";
@@ -116,7 +117,7 @@ export default function Admin_EditResident() {
         },
       };
 
-      await API.put(`/residents/${encodeURIComponent(originalPhone || phone)}`, payload);
+      await minDelay(API.put(`/residents/${encodeURIComponent(originalPhone || phone)}`, payload));
       setSuccess("Resident details updated successfully.");
 
       const nextPhone = payload.phoneNumber || originalPhone || phone;

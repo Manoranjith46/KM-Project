@@ -3,7 +3,7 @@ import styles from "./AD_Payment.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Topbar from "./Components/Header/Topbar";
 import { PaymentSkeleton } from "./Components/Skeleton/Skeleton";
-import exportPDF from "../../Components/exportCSV";
+import exportPDF from "../../Components/exportPDF";
 import { useNavigate } from "react-router-dom";
 import API from "../../API/axios";
 
@@ -283,7 +283,7 @@ export default function Admin_Payment() {
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Financial Overview</h2>
             <div className={styles.headerActions}>
-              <button className={styles.btnGhost} onClick={() => { navigate('/admin/payments/verify') }}>Verify Payments</button>
+              <button className={styles.btnPrimary} onClick={() => { navigate('/admin/payments/verify') }}>Verify Payments</button>
               <button className={styles.btnPrimary} onClick={() => { navigate('/admin/payments/add') }}>+ Record Payment</button>
             </div>
           </div>

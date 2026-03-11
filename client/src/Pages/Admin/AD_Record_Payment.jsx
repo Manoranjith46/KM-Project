@@ -4,6 +4,7 @@ import Sidebar from "./Components/Sidebar/Sidebar";
 import Loader from "./Components/Loader/Loader";
 import { useNavigate } from "react-router-dom";
 import API from "../../API/axios";
+import { minDelay } from "../../utils/minDelay";
 
 export default function Admin_Record_Payment() {
 
@@ -45,22 +46,23 @@ export default function Admin_Record_Payment() {
     }
     try {
       setIsSubmitting(true);
-      // Look up resident name by phone number
-      const { data: occData } = await API.get("/admin/occupants");
-      const match = (occData.occupants || []).find(
-        (r) => r.phoneNumber === cashForm.resident
-      );
-      if (!match) {
-        setError("No resident found with this mobile number.");
-        return;
-      }
-      await API.post("/payments/cash", {
-        name: match.name,
-        phoneNumber: cashForm.resident,
-        amount: Number(cashForm.amount),
-        date: cashForm.date || new Date().toISOString(),
-      });
-      navigate("/admin/payments");
+      await minDelay((async () => {
+        const { data: occData } = await API.get("/admin/occupants");
+        const match = (occData.occupants || []).find(
+          (r) => r.phoneNumber === cashForm.resident
+        );
+        if (!match) {
+          setError("No resident found with this mobile number.");
+          return;
+        }
+        await API.post("/payments/cash", {
+          name: match.name,
+          phoneNumber: cashForm.resident,
+          amount: Number(cashForm.amount),
+          date: cashForm.date || new Date().toISOString(),
+        });
+        navigate("/admin/payments");
+      })());
     } catch (err) {
       setError(err.response?.data?.message || "Failed to record payment.");
     } finally {

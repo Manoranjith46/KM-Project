@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import styles from "./RD_Report_Issue.module.css";
 import API from '../../API/axios';
+import { minDelay } from '../../utils/minDelay';
 import { useAuth } from '../../Context/AuthContext';
 import useSocket from '../../hooks/useSocket';
 import Loader from './Components/Loader/Loader';
@@ -65,7 +66,7 @@ export default function Resident_ReportIssue() {
         uploadData.append('photo', formData.photo);
       }
 
-      const response = await API.post('/residents/report', uploadData);
+      const response = await minDelay(API.post('/residents/report', uploadData));
 
       setSuccessMsg(response?.data?.message);
       setFormData({ category: "", description: "", photo: null });

@@ -282,3 +282,119 @@ export function KitchenSkeleton() {
     </>
   );
 }
+
+/* ── Maintenance Reports Skeleton ── */
+export function ReportsSkeleton() {
+  return (
+    <>
+      {/* Stats Row */}
+      <div className={styles.skeletonStatsRow}>
+        {[1, 2, 3].map((i) => (
+          <SkeletonCard key={i}>
+            <Skeleton width="100px" height="14px" radius="4px" />
+            <Skeleton width="60px" height="40px" radius="8px" />
+            <Skeleton width="110px" height="24px" radius="20px" />
+          </SkeletonCard>
+        ))}
+      </div>
+
+      {/* Filter Row */}
+      <div className={styles.skeletonFilterRow}>
+        <Skeleton width="100%" height="44px" radius="12px" />
+        <Skeleton width="100%" height="44px" radius="12px" />
+        <Skeleton width="100%" height="44px" radius="12px" />
+        <Skeleton width="100%" height="44px" radius="12px" />
+      </div>
+
+      {/* Table */}
+      <SkeletonCard className={styles.skeletonTableCard}>
+        <div className={styles.skeletonTableHeader}>
+          <Skeleton width="100px" height="12px" radius="4px" />
+          <Skeleton width="80px" height="12px" radius="4px" />
+          <Skeleton width="90px" height="12px" radius="4px" />
+          <Skeleton width="80px" height="12px" radius="4px" />
+          <Skeleton width="70px" height="12px" radius="4px" />
+          <Skeleton width="70px" height="12px" radius="4px" />
+        </div>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className={styles.skeletonTableRow}>
+            <div className={styles.skeletonRowCenter}>
+              <Skeleton width="36px" height="36px" radius="50%" />
+              <div>
+                <Skeleton width="110px" height="14px" radius="4px" />
+                <Skeleton width="80px" height="10px" radius="4px" />
+              </div>
+            </div>
+            <Skeleton width="80px" height="16px" radius="4px" />
+            <Skeleton width="60px" height="30px" radius="8px" />
+            <Skeleton width="90px" height="16px" radius="4px" />
+            <Skeleton width="80px" height="26px" radius="20px" />
+            <Skeleton width="90px" height="30px" radius="8px" />
+          </div>
+        ))}
+      </SkeletonCard>
+
+      {/* Mobile cards skeleton */}
+      <div className={styles.skeletonMobileCards}>
+        {[1, 2, 3].map((i) => (
+          <SkeletonCard key={i}>
+            <div className={styles.skeletonRowBetween}>
+              <div className={styles.skeletonRowCenter}>
+                <Skeleton width="38px" height="38px" radius="50%" />
+                <div>
+                  <Skeleton width="110px" height="14px" radius="4px" />
+                  <Skeleton width="80px" height="10px" radius="4px" />
+                </div>
+              </div>
+              <Skeleton width="80px" height="26px" radius="20px" />
+            </div>
+            <Skeleton width="100%" height="1px" radius="0" />
+            <div className={styles.skeletonRowBetween}>
+              <Skeleton width="80px" height="14px" radius="4px" />
+              <Skeleton width="90px" height="14px" radius="4px" />
+            </div>
+            <Skeleton width="60px" height="28px" radius="8px" />
+            <Skeleton width="100%" height="38px" radius="8px" />
+          </SkeletonCard>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* ── Announcements Skeleton ── */
+export function AnnouncementsSkeleton() {
+  return (
+    <>
+      {/* Stats Row */}
+      <div className={styles.skeletonStatsRow}>
+        {[1, 2, 3].map((i) => (
+          <SkeletonCard key={i}>
+            <Skeleton width="80px" height="14px" radius="4px" />
+            <Skeleton width="50px" height="40px" radius="8px" />
+            <Skeleton width="120px" height="24px" radius="20px" />
+          </SkeletonCard>
+        ))}
+      </div>
+
+      {/* Announcement Cards */}
+      {[1, 2, 3, 4].map((i) => (
+        <SkeletonCard key={i}>
+          <div className={styles.skeletonRowBetween}>
+            <div className={styles.skeletonRowCenter}>
+              <Skeleton width="32px" height="32px" radius="8px" />
+              <div>
+                <Skeleton width="180px" height="18px" radius="6px" />
+                <Skeleton width="70px" height="20px" radius="20px" />
+              </div>
+            </div>
+            <Skeleton width="28px" height="28px" radius="8px" />
+          </div>
+          <Skeleton width="90%" height="14px" radius="4px" />
+          <Skeleton width="60%" height="14px" radius="4px" />
+          <Skeleton width="130px" height="12px" radius="4px" />
+        </SkeletonCard>
+      ))}
+    </>
+  );
+}

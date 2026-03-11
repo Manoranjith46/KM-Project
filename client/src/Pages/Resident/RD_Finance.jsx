@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./RD_Finance.module.css";
 import API from '../../API/axios';
+import { minDelay } from '../../utils/minDelay';
 import { useAuth } from '../../Context/AuthContext';
 import Loader from './Components/Loader/Loader';
 import Popup from './Components/popup/Popup';
@@ -202,7 +203,7 @@ export default function Resident_Finance() {
       formData.append('paymentMethod', paymentData.paymentMethod);
       formData.append('paymentProof', paymentData.receipt);
 
-      const response = await API.post('/payments/online', formData);
+      const response = await minDelay(API.post('/payments/online', formData));
 
       setPopup({
         isOpen: true,

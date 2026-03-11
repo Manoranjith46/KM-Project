@@ -7,6 +7,7 @@ import { getCroppedImg, handleFileChange, handleCropUpload, handleClearPreview, 
 import Popup from "./Components/Popup/Popup";
 import Loader from "../Resident/Components/Loader/Loader";
 import API from "../../API/axios";
+import { minDelay } from "../../utils/minDelay";
 
 export default function Admin_AddResident() {
   const navigate = useNavigate(); 
@@ -281,7 +282,7 @@ export default function Admin_AddResident() {
       }
 
       // 2. Send the data to your backend
-      const response = await API.post('/residents', formData);
+      const response = await minDelay(API.post('/residents', formData));
 
       // 3. Parse the response from the backend
       const data = response.data;

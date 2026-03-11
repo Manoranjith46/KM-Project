@@ -4,6 +4,7 @@ import styles from "./AD_Update_Menu.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Loader from "../Resident/Components/Loader/Loader";
 import API from "../../API/axios";
+import { minDelay } from "../../utils/minDelay";
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -75,12 +76,12 @@ export default function Admin_UpdateMenu() {
     try {
       const toItems = (str) => str.split("\n").map((s) => s.trim()).filter(Boolean);
 
-      await API.put("/kitchen/menu", {
+      await minDelay(API.put("/kitchen/menu", {
         day: selectedDay,
         breakfast: { time: form.breakfastTime, items: toItems(form.breakfastItems) },
         lunch: { time: form.lunchTime, items: toItems(form.lunchItems) },
         dinner: { time: form.dinnerTime, items: toItems(form.dinnerItems) },
-      });
+      }));
 
       navigate("/admin/kitchen");
     } catch (err) {

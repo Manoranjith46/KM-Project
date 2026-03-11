@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import API from "../../API/axios";
+import { minDelay } from "../../utils/minDelay";
 import useSocket from "../../hooks/useSocket";
 import Loader from "./Components/Loader/Loader";
 import { DashboardSkeleton } from "./Components/Skeleton/Skeleton";
@@ -155,10 +156,10 @@ export default function Resident_Dashboard() {
 
     try {
       setIsUpdatingMeal(true);
-      const res = await API.put('/food/toggle', {
+      const res = await minDelay(API.put('/food/toggle', {
         phoneNumber: user.mobileNumber,
         mealType
-      });
+      }));
       setMeals(res.data.currentStatus);
     } catch (err) {
       console.error("Error updating meal preference:", err);
@@ -182,7 +183,7 @@ export default function Resident_Dashboard() {
     if (isTogglingGate || !user?.mobileNumber) return;
     try {
       setIsTogglingGate(true);
-      const res = await API.put(`/residents/gate-toggle/${user.mobileNumber}`);
+      const res = await minDelay(API.put(`/residents/gate-toggle/${user.mobileNumber}`));
       const { isActive, dailyMeals } = res.data;
 
       const newStatus = isActive ? "IN HOSTEL" : "ON LEAVE";
