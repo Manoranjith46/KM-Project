@@ -12,6 +12,7 @@ import authRoutes from './routes/authRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import kitchenRoutes from './routes/kitchenRoutes.js';
+import { startMonthlyRentReset } from './cron/monthlyRentReset.js';
 
 // Load config
 dotenv.config({ silent: true });
@@ -37,6 +38,9 @@ app.use(cookieParser()); // Parse cookies from requests
 
 // Initialize Socket.IO
 initSocket(server, corsOptions);
+
+// Start cron jobs
+startMonthlyRentReset();
 
 // Routes
 app.use('/api/auth', authRoutes);

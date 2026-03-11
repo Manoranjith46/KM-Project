@@ -6,6 +6,7 @@ import Sidebar from "./Components/Sidebar/Sidebar";
 import { EditResidentSkeleton } from "./Components/Skeleton/Skeleton";
 import Loader from "../Resident/Components/Loader/Loader";
 import { minDelay } from "../../utils/minDelay";
+import useBlockInteraction from "../../hooks/useBlockInteraction";
 
 const toInputDate = (dateValue) => {
   if (!dateValue) return "";
@@ -50,6 +51,7 @@ export default function Admin_EditResident() {
   const [originalPhone, setOriginalPhone] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  useBlockInteraction(saving);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 

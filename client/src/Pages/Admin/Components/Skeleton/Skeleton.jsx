@@ -398,3 +398,69 @@ export function AnnouncementsSkeleton() {
     </>
   );
 }
+
+/* ── Settings: Profile Tab Skeleton ── */
+export function SettingsProfileSkeleton() {
+  return (
+    <>
+      {/* Avatar row */}
+      <div className={styles.skeletonRowCenter}>
+        <Skeleton width="64px" height="64px" radius="50%" />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <Skeleton width="150px" height="20px" radius="6px" />
+          <Skeleton width="80px" height="16px" radius="4px" />
+        </div>
+      </div>
+      {/* Form fields */}
+      <div className={styles.skeletonEditGrid}>
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className={styles.skeletonFieldGroup}>
+            <Skeleton width="80px" height="14px" radius="4px" />
+            <Skeleton width="100%" height="44px" radius="10px" />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* ── Settings: Property Tab Skeleton ── */
+export function SettingsPropertySkeleton() {
+  return (
+    <div className={styles.skeletonEditGrid}>
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={i} className={styles.skeletonFieldGroup} style={i === 2 || i === 5 ? { gridColumn: "1 / -1" } : undefined}>
+          <Skeleton width="100px" height="14px" radius="4px" />
+          <Skeleton width="100%" height="44px" radius="10px" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Settings: Rooms & Rates Tab Skeleton ── */
+export function SettingsRoomsSkeleton() {
+  return (
+    <>
+      <div className={styles.skeletonEditGrid}>
+        {[1, 2].map((i) => (
+          <div key={i} className={styles.skeletonFieldGroup}>
+            <Skeleton width="100px" height="14px" radius="4px" />
+            <Skeleton width="100%" height="44px" radius="10px" />
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <Skeleton width="80px" height="18px" radius="6px" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className={styles.skeletonRowCenter}>
+            <Skeleton width="100%" height="44px" radius="10px" />
+            <Skeleton width="100%" height="44px" radius="10px" />
+            <Skeleton width="100%" height="44px" radius="10px" />
+            <Skeleton width="36px" height="36px" radius="8px" />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}

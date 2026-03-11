@@ -2,7 +2,7 @@ import express from 'express';
 const router = express.Router();
 import { getPendingPayments, getRevenueSummary, getAllOccupants, getAllReports, updateReportStatus, getAdminAnnouncements } from '../controllers/adminController.js';
 import { createAnnouncement, deleteAnnouncement } from '../controllers/residentController.js';
-import { getProfile, updateProfile, getProperty, updateProperty, changePassword, uploadProfilePhoto, removeProfilePhoto } from '../controllers/settingsController.js';
+import { getProfile, updateProfile, getProperty, updateProperty, changePassword, uploadProfilePhoto, removeProfilePhoto, getRoomsAndRates, updateRoomsAndRates } from '../controllers/settingsController.js';
 import { verifyToken, authorizeRoles } from '../middleware/authMiddleware.js';
 import upload from '../middleware/upload.js';
 
@@ -32,5 +32,7 @@ router.put('/settings/property', verifyToken, authorizeRoles('owner'), updatePro
 router.post('/settings/change-password', verifyToken, authorizeRoles('owner'), changePassword);
 router.post('/settings/profile-photo', verifyToken, authorizeRoles('owner'), upload.single('profilePhoto'), uploadProfilePhoto);
 router.delete('/settings/profile-photo', verifyToken, authorizeRoles('owner'), removeProfilePhoto);
+router.get('/settings/rooms-rates', verifyToken, authorizeRoles('owner'), getRoomsAndRates);
+router.put('/settings/rooms-rates', verifyToken, authorizeRoles('owner'), updateRoomsAndRates);
 
 export default router;

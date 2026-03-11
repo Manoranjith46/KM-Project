@@ -360,6 +360,76 @@
   color: var(--text-primary);
   margin: 0;
 }
+.subSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Rooms & Rates */
+.addRoomBtn {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pg-purple);
+  background: transparent;
+  border: 1.5px solid var(--pg-purple);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.addRoomBtn:hover {
+  background: var(--pg-purple);
+  color: #fff;
+}
+.emptyRooms {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: 1.5rem 0;
+}
+.roomsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.roomRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+.roomField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.roomLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.removeRoomBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 2px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.removeRoomBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+}
 
 /* Toggles */
 .toggleRow {
@@ -797,18 +867,6 @@
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.95);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
-}
-
-/* ── Skeleton ── */
-.skeleton {
-  background: linear-gradient(90deg, var(--ring) 25%, var(--pg-purple-light) 50%, var(--ring) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 }
 
 /* ── Crop Modal ── */

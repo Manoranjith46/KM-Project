@@ -1,5 +1,7 @@
 import User from '../models/User.js';
 import Property from '../models/Property.js';
+import Info from '../models/Info.js';
+import Resident from '../models/Resident.js';
 import { uploadToGridFS, deleteFromGridFS } from '../config/gridfs.js';
 import mongoose from 'mongoose';
 
@@ -41,7 +43,7 @@ export const updateProfile = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { name, email, mobileNumber },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -190,6 +192,82 @@ export const removeProfilePhoto = async (req, res) => {
     }
 
     res.status(200).json({ message: 'Profile photo removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ── Rooms & Rates ──
+
+// @desc    Get rooms and rent rates (with occupancy counts)
+// @route   GET /api/admin/settings/rooms-rates
+export const getRoomsAndRates = async (req, res) => {
+  try {
+    let info = await Info.findOne();
+    if (!info) {
+      info = await Info.create({ monthly: '0', daily: '0', rooms: [] });
+    }
+
+    // Count active residents per room
+    const occupancyCounts = await Resident.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: { $toUpper: '$roomNumber' }, count: { $sum: 1 } } },
+    ]);
+    const countMap = Object.fromEntries(occupancyCounts.map(o => [o._id, o.count]));
+
+    const rooms = info.rooms.map(r => ({
+      roomNo: r.roomNo,
+      beds: r.beds,
+      maxOccupants: r.maxOccupants,
+      currentOccupants: countMap[r.roomNo.toUpperCase()] || 0,
+    }));
+
+    res.status(200).json({
+      monthly: info.monthly,
+      daily: info.daily,
+      rooms,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update rent rates and rooms
+// @route   PUT /api/admin/settings/rooms-rates
+export const updateRoomsAndRates = async (req, res) => {
+  try {
+    const { monthly, daily, rooms } = req.body;
+
+    let info = await Info.findOne();
+    if (!info) {
+      info = new Info({ monthly: '0', daily: '0', rooms: [] });
+    }
+
+    if (monthly !== undefined) info.monthly = String(monthly);
+    if (daily !== undefined) info.daily = String(daily);
+
+    if (rooms !== undefined) {
+      // Validate no duplicate room numbers
+      const roomNos = rooms.map(r => String(r.roomNo).trim().toUpperCase());
+      const unique = new Set(roomNos);
+      if (unique.size !== roomNos.length) {
+        return res.status(400).json({ message: 'Duplicate room numbers are not allowed' });
+      }
+      info.rooms = rooms.map(r => ({
+        roomNo: String(r.roomNo).trim().toUpperCase(),
+        beds: Math.max(1, Number(r.beds) || 1),
+        maxOccupants: Math.max(1, Number(r.maxOccupants) || 1),
+      }));
+    }
+
+    await info.save();
+
+    res.status(200).json({
+      message: 'Rooms & rates updated successfully',
+      monthly: info.monthly,
+      daily: info.daily,
+      rooms: info.rooms,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

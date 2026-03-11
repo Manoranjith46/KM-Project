@@ -66,7 +66,7 @@ export const updatePaymentStatus = async (req, res) => {
 		const payment = await Payment.findByIdAndUpdate(
 			id,
 			{ status },
-			{ new: true, runValidators: true }
+			{ returnDocument: 'after', runValidators: true }
 		);
 
 		if (!payment) {

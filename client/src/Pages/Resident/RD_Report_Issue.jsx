@@ -7,6 +7,7 @@ import { useAuth } from '../../Context/AuthContext';
 import useSocket from '../../hooks/useSocket';
 import Loader from './Components/Loader/Loader';
 import { ReportSkeleton } from './Components/Skeleton/Skeleton';
+import useBlockInteraction from '../../hooks/useBlockInteraction';
 
 export default function Resident_ReportIssue() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function Resident_ReportIssue() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  useBlockInteraction(isSubmitting);
   const [successMsg, setSuccessMsg] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
   const [reports, setReports] = useState([]);

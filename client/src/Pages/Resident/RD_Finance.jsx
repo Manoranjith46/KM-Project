@@ -7,6 +7,7 @@ import { useAuth } from '../../Context/AuthContext';
 import Loader from './Components/Loader/Loader';
 import Popup from './Components/popup/Popup';
 import { FinanceSkeleton } from './Components/Skeleton/Skeleton';
+import useBlockInteraction from '../../hooks/useBlockInteraction';
 
 export default function Resident_Finance() {
   const navigate = useNavigate();
@@ -47,6 +48,7 @@ export default function Resident_Finance() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  useBlockInteraction(isSubmitting);
   const [warningMsg, setWarningMsg] = useState("");
   const [receiptPreview, setReceiptPreview] = useState("");
   const fileInputRef = useRef(null);

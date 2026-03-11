@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import styles from "./Popup.module.css";
 
 export default function Popup({
@@ -11,12 +11,22 @@ export default function Popup({
   confirmText = "Confirm",
   cancelText = "Cancel"
 }) {
+  const overlayRef = useRef(null);
+
   useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") onClose();
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") { onClose(); return; }
+      // Allow keys only inside the popup
+      if (overlayRef.current && !overlayRef.current.contains(e.target)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     };
-    if (isOpen) window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -75,7 +85,7 @@ export default function Popup({
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay} ref={overlayRef} onClick={onClose}>
       <div className={styles.popupBox} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         
         {/* Colorful top accent bar matching the Dashboard meal cards */}

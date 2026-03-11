@@ -6,6 +6,7 @@ import Popup from "./Components/Popup/Popup";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../../API/axios";
 import { minDelay } from "../../utils/minDelay";
+import useBlockInteraction from "../../hooks/useBlockInteraction";
 
 export default function Admin_View_Payment() {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ export default function Admin_View_Payment() {
   };
 
   const [actionLoading, setActionLoading] = useState(false);
+  useBlockInteraction(actionLoading);
   const [popup, setPopup] = useState({ isOpen: false, type: "info", title: "", message: "" });
 
   const handleApprove = async () => {

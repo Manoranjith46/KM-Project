@@ -7,6 +7,7 @@ import { ReportsSkeleton, AnnouncementsSkeleton } from "./Components/Skeleton/Sk
 import Loader from "../Resident/Components/Loader/Loader";
 import Popup from "./Components/Popup/Popup";
 import { minDelay } from "../../utils/minDelay";
+import useBlockInteraction from "../../hooks/useBlockInteraction";
 
 const CATEGORY_ICONS = {
   Plumbing:   "🔧",
@@ -53,6 +54,7 @@ export default function Admin_Maintenance() {
 
   // Loader & Popup state
   const [loaderText, setLoaderText] = useState("");
+  useBlockInteraction(loaderText);
   const [popup, setPopup] = useState({ isOpen: false, type: "info", title: "", message: "" });
   const [pendingDelete, setPendingDelete] = useState(null);
 

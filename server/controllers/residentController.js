@@ -2,21 +2,24 @@ import Resident from "../models/Resident.js";
 import History from "../models/History.js";
 import Report from "../models/Report.js";
 import Announcement from "../models/Announcement.js";
+import User from "../models/User.js";
+import Payment from "../models/Payment.js";
+import Info from "../models/Info.js";
 import { getIO } from "../socket.js";
 import { uploadToGridFS } from "../config/gridfs.js";
 
 // @access  Public (for now)
 export const registerResident = async (req, res) => {
   try {
-    const { name, phoneNumber, roomNumber, type, dob, gender, bloodGroup, joiningDate, monthlyRent, securityDeposit } = req.body;
+    const { name, phoneNumber, roomNumber, type, dob, gender, bloodGroup, joiningDate, monthlyRent, securityDeposit, password } = req.body;
     const guardianDetails = typeof req.body.guardianDetails === 'string'
       ? JSON.parse(req.body.guardianDetails)
       : req.body.guardianDetails;
 
     // Validate required fields
-    if (!name || !phoneNumber || !guardianDetails || !guardianDetails.name || !guardianDetails.phone || !roomNumber) {
+    if (!name || !phoneNumber || !guardianDetails || !guardianDetails.name || !guardianDetails.phone || !roomNumber || !password) {
       return res.status(400).json({ 
-        message: "Please provide all required fields: name, phoneNumber, guardianDetails (name, phone), and roomNumber" 
+        message: "Please provide all required fields: name, phoneNumber, password, guardianDetails (name, phone), and roomNumber" 
       });
     }
 
@@ -26,10 +29,28 @@ export const registerResident = async (req, res) => {
       return res.status(400).json({ message: "Resident's phone number already exists" });
     }
 
+    // Check if user account already exists
+    const userExists = await User.findOne({ mobileNumber: phoneNumber });
+    if (userExists) {
+      return res.status(400).json({ message: "A user account with this phone number already exists" });
+    }
+
     // Check if guardian phone already exists
     const guardianExists = await Resident.findOne({ 'guardianDetails.phone': guardianDetails.phone });
     if (guardianExists) {
       return res.status(400).json({ message: "Guardian's phone number already exists" });
+    }
+
+    // Check room capacity
+    const info = await Info.findOne();
+    if (info) {
+      const roomDef = info.rooms.find(r => r.roomNo.toUpperCase() === roomNumber.toUpperCase());
+      if (roomDef) {
+        const currentCount = await Resident.countDocuments({ roomNumber: { $regex: new RegExp(`^${roomNumber}$`, 'i') }, isActive: true });
+        if (currentCount >= roomDef.maxOccupants) {
+          return res.status(400).json({ message: `Room ${roomNumber} is full (${currentCount}/${roomDef.maxOccupants} occupants)` });
+        }
+      }
     }
 
     // Upload document to GridFS if provided
@@ -54,7 +75,16 @@ export const registerResident = async (req, res) => {
       document: documentId ? documentId.toString() : null
     });
 
-    // 3. Send success response
+    // 3. Create user account for login
+    const userRole = type === 'Guest' ? 'guest' : 'resident';
+    await User.create({
+      name,
+      mobileNumber: phoneNumber,
+      password,
+      role: userRole,
+    });
+
+    // 4. Send success response
     if (resident) {
       res.status(201).json({
         _id: resident._id,
@@ -143,42 +173,65 @@ export const deleteResident = async (req, res) => {
             return res.status(404).json({ message: "Resident not found" });
         }
 
-        const monthlyRate = 5000;
         const checkIn = new Date(resident.joiningDate);
         const checkOut = new Date();
+        const monthlyRate = resident.monthlyRent || 0;
 
-        // Calculate months (Difference in ms / ms in a month)
+        // Calculate months stayed
         const diffInMs = checkOut - checkIn;
-        const monthsStayed = diffInMs / (1000 * 60 * 60 * 24 * 30); 
+        const monthsStayed = diffInMs / (1000 * 60 * 60 * 24 * 30);
 
         const finalBill = Math.round(monthsStayed * monthlyRate);
 
-        const totalExpense = Array.isArray(resident.payments)
+        // Sum from embedded payments
+        const embeddedExpense = Array.isArray(resident.payments)
           ? resident.payments
-            .filter((payment) => payment.status === 'Paid')
-            .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0)
+            .filter((p) => p.status === 'Paid')
+            .reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
           : 0;
 
+        // Fetch all payments from Payment collection for this resident
+        const paymentRecords = await Payment.find({ phoneNumber }).lean();
+        const approvedPayments = paymentRecords.filter(p => p.status === 'approved');
+        const paymentCollectionExpense = approvedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+        const totalExpense = embeddedExpense + paymentCollectionExpense;
+
+        // Get user account data (exclude password)
+        const user = await User.findOne({ mobileNumber: phoneNumber }).select('-password').lean();
+
+        // Build full archived data from resident (plain object)
+        const residentData = resident.toObject();
+
+        // Build complete archived record
+        const archivedData = {
+          resident: residentData,
+          user: user || null,
+          payments: paymentRecords,
+        };
+
         await History.create({
-            type: 'Resident',
-            name: resident.name,
-            phoneNumber: resident.phoneNumber,
-            checkInDate: resident.joiningDate,
-            checkOutDate: checkOut,
+          type: resident.type || 'Resident',
+          name: resident.name,
+          phoneNumber: resident.phoneNumber,
+          checkInDate: resident.joiningDate,
+          checkOutDate: checkOut,
           totalExpense,
-          aadharUrl: resident.document || resident.aadharUrl,
+          aadharUrl: resident.document || null,
           checkoutSummary: {
             monthlyRate,
             durationInMonths: parseFloat(monthsStayed.toFixed(2)),
-            estimatedFinalBill: finalBill
+            estimatedFinalBill: finalBill,
           },
-          archivedData: resident.toObject()
+          archivedData,
         });
 
-        // Delete from Active Collection
+        // Delete from all collections
         await Resident.findOneAndDelete({ phoneNumber });
+        await User.findOneAndDelete({ mobileNumber: phoneNumber });
+        await Payment.deleteMany({ phoneNumber });
 
-        res.status(200).json({ message: `Resident ${resident.name} has been checked out successfully` });
+        res.status(200).json({ message: `${resident.type || 'Resident'} ${resident.name} has been checked out successfully` });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from 'lucide-react';
 import Cropper from "react-easy-crop";
 import styles from './AD_Add_Residents.module.css';
 import Sidebar from "./Components/Sidebar/Sidebar";
@@ -8,21 +9,36 @@ import Popup from "./Components/Popup/Popup";
 import Loader from "../Resident/Components/Loader/Loader";
 import API from "../../API/axios";
 import { minDelay } from "../../utils/minDelay";
+import useBlockInteraction from "../../hooks/useBlockInteraction";
 
 export default function Admin_AddResident() {
   const navigate = useNavigate(); 
   const [popupConfig, setPopupConfig] = useState({ isOpen: false, type: '', title: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  useBlockInteraction(isSubmitting);
 
   
   const [activeNav, setActiveNav] = useState("residents");
   const [isMobile, setIsMobile] = useState(false);
+  const [availableRooms, setAvailableRooms] = useState([]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Fetch available rooms from Info collection
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await API.get("/admin/settings/rooms-rates");
+        setAvailableRooms(data.rooms || []);
+      } catch {
+        // fallback empty
+      }
+    })();
   }, []);
 
   // Set joining date to today's date on component mount
@@ -43,6 +59,8 @@ export default function Admin_AddResident() {
     firstName: "",
     lastName: "",
     phone: "",
+    password: "",
+    confirmPassword: "",
     dob: "",
     gender: "Male",
     bloodGroup: "",
@@ -57,6 +75,8 @@ export default function Admin_AddResident() {
     document: null,
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [showErrorSummary, setShowErrorSummary] = useState(false);
@@ -77,6 +97,16 @@ export default function Admin_AddResident() {
         if (!value.trim()) return 'This field is required';
         if (value.trim().length < 2) return 'Must be at least 2 characters';
         if (!/^[a-zA-Z\s]+$/.test(value)) return 'Only letters are allowed';
+        return '';
+
+      case 'password':
+        if (!value) return 'Password is required';
+        if (value.length < 6) return 'Password must be at least 6 characters';
+        return '';
+
+      case 'confirmPassword':
+        if (!value) return 'Please confirm your password';
+        if (value !== form.password) return 'Passwords do not match';
         return '';
 
       case 'phone':
@@ -166,7 +196,8 @@ export default function Admin_AddResident() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    const updatedForm = { ...form, [name]: value };
+    setForm(updatedForm);
     
     // Hide error summary when user starts fixing errors
     if (showErrorSummary) {
@@ -176,7 +207,13 @@ export default function Admin_AddResident() {
     // Validate the field if it has been touched
     if (touched[name]) {
       const error = validateField(name, value);
-      setErrors({ ...errors, [name]: error });
+      const newErrors = { ...errors, [name]: error };
+      // Cross-validate confirmPassword when password changes
+      if (name === 'password' && touched.confirmPassword) {
+        newErrors.confirmPassword = updatedForm.confirmPassword && updatedForm.confirmPassword !== value
+          ? 'Passwords do not match' : (!updatedForm.confirmPassword ? 'Please confirm your password' : '');
+      }
+      setErrors(newErrors);
     }
   };
 
@@ -228,7 +265,7 @@ export default function Admin_AddResident() {
     // Validate all fields before submission
     const newErrors = {};
     const fieldsToValidate = [
-      'firstName', 'lastName', 'phone', 'dob',
+      'firstName', 'lastName', 'phone', 'password', 'confirmPassword', 'dob',
       'bloodGroup', 'emerName', 'emerRelation', 'emerPhone',
       'type', 'roomNo', 'joiningDate', 'document',
       ...(form.type !== 'Guest' ? ['rentAmount', 'depositAmount'] : [])
@@ -262,6 +299,7 @@ export default function Admin_AddResident() {
       const formData = new FormData();
       formData.append('name', `${form.firstName} ${form.lastName}`.trim());
       formData.append('phoneNumber', form.phone);
+      formData.append('password', form.password);
       formData.append('type', form.type);
       formData.append('dob', form.dob);
       formData.append('gender', form.gender);
@@ -302,6 +340,8 @@ export default function Admin_AddResident() {
           firstName: "",
           lastName: "",
           phone: "",
+          password: "",
+          confirmPassword: "",
           dob: "",
           gender: "Male",
           bloodGroup: "",
@@ -459,6 +499,7 @@ export default function Admin_AddResident() {
                     <span className={styles.errorText}>{errors.phone}</span>
                   )}
                 </div>
+
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="dob">
                     Date of Birth <span className={styles.required}>*</span>
@@ -586,9 +627,15 @@ export default function Admin_AddResident() {
                     onBlur={handleBlur}
                   >
                     <option value="">Select Room</option>
-                    <option value="101">101 (Available)</option>
-                    <option value="102">102 (Available)</option>
-                    <option value="205">205 (Available)</option>
+                    {availableRooms.map((room) => {
+                      const available = room.maxOccupants - (room.currentOccupants || 0);
+                      const isFull = available <= 0;
+                      return (
+                        <option key={room.roomNo} value={room.roomNo} disabled={isFull}>
+                          {room.roomNo} — {room.beds} bed{room.beds !== 1 ? 's' : ''} · {isFull ? 'Full' : `${available} spot${available !== 1 ? 's' : ''} available`}
+                        </option>
+                      );
+                    })}
                   </select>
                   {errors.roomNo && touched.roomNo && (
                     <span className={styles.errorText}>{errors.roomNo}</span>
@@ -730,6 +777,68 @@ export default function Admin_AddResident() {
               {errors.document && touched.document && (
                 <span className={styles.errorText}>{errors.document}</span>
               )}
+            </section>
+            {/* 5. Account Credentials */}
+            <section className={styles.subSection}>
+              <h3 className={styles.subSectionTitle}>Account Credentials</h3>
+              <div className={styles.formGrid}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="password">
+                    Password <span className={styles.required}>*</span>
+                  </label>
+                  <div className={styles.passwordInputWrapper}>
+                    <input 
+                      id="password" 
+                      name="password" 
+                      type={showPassword ? 'text' : 'password'}
+                      className={`${styles.input} ${errors.password && touched.password ? styles.inputError : ''}`}
+                      placeholder="Min 6 characters" 
+                      value={form.password} 
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className={styles.passwordToggleBtn}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && touched.password && (
+                    <span className={styles.errorText}>{errors.password}</span>
+                  )}
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="confirmPassword">
+                    Confirm Password <span className={styles.required}>*</span>
+                  </label>
+                  <div className={styles.passwordInputWrapper}>
+                    <input 
+                      id="confirmPassword" 
+                      name="confirmPassword" 
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      className={`${styles.input} ${errors.confirmPassword && touched.confirmPassword ? styles.inputError : ''}`}
+                      placeholder="Re-enter password" 
+                      value={form.confirmPassword} 
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className={styles.passwordToggleBtn}
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && touched.confirmPassword && (
+                    <span className={styles.errorText}>{errors.confirmPassword}</span>
+                  )}
+                </div>
+              </div>
             </section>
 
             {/* Actions */}

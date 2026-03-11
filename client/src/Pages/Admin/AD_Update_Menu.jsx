@@ -5,6 +5,7 @@ import Sidebar from "./Components/Sidebar/Sidebar";
 import Loader from "../Resident/Components/Loader/Loader";
 import API from "../../API/axios";
 import { minDelay } from "../../utils/minDelay";
+import useBlockInteraction from "../../hooks/useBlockInteraction";
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -14,6 +15,7 @@ export default function Admin_UpdateMenu() {
   const [activeNav, setActiveNav] = useState("kitchen");
   const [isMobile, setIsMobile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  useBlockInteraction(isSubmitting);
 
   const todayDay = DAYS[new Date().getDay()];
   const [selectedDay, setSelectedDay] = useState(todayDay);
