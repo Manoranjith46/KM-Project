@@ -1,137 +1,298 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../../Context/AuthContext";
+import API from "../../API/axios";
+import { minDelay } from "../../utils/minDelay";
+import Cropper from "react-easy-crop";
+import { getCroppedImg } from "../../Components/ImageCrop";
+import Loader from "../Resident/Components/Loader/Loader";
+import Popup from "./Components/Popup/Popup";
 import styles from "./AD_Settings.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
-import Topbar from "./Components/Header/Topbar";
 
 const SETTING_TABS = [
-  { id: "profile",       label: "My Profile" },
-  { id: "property",      label: "Property Details" },
-  { id: "notifications", label: "Notifications" },
-  { id: "security",      label: "Security" },
-  { id: "billing",       label: "Billing" },
+  { id: "profile",  label: "My Profile" },
+  { id: "property", label: "Property Details" },
+  { id: "security", label: "Security" },
 ];
 
 export default function Admin_Settings() {
-  const navigate = useNavigate();
+  const { user, login } = useAuth();
+  const [activeTab, setActiveTab] = useState("profile");
+  const [isMobile, setIsMobile]   = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { logout } = useAuth();
   const fileInputRef = useRef(null);
-  const [activeNav, setActiveNav]     = useState("settings");
-  const [activeTab, setActiveTab]     = useState("profile");
-  const [creditCards, setCreditCards] = useState(true);
-  const [isMobile, setIsMobile]       = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    // Call logout from AuthContext (handles API call, session clearing, and redirect)
-    await logout();
-    // AuthContext now handles redirect via window.location.replace('/login')
-  };
+  // Profile photo
+  const [profilePhoto, setProfilePhoto] = useState("");
+
+  // Crop modal state
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [tempPreviewUrl, setTempPreviewUrl] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const onCropComplete = useCallback((_, croppedPixels) => {
+    setCroppedAreaPixels(croppedPixels);
+  }, []);
+
+  // Skeleton / initial loading
+  const [loadingProfile, setLoadingProfile]   = useState(true);
+  const [loadingProperty, setLoadingProperty] = useState(true);
+
+  // Loader & Popup state
+  const [loaderText, setLoaderText] = useState("");
+  const [popup, setPopup] = useState({ isOpen: false, type: "info", title: "", message: "" });
+
+  // Scroll lock when overlay is open
+  useEffect(() => {
+    const hasOverlay = Boolean(loaderText || popup.isOpen || showCropModal);
+    document.body.style.overflow = hasOverlay ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [loaderText, popup.isOpen, showCropModal]);
+
+  // Profile form
+  const [profile, setProfile] = useState({ name: "", email: "", mobileNumber: "", role: "" });
+  const [profileOriginal, setProfileOriginal] = useState(null);
+  const handleProfile = (e) => setProfile((p) => ({ ...p, [e.target.name]: e.target.value }));
+
+  // Property form
+  const [form, setForm] = useState({ propertyName: "", address: "", totalBeds: "", contactNumber: "", managerEmail: "", upiId: "" });
+  const [formOriginal, setFormOriginal] = useState(null);
+  const handleChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+
+  // Security form
+  const [secForm, setSecForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const handleSec = (e) => setSecForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  /* ── Property form ── */
-  const [form, setForm] = useState({
-    propertyName:  "PG-Ease",
-    address:       "42, Lakeview Colony, Hyderabad, Telangana – 500081",
-    totalBeds:     "50",
-    contactNumber: "+91 98765 43210",
-    managerEmail:  "admin@pgease.in",
-    upiId:         "pgease@upi",
-  });
-  const handleChange = (e) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  // Fetch profile on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await minDelay(API.get("/admin/settings/profile"));
+        const p = { name: data.name, email: data.email, mobileNumber: data.mobileNumber, role: data.role };
+        setProfile(p);
+        setProfileOriginal(p);
+        if (data.profilePhoto) setProfilePhoto(data.profilePhoto);
+      } catch {
+        // AuthContext data fallback
+        if (user) {
+          const p = { name: user.name || "", email: user.email || "", mobileNumber: user.mobileNumber || "", role: user.role || "" };
+          setProfile(p);
+          setProfileOriginal(p);
+        }
+      } finally {
+        setLoadingProfile(false);
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ── Profile form ── */
-  const [profile, setProfile] = useState({
-    fullName:  "Admin Kumar",
-    email:     "admin@pgease.in",
-    phone:     "+91 98765 43210",
-    role:      "Owner / Admin",
-    bio:       "Managing PG-Ease since 2022. Passionate about comfortable living spaces.",
-  });
-  const handleProfile = (e) =>
-    setProfile((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  // Fetch property on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await minDelay(API.get("/admin/settings/property"));
+        const f = {
+          propertyName: data.propertyName || "",
+          address: data.address || "",
+          totalBeds: data.totalBeds ? String(data.totalBeds) : "",
+          contactNumber: data.contactNumber || "",
+          managerEmail: data.managerEmail || "",
+          upiId: data.upiId || "",
+        };
+        setForm(f);
+        setFormOriginal(f);
+      } catch {
+        // leave empty defaults
+      } finally {
+        setLoadingProperty(false);
+      }
+    })();
+  }, []);
 
-  /* ── Photo Upload ── */
-  const handlePhotoClick = () => {
-    fileInputRef.current?.click();
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logout();
   };
 
-  const handlePhotoChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePhoto(reader.result);
-      };
-      reader.readAsDataURL(file);
+  // ── Save profile ──
+  const saveProfile = async () => {
+    if (!profile.name.trim() || !profile.mobileNumber.trim()) {
+      setPopup({ isOpen: true, type: "warning", title: "Missing Fields", message: "Name and mobile number are required." });
+      return;
+    }
+    setLoaderText("Saving Profile");
+    try {
+      const { data } = await minDelay(API.put("/admin/settings/profile", {
+        name: profile.name.trim(),
+        email: profile.email.trim(),
+        mobileNumber: profile.mobileNumber.trim(),
+      }));
+      setLoaderText("");
+      // Update AuthContext + sessionStorage
+      login(data.user);
+      const p = { name: data.user.name, email: data.user.email, mobileNumber: data.user.mobileNumber, role: data.user.role };
+      setProfile(p);
+      setProfileOriginal(p);
+      setPopup({ isOpen: true, type: "success", title: "Profile Updated", message: "Your profile has been updated successfully." });
+    } catch (err) {
+      setLoaderText("");
+      setPopup({ isOpen: true, type: "error", title: "Update Failed", message: err.response?.data?.message || "Could not update profile." });
     }
   };
 
-  /* ── Notifications toggles ── */
-  const [notifs, setNotifs] = useState({
-    rentReminders:   true,
-    paymentAlerts:   true,
-    maintenanceAlerts: true,
-    mealFeedback:    false,
-    newResidents:    true,
-    weeklyReport:    false,
-    smsAlerts:       true,
-    emailDigest:     true,
-  });
-  const toggleNotif = (key) =>
-    setNotifs((prev) => ({ ...prev, [key]: !prev[key] }));
+  // ── Save property ──
+  const saveProperty = async () => {
+    setLoaderText("Saving Property");
+    try {
+      const { data } = await minDelay(API.put("/admin/settings/property", {
+        propertyName: form.propertyName.trim(),
+        address: form.address.trim(),
+        totalBeds: form.totalBeds ? Number(form.totalBeds) : 0,
+        contactNumber: form.contactNumber.trim(),
+        managerEmail: form.managerEmail.trim(),
+        upiId: form.upiId.trim(),
+      }));
+      setLoaderText("");
+      const f = {
+        propertyName: data.property.propertyName || "",
+        address: data.property.address || "",
+        totalBeds: data.property.totalBeds ? String(data.property.totalBeds) : "",
+        contactNumber: data.property.contactNumber || "",
+        managerEmail: data.property.managerEmail || "",
+        upiId: data.property.upiId || "",
+      };
+      setForm(f);
+      setFormOriginal(f);
+      setPopup({ isOpen: true, type: "success", title: "Property Updated", message: "Property details saved successfully." });
+    } catch (err) {
+      setLoaderText("");
+      setPopup({ isOpen: true, type: "error", title: "Update Failed", message: err.response?.data?.message || "Could not update property details." });
+    }
+  };
 
-  /* ── Security form ── */
-  const [secForm, setSecForm] = useState({
-    currentPassword: "",
-    newPassword:     "",
-    confirmPassword: "",
-  });
-  const [twoFa, setTwoFa] = useState(true);
-  const handleSec = (e) =>
-    setSecForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  // ── Change password ──
+  const savePassword = async () => {
+    if (!secForm.currentPassword || !secForm.newPassword || !secForm.confirmPassword) {
+      setPopup({ isOpen: true, type: "warning", title: "Missing Fields", message: "Please fill in all password fields." });
+      return;
+    }
+    if (secForm.newPassword.length < 6) {
+      setPopup({ isOpen: true, type: "warning", title: "Weak Password", message: "New password must be at least 6 characters." });
+      return;
+    }
+    if (secForm.newPassword !== secForm.confirmPassword) {
+      setPopup({ isOpen: true, type: "warning", title: "Mismatch", message: "New password and confirm password do not match." });
+      return;
+    }
+    setLoaderText("Updating");
+    try {
+      await minDelay(API.post("/admin/settings/change-password", {
+        currentPassword: secForm.currentPassword,
+        newPassword: secForm.newPassword,
+      }));
+      setLoaderText("");
+      setSecForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPopup({ isOpen: true, type: "success", title: "Password Changed", message: "Your password has been updated successfully." });
+    } catch (err) {
+      setLoaderText("");
+      setPopup({ isOpen: true, type: "error", title: "Change Failed", message: err.response?.data?.message || "Could not change password." });
+    }
+  };
 
-  /* ── Billing ── */
-  const INVOICES = [
-    { id: "INV-2026-02", plan: "Pro Plan", amount: "₹2,499", date: "01 Feb 2026", status: "Paid" },
-    { id: "INV-2026-01", plan: "Pro Plan", amount: "₹2,499", date: "01 Jan 2026", status: "Paid" },
-    { id: "INV-2025-12", plan: "Pro Plan", amount: "₹2,499", date: "01 Dec 2025", status: "Paid" },
-    { id: "INV-2025-11", plan: "Starter",  amount: "₹999",   date: "01 Nov 2025", status: "Paid" },
-  ];
+  // ── Open file picker → crop modal ──
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setPopup({ isOpen: true, type: "warning", title: "Invalid File", message: "Please select an image file (JPG, PNG, or SVG)." });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setTempPreviewUrl(ev.target.result);
+      setShowCropModal(true);
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // ── Crop & upload ──
+  const handleCropUpload = async () => {
+    if (!tempPreviewUrl || !croppedAreaPixels) return;
+    try {
+      const { file } = await getCroppedImg(tempPreviewUrl, croppedAreaPixels);
+      setShowCropModal(false);
+      setLoaderText("Uploading");
+      const fd = new FormData();
+      fd.append("profilePhoto", file);
+      const { data } = await minDelay(API.post("/admin/settings/profile-photo", fd));
+      setProfilePhoto(data.profilePhoto);
+      setLoaderText("");
+      setPopup({ isOpen: true, type: "success", title: "Photo Updated", message: "Profile photo has been updated." });
+    } catch (err) {
+      setLoaderText("");
+      setPopup({ isOpen: true, type: "error", title: "Upload Failed", message: err.response?.data?.message || "Could not upload photo." });
+    }
+  };
+
+  const closeCropModal = () => {
+    setShowCropModal(false);
+    setTempPreviewUrl(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+  };
+
+  // ── Remove profile photo ──
+  const removePhoto = async () => {
+    setLoaderText("Removing");
+    try {
+      await minDelay(API.delete("/admin/settings/profile-photo"));
+      setProfilePhoto("");
+      setLoaderText("");
+      setPopup({ isOpen: true, type: "success", title: "Photo Removed", message: "Profile photo has been removed." });
+    } catch (err) {
+      setLoaderText("");
+      setPopup({ isOpen: true, type: "error", title: "Remove Failed", message: err.response?.data?.message || "Could not remove photo." });
+    }
+  };
+
+  // Cancel handlers – reset to last saved values
+  const cancelProfile  = () => { if (profileOriginal) setProfile(profileOriginal); };
+  const cancelProperty = () => { if (formOriginal) setForm(formOriginal); };
+  const cancelSecurity = () => setSecForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+
+  // Skeleton block helper
+  const Skeleton = ({ width = "100%", height = "40px", radius = "12px" }) => (
+    <div className={styles.skeleton} style={{ width, height, borderRadius: radius }} />
+  );
 
   return (
     <div className={styles.dashboardWrapper}>
-      {/* Floating Background Blobs */}
       <div className={styles.backgroundBlobs}>
         <div className={`${styles.blob} ${styles.blob1}`}></div>
         <div className={`${styles.blob} ${styles.blob2}`}></div>
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      <Sidebar currentPath={'settings'} />
+      <Sidebar currentPath={"settings"} />
 
       <main className={styles.mainContent}>
-
         <div className={styles.content}>
-          
           <div className={styles.contentHeader}>
             <h2 className={styles.contentTitle}>Admin Settings</h2>
           </div>
 
-          {/* Settings container – split card */}
           <div className={styles.settingsCard}>
-
-            {/* Inner sidebar – vertical tabs (desktop) / horizontal scroll (mobile) */}
+            {/* Inner sidebar tabs */}
             <nav className={styles.innerSidebar} aria-label="Settings sections">
               {SETTING_TABS.map((tab) => (
                 <button
@@ -147,8 +308,115 @@ export default function Admin_Settings() {
 
             {/* Form area */}
             <div className={styles.formArea}>
-              
-              {/* PROPERTY DETAILS */}
+
+              {/* ═══════════ MY PROFILE ═══════════ */}
+              {activeTab === "profile" && (
+                <div className={styles.tabContentFade}>
+                  <div className={styles.formHeader}>
+                    <h3 className={styles.formTitle}>My Profile</h3>
+                    <p className={styles.formSubtext}>Update your personal information.</p>
+                  </div>
+
+                  {loadingProfile ? (
+                    <>
+                      <div className={styles.avatarRow}>
+                        <Skeleton width="64px" height="64px" radius="50%" />
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                          <Skeleton width="150px" height="20px" />
+                          <Skeleton width="80px" height="16px" />
+                        </div>
+                      </div>
+                      <div className={styles.formGrid}>
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className={styles.fieldGroup}>
+                            <Skeleton width="80px" height="14px" />
+                            <Skeleton height="44px" />
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={styles.avatarRow}>
+                        <div
+                          className={styles.profileAvatar}
+                          style={profilePhoto ? {
+                            backgroundImage: `url(${API.defaults.baseURL}/uploads/${profilePhoto})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            color: "transparent",
+                          } : {}}
+                        >
+                          {!profilePhoto && (profile.name ? profile.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() : "AD")}
+                        </div>
+                        <div className={styles.avatarMeta}>
+                          <span className={styles.avatarName}>{profile.name}</span>
+                          <span className={styles.avatarRole}>{profile.role}</span>
+                        </div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/svg+xml"
+                          style={{ display: "none" }}
+                          onChange={handlePhotoSelect}
+                        />
+                        <div className={styles.avatarActions}>
+                          <button className={styles.outlineBtn} onClick={() => fileInputRef.current?.click()}>Change Photo</button>
+                          {profilePhoto && (
+                            <button className={styles.removeBtnSmall} onClick={removePhoto}>Remove</button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className={styles.formGrid}>
+                        <div className={styles.fieldGroup}>
+                          <label className={styles.label} htmlFor="name">Full Name</label>
+                          <input id="name" name="name" className={styles.input} value={profile.name} onChange={handleProfile} />
+                        </div>
+                        <div className={styles.fieldGroup}>
+                          <label className={styles.label} htmlFor="role">Role</label>
+                          <input id="role" name="role" className={styles.input} value={profile.role} disabled />
+                        </div>
+                        <div className={styles.fieldGroup}>
+                          <label className={styles.label} htmlFor="profileEmail">Email Address</label>
+                          <input id="profileEmail" name="email" type="email" className={styles.input} value={profile.email} onChange={handleProfile} />
+                        </div>
+                        <div className={styles.fieldGroup}>
+                          <label className={styles.label} htmlFor="profilePhone">Mobile Number</label>
+                          <input id="profilePhone" name="mobileNumber" className={styles.input} value={profile.mobileNumber} onChange={handleProfile} />
+                        </div>
+                      </div>
+
+                      <div className={styles.formFooter}>
+                        <hr className={styles.divider} />
+                        <div className={styles.footerActions}>
+                          <button className={styles.cancelBtn} onClick={cancelProfile}>Cancel</button>
+                          <button className={styles.saveBtn} onClick={saveProfile}>Save Profile</button>
+                        </div>
+                      </div>
+
+                      <div className={styles.logoutSection}>
+                        <hr className={styles.divider} />
+                        <button
+                          className={styles.logoutBtn}
+                          onClick={handleLogout}
+                          disabled={isLoggingOut}
+                          style={{ opacity: isLoggingOut ? 0.6 : 1, cursor: isLoggingOut ? "not-allowed" : "pointer" }}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                          </svg>
+                          {isLoggingOut ? "Logging out..." : "Logout"}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* ═══════════ PROPERTY DETAILS ═══════════ */}
               {activeTab === "property" && (
                 <div className={styles.tabContentFade}>
                   <div className={styles.formHeader}>
@@ -156,196 +424,68 @@ export default function Admin_Settings() {
                     <p className={styles.formSubtext}>Manage your PG's core information.</p>
                   </div>
 
-                  <div className={styles.formGrid}>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor="propertyName">Property Name</label>
-                      <input id="propertyName" name="propertyName" className={styles.input} value={form.propertyName} onChange={handleChange} />
-                    </div>
-
-                    <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                      <label className={styles.label} htmlFor="address">Address</label>
-                      <input id="address" name="address" className={styles.input} value={form.address} onChange={handleChange} />
-                    </div>
-
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor="totalBeds">Total Beds Capacity</label>
-                      <input id="totalBeds" name="totalBeds" type="number" className={styles.input} value={form.totalBeds} onChange={handleChange} />
-                    </div>
-
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor="contactNumber">Contact Number</label>
-                      <input id="contactNumber" name="contactNumber" className={styles.input} value={form.contactNumber} onChange={handleChange} />
-                    </div>
-
-                    <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                      <label className={styles.label} htmlFor="managerEmail">Manager Email</label>
-                      <input id="managerEmail" name="managerEmail" type="email" className={styles.input} value={form.managerEmail} onChange={handleChange} />
-                    </div>
-                  </div>
-
-                  {/* Payment Setup sub-section */}
-                  <div className={styles.subSection}>
-                    <h4 className={styles.subSectionTitle}>Payment Setup</h4>
+                  {loadingProperty ? (
                     <div className={styles.formGrid}>
-                      <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                        <label className={styles.label} htmlFor="upiId">Default UPI ID</label>
-                        <input id="upiId" name="upiId" className={styles.input} value={form.upiId} onChange={handleChange} />
-                      </div>
-                      <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                        <div className={styles.toggleRow}>
-                          <div>
-                            <span className={styles.toggleRowLabel}>Accept Credit Cards</span>
-                            <span className={styles.toggleRowSub}>Allow residents to pay via credit card</span>
-                          </div>
-                          <button role="switch" aria-checked={creditCards} className={`${styles.toggle} ${creditCards ? styles.toggleOn : ""}`} onClick={() => setCreditCards((v) => !v)}>
-                            <span className={styles.toggleThumb} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className={styles.formFooter}>
-                    <hr className={styles.divider} />
-                    <div className={styles.footerActions}>
-                      <button className={styles.cancelBtn}>Cancel</button>
-                      <button className={styles.saveBtn}>Save Changes</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* MY PROFILE */}
-              {activeTab === "profile" && (
-                <div className={styles.tabContentFade}>
-                  <div className={styles.formHeader}>
-                    <h3 className={styles.formTitle}>My Profile</h3>
-                    <p className={styles.formSubtext}>Update your personal information and display preferences.</p>
-                  </div>
-
-                  <div className={styles.avatarRow}>
-                    <div className={styles.profileAvatar} style={profilePhoto ? { backgroundImage: `url(${profilePhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
-                      {!profilePhoto && 'AK'}
-                    </div>
-                    <div className={styles.avatarMeta}>
-                      <span className={styles.avatarName}>{profile.fullName}</span>
-                      <span className={styles.avatarRole}>{profile.role}</span>
-                    </div>
-                    <input 
-                      ref={fileInputRef}
-                      type="file" 
-                      accept="image/*" 
-                      style={{ display: 'none' }}
-                      onChange={handlePhotoChange}
-                    />
-                    <button className={styles.outlineBtn} onClick={handlePhotoClick}>Change Photo</button>
-                  </div>
-
-                  <div className={styles.formGrid}>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor="fullName">Full Name</label>
-                      <input id="fullName" name="fullName" className={styles.input} value={profile.fullName} onChange={handleProfile} />
-                    </div>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor="role">Role</label>
-                      <input id="role" name="role" className={styles.input} value={profile.role} onChange={handleProfile} />
-                    </div>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor="profileEmail">Email Address</label>
-                      <input id="profileEmail" name="email" type="email" className={styles.input} value={profile.email} onChange={handleProfile} />
-                    </div>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor="profilePhone">Phone Number</label>
-                      <input id="profilePhone" name="phone" className={styles.input} value={profile.phone} onChange={handleProfile} />
-                    </div>
-                    <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-                      <label className={styles.label} htmlFor="bio">Short Bio</label>
-                      <textarea id="bio" name="bio" className={`${styles.input} ${styles.textarea}`} rows={3} value={profile.bio} onChange={handleProfile} />
-                    </div>
-                  </div>
-
-                  <div className={styles.formFooter}>
-                    <hr className={styles.divider} />
-                    <div className={styles.footerActions}>
-                      <button className={styles.cancelBtn}>Cancel</button>
-                      <button className={styles.saveBtn}>Save Profile</button>
-                    </div>
-                  </div>
-
-                  <div className={styles.logoutSection}>
-                    <hr className={styles.divider} />
-                    <button 
-                      className={styles.logoutBtn} 
-                      onClick={handleLogout}
-                      disabled={isLoggingOut}
-                      style={{ opacity: isLoggingOut ? 0.6 : 1, cursor: isLoggingOut ? 'not-allowed' : 'pointer' }}
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                      </svg>
-                      {isLoggingOut ? 'Logging out...' : 'Logout'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* NOTIFICATIONS */}
-              {activeTab === "notifications" && (
-                <div className={styles.tabContentFade}>
-                  <div className={styles.formHeader}>
-                    <h3 className={styles.formTitle}>Notifications</h3>
-                    <p className={styles.formSubtext}>Choose which alerts and digests you receive.</p>
-                  </div>
-
-                  {[
-                    {
-                      group: "In-App Alerts",
-                      items: [
-                        { key: "rentReminders",   label: "Rent Reminders",     sub: "Notify 3 days before rent is due" },
-                        { key: "paymentAlerts",   label: "Payment Received",   sub: "Instant alert on every payment" },
-                        { key: "maintenanceAlerts",label: "Maintenance Tickets",sub: "New and updated complaint tickets" },
-                        { key: "mealFeedback",    label: "Meal Feedback",      sub: "Resident ratings after each service" },
-                        { key: "newResidents",    label: "New Resident Check-in",sub: "Alert when a new resident is added" },
-                      ],
-                    },
-                    {
-                      group: "External Channels",
-                      items: [
-                        { key: "weeklyReport", label: "Weekly Summary Report", sub: "Email digest every Monday morning" },
-                        { key: "smsAlerts",    label: "SMS Alerts",           sub: "Critical alerts via SMS" },
-                        { key: "emailDigest",  label: "Daily Email Digest",    sub: "End-of-day activity summary" },
-                      ],
-                    },
-                  ].map(({ group, items }) => (
-                    <div key={group} className={styles.subSection}>
-                      <h4 className={styles.subSectionTitle}>{group}</h4>
-                      {items.map(({ key, label, sub }) => (
-                        <div key={key} className={styles.toggleRow}>
-                          <div>
-                            <span className={styles.toggleRowLabel}>{label}</span>
-                            <span className={styles.toggleRowSub}>{sub}</span>
-                          </div>
-                          <button role="switch" aria-checked={notifs[key]} className={`${styles.toggle} ${notifs[key] ? styles.toggleOn : ""}`} onClick={() => toggleNotif(key)}>
-                            <span className={styles.toggleThumb} />
-                          </button>
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className={i === 2 || i === 5 ? `${styles.fieldGroup} ${styles.fullWidth}` : styles.fieldGroup}>
+                          <Skeleton width="100px" height="14px" />
+                          <Skeleton height="44px" />
                         </div>
                       ))}
                     </div>
-                  ))}
+                  ) : (
+                    <>
+                      <div className={styles.formGrid}>
+                        <div className={styles.fieldGroup}>
+                          <label className={styles.label} htmlFor="propertyName">Property Name</label>
+                          <input id="propertyName" name="propertyName" className={styles.input} value={form.propertyName} onChange={handleChange} />
+                        </div>
 
-                  <div className={styles.formFooter}>
-                    <hr className={styles.divider} />
-                    <div className={styles.footerActions}>
-                      <button className={styles.cancelBtn}>Reset</button>
-                      <button className={styles.saveBtn}>Save Preferences</button>
-                    </div>
-                  </div>
+                        <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                          <label className={styles.label} htmlFor="address">Address</label>
+                          <input id="address" name="address" className={styles.input} value={form.address} onChange={handleChange} />
+                        </div>
+
+                        <div className={styles.fieldGroup}>
+                          <label className={styles.label} htmlFor="totalBeds">Total Beds Capacity</label>
+                          <input id="totalBeds" name="totalBeds" type="number" className={styles.input} value={form.totalBeds} onChange={handleChange} />
+                        </div>
+
+                        <div className={styles.fieldGroup}>
+                          <label className={styles.label} htmlFor="contactNumber">Contact Number</label>
+                          <input id="contactNumber" name="contactNumber" className={styles.input} value={form.contactNumber} onChange={handleChange} />
+                        </div>
+
+                        <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                          <label className={styles.label} htmlFor="managerEmail">Manager Email</label>
+                          <input id="managerEmail" name="managerEmail" type="email" className={styles.input} value={form.managerEmail} onChange={handleChange} />
+                        </div>
+                      </div>
+
+                      {/* Payment Setup sub-section */}
+                      <div className={styles.subSection}>
+                        <h4 className={styles.subSectionTitle}>Payment Setup</h4>
+                        <div className={styles.formGrid}>
+                          <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                            <label className={styles.label} htmlFor="upiId">Default UPI ID</label>
+                            <input id="upiId" name="upiId" className={styles.input} value={form.upiId} onChange={handleChange} />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={styles.formFooter}>
+                        <hr className={styles.divider} />
+                        <div className={styles.footerActions}>
+                          <button className={styles.cancelBtn} onClick={cancelProperty}>Cancel</button>
+                          <button className={styles.saveBtn} onClick={saveProperty}>Save Changes</button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
-              {/* SECURITY */}
+              {/* ═══════════ SECURITY ═══════════ */}
               {activeTab === "security" && (
                 <div className={styles.tabContentFade}>
                   <div className={styles.formHeader}>
@@ -362,7 +502,7 @@ export default function Admin_Settings() {
                       </div>
                       <div className={styles.fieldGroup}>
                         <label className={styles.label} htmlFor="newPassword">New Password</label>
-                        <input id="newPassword" name="newPassword" type="password" className={styles.input} placeholder="Min. 8 characters" value={secForm.newPassword} onChange={handleSec} />
+                        <input id="newPassword" name="newPassword" type="password" className={styles.input} placeholder="Min. 6 characters" value={secForm.newPassword} onChange={handleSec} />
                       </div>
                       <div className={styles.fieldGroup}>
                         <label className={styles.label} htmlFor="confirmPassword">Confirm Password</label>
@@ -371,102 +511,92 @@ export default function Admin_Settings() {
                     </div>
                   </div>
 
-                  <div className={styles.subSection}>
-                    <h4 className={styles.subSectionTitle}>Two-Factor Authentication</h4>
-                    <div className={styles.toggleRow}>
-                      <div>
-                        <span className={styles.toggleRowLabel}>Enable 2FA via OTP</span>
-                        <span className={styles.toggleRowSub}>Require OTP on every login for added security</span>
-                      </div>
-                      <button role="switch" aria-checked={twoFa} className={`${styles.toggle} ${twoFa ? styles.toggleOn : ""}`} onClick={() => setTwoFa((v) => !v)}>
-                        <span className={styles.toggleThumb} />
-                      </button>
-                    </div>
-                  </div>
-
                   <div className={styles.formFooter}>
                     <hr className={styles.divider} />
                     <div className={styles.footerActions}>
-                      <button className={styles.cancelBtn}>Cancel</button>
-                      <button className={styles.saveBtn}>Update Security</button>
+                      <button className={styles.cancelBtn} onClick={cancelSecurity}>Cancel</button>
+                      <button className={styles.saveBtn} onClick={savePassword}>Update Password</button>
                     </div>
                   </div>
                 </div>
               )}
-
-              {/* BILLING */}
-              {activeTab === "billing" && (
-                <div className={styles.tabContentFade}>
-                  <div className={styles.formHeader}>
-                    <h3 className={styles.formTitle}>Billing</h3>
-                    <p className={styles.formSubtext}>Your current plan, payment method, and invoice history.</p>
-                  </div>
-
-                  <div className={styles.planCard}>
-                    <div className={styles.planInfo}>
-                      <span className={styles.planBadge}>Active</span>
-                      <span className={styles.planName}>Pro Plan</span>
-                      <span className={styles.planPrice}>₹2,499 <small>/month</small></span>
-                      <span className={styles.planRenews}>Renews on 01 Mar 2026</span>
-                    </div>
-                    <button className={styles.outlineBtn}>Upgrade Plan</button>
-                  </div>
-
-                  <div className={styles.subSection}>
-                    <h4 className={styles.subSectionTitle}>Invoice History</h4>
-                    <div className={styles.invoiceTable}>
-                      <div className={styles.invoiceHead}>
-                        <span>Invoice</span>
-                        <span>Plan</span>
-                        <span>Amount</span>
-                        <span>Date</span>
-                        <span>Status</span>
-                      </div>
-                      {INVOICES.map((inv) => (
-                        <div key={inv.id} className={styles.invoiceRow}>
-                          <span className={styles.invoiceId}>{inv.id}</span>
-                          <span>{inv.plan}</span>
-                          <span>{inv.amount}</span>
-                          <span>{inv.date}</span>
-                          <span className={styles.pillPaid}>Paid</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
             </div>
           </div>
         </div>
       </main>
 
+      {/* ═══════════ CROP MODAL ═══════════ */}
+      {showCropModal && (
+        <div className={styles.cropModalOverlay}>
+          <div className={styles.cropModal}>
+            <div className={styles.cropModalHeader}>
+              <h2 className={styles.cropModalTitle}>Crop Profile Photo</h2>
+              <button className={styles.cropModalCloseBtn} type="button" onClick={closeCropModal}>✕</button>
+            </div>
+
+            <div className={styles.cropperArea}>
+              {tempPreviewUrl && (
+                <Cropper
+                  image={tempPreviewUrl}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="round"
+                  showGrid={false}
+                  onCropChange={setCrop}
+                  onCropComplete={onCropComplete}
+                  onZoomChange={setZoom}
+                />
+              )}
+            </div>
+
+            <div className={styles.cropZoomContainer}>
+              <label className={styles.zoomLabel}>Zoom:</label>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className={styles.zoomSlider}
+              />
+            </div>
+
+            <div className={styles.cropModalFooter}>
+              <button className={styles.cropCancelBtn} type="button" onClick={closeCropModal}>Cancel</button>
+              <button className={styles.cropUploadBtn} type="button" onClick={handleCropUpload}>Upload Photo</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ LOADER ═══════════ */}
+      {loaderText && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text={loaderText} />
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ POPUP ═══════════ */}
+      <Popup
+        isOpen={popup.isOpen}
+        onClose={() => setPopup({ ...popup, isOpen: false })}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+      />
+
       {isMobile && (
         <nav className={styles.bottomNav} aria-label="Mobile navigation">
-            <button className={`${styles.bottomNavItem} ${activeNav === 'dashboard' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('dashboard')}>
-                <span className={styles.bottomNavIcon}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                </span>
-                <span className={styles.bottomNavLabel}>Dashboard</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'residents' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('residents')}>
-                <span className={styles.bottomNavIcon}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </span>
-                <span className={styles.bottomNavLabel}>Residents</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'payments' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('payments')}>
-                <span className={styles.bottomNavIcon}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                </span>
-                <span className={styles.bottomNavLabel}>Payments</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'settings' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('settings')}>
-                <span className={styles.bottomNavIcon}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06-.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                </span>
-                <span className={styles.bottomNavLabel}>Settings</span>
-            </button>
+          <button className={`${styles.bottomNavItem} ${styles.bottomNavItemActive}`}>
+            <span className={styles.bottomNavIcon}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06-.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </span>
+            <span className={styles.bottomNavLabel}>Settings</span>
+          </button>
         </nav>
       )}
     </div>

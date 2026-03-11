@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Login from "./Pages/Login/Login"
 import { ThemeProvider } from './Context/ThemeContext';
 import { AuthProvider } from './Context/AuthContext';
@@ -43,6 +44,19 @@ function HomeRedirect() {
 }
 
 function App() {
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setSessionExpired(true);
+    window.addEventListener('session-expired', handler);
+    return () => window.removeEventListener('session-expired', handler);
+  }, []);
+
+  const handleSessionClose = () => {
+    setSessionExpired(false);
+    window.location.replace('/login');
+  };
+
   return (
     <AuthProvider>
       <ThemeProvider>
@@ -77,6 +91,22 @@ function App() {
           {/* Fallback Route */}
           <Route path="*" element={<HomeRedirect />} />
         </Routes>
+
+        {sessionExpired && (
+          <div className="session-overlay">
+            <div className="session-popup">
+              <div className="session-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <h3 className="session-title">Session Expired</h3>
+              <p className="session-message">Your session has expired. Please log in again to continue.</p>
+              <button className="session-btn" onClick={handleSessionClose}>Log In</button>
+            </div>
+          </div>
+        )}
       </ThemeProvider>
     </AuthProvider>
   )

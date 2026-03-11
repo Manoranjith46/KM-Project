@@ -31,23 +31,22 @@ const userSchema = new mongoose.Schema(
       enum: ['owner', 'resident', 'guest'],
       default: 'guest',
     },
+    profilePhoto: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true }
 );
 
 // Pre-save hook to hash password before saving
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   // Only hash if password is modified
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
 
-  try {
-    this.password = await hashPassword(this.password);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  this.password = await hashPassword(this.password);
 });
 
 // Method to compare passwords

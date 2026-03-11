@@ -63,6 +63,19 @@ export default function Admin_Maintenance() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  useEffect(() => {
+    const hasOverlayOpen = Boolean(loaderText || popup.isOpen || viewDesc);
+    const previousOverflow = document.body.style.overflow;
+
+    if (hasOverlayOpen) {
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [loaderText, popup.isOpen, viewDesc]);
+
   // Fetch reports
   useEffect(() => {
     const fetchReports = async () => {
@@ -95,7 +108,7 @@ export default function Admin_Maintenance() {
 
   // Update report status
   const handleStatusChange = async (reportId, newStatus) => {
-    setLoaderText("Updating status...");
+    setLoaderText("Updating");
     try {
       const { data } = await minDelay(API.patch(`/admin/reports/${reportId}`, { status: newStatus }));
       setReports(prev => prev.map(r => (r._id === reportId ? data : r)));
@@ -113,7 +126,7 @@ export default function Admin_Maintenance() {
     e.preventDefault();
     if (!newAnn.title.trim() || !newAnn.message.trim()) return;
     setCreating(true);
-    setLoaderText("Publishing announcement...");
+    setLoaderText("Publishing");
     try {
       const { data } = await minDelay(API.post("/admin/announcements", newAnn));
       setAnnouncements(prev => [data, ...prev]);
@@ -293,7 +306,6 @@ export default function Admin_Maintenance() {
                           <th>CATEGORY</th>
                           <th>DESCRIPTION</th>
                           <th>DATE RAISED</th>
-                          <th>STATUS</th>
                           <th>ACTIONS</th>
                         </tr>
                       </thead>
@@ -325,9 +337,6 @@ export default function Admin_Maintenance() {
                               </td>
                               <td className={styles.dateCell}>
                                 {new Date(t.createdAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
-                              </td>
-                              <td>
-                                <span className={`${styles.statusPill} ${styles[s.cls]}`}>{s.label}</span>
                               </td>
                               <td>
                                 <select
@@ -535,20 +544,8 @@ export default function Admin_Maintenance() {
                 <span className={styles.descModalValue}>{viewDesc.name}</span>
               </div>
               <div className={styles.descModalRow}>
-                <span className={styles.descModalLabel}>Phone</span>
-                <span className={styles.descModalValue}>{viewDesc.phoneNumber}</span>
-              </div>
-              <div className={styles.descModalRow}>
                 <span className={styles.descModalLabel}>Category</span>
                 <span className={styles.descModalValue}>{CATEGORY_ICONS[viewDesc.category] || "📋"} {viewDesc.category}</span>
-              </div>
-              <div className={styles.descModalRow}>
-                <span className={styles.descModalLabel}>Status</span>
-                <span className={`${styles.statusPill} ${styles[STATUS_MAP[viewDesc.status]?.cls || "statusOpen"]}`}>{viewDesc.status}</span>
-              </div>
-              <div className={styles.descModalRow}>
-                <span className={styles.descModalLabel}>Date</span>
-                <span className={styles.descModalValue}>{new Date(viewDesc.createdAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>
               </div>
               <div className={styles.descModalDescBlock}>
                 <span className={styles.descModalLabel}>Description</span>

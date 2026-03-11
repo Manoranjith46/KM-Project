@@ -61,26 +61,29 @@ API.interceptors.response.use(
                     return API(originalRequest);
                 })
                 .catch((err) => {
-                    // Refresh failed - redirect to login
+                    // Refresh failed - session expired
                     processQueue(err);
                     sessionStorage.removeItem('user');
-                    window.location.replace('/login');  // Use replace to prevent back button
+                    window.location.replace('/login');
+                    window.dispatchEvent(new CustomEvent('session-expired'));
                     return Promise.reject(err);
                 });
         }
 
         // Handle auth failures carefully:
-        // - 401: unauthenticated/session expired -> redirect to login
-        // - 403 on /auth/refresh: refresh token invalid/expired -> redirect to login
+        // - 401: unauthenticated/session expired -> show popup
+        // - 403 on /auth/refresh: refresh token invalid/expired -> show popup
         // - 403 on business routes (e.g., owner-only action): do NOT logout automatically
         if (error.response?.status === 401) {
             sessionStorage.removeItem('user');
             window.location.replace('/login');
+            window.dispatchEvent(new CustomEvent('session-expired'));
         }
 
         if (error.response?.status === 403 && originalRequest.url === '/auth/refresh') {
             sessionStorage.removeItem('user');
             window.location.replace('/login');
+            window.dispatchEvent(new CustomEvent('session-expired'));
         }
 
         return Promise.reject(error);

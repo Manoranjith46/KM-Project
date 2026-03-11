@@ -26,7 +26,7 @@
   border-radius: 50%;
   filter: blur(80px);
   opacity: 0.3;
-  animation: floatBlob 20s infinite ease-in-out;
+  animation: none;
 }
 
 .blob1 {
@@ -69,7 +69,7 @@
   flex-direction: column;
   gap: 1.5rem;
   height: 100vh;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
@@ -469,7 +469,6 @@
 /* ─── Announcement Form ─── */
 .annForm {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.5rem;
@@ -553,7 +552,6 @@
 
 .annCard {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
@@ -702,7 +700,6 @@
 
 .statCard {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.5rem;
@@ -716,7 +713,7 @@
 }
 
 .statCard:hover {
-  transform: translateY(-8px) rotateX(2deg);
+  transform: translateY(-4px);
   box-shadow: var(--glass-shadow-lg);
   border-color: rgba(124, 92, 191, 0.3);
 }
@@ -789,7 +786,6 @@
 /* ─── Table card (Desktop) ─── */
 .tableCard {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   box-shadow: var(--glass-shadow);

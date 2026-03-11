@@ -545,6 +545,28 @@
   color: #fff;
 }
 
+.avatarActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.removeBtnSmall {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+.removeBtnSmall:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
 /* Billing Specific */
 .planCard {
   display: flex;
@@ -753,4 +775,203 @@
 
 @media (max-width: 320px) {
   .mainContent { padding: 0.75rem; }
+}
+
+/* ── Loader Overlay ── */
+.loaderOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.loaderPopup {
+  width: min(92vw, 420px);
+  padding: 0.5rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
+}
+
+/* ── Skeleton ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--ring) 25%, var(--pg-purple-light) 50%, var(--ring) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Crop Modal ── */
+.cropModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.cropModal {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.cropModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cropModalTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.cropModalCloseBtn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+.cropModalCloseBtn:hover {
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--text-primary);
+}
+
+.cropperArea {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  background: #1f2937;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+}
+
+.cropZoomContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.zoomLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 50px;
+}
+
+.zoomSlider {
+  flex: 1;
+  max-width: 200px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--pg-purple), var(--pg-blue, #4F46E5));
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.zoomSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--pg-purple);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+}
+.zoomSlider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--pg-purple);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+}
+
+.cropModalFooter {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.cropCancelBtn,
+.cropUploadBtn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cropCancelBtn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+}
+.cropCancelBtn:hover {
+  background: rgba(124, 58, 237, 0.05);
+  color: var(--text-primary);
+}
+
+.cropUploadBtn {
+  background: linear-gradient(135deg, #7c3aed, #4F46E5);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+.cropUploadBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+@media (max-width: 425px) {
+  .cropperArea {
+    height: 260px;
+  }
+  .cropModal {
+    padding: 1.5rem;
+    max-width: 95vw;
+  }
 }

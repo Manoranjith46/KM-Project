@@ -4,7 +4,8 @@ let bucket;
 
 export const getGridFSBucket = () => {
   if (!bucket) {
-    bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+    const db = mongoose.connection.getClient().db();
+    bucket = new mongoose.mongo.GridFSBucket(db, {
       bucketName: 'uploads',
     });
   }

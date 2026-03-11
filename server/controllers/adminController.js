@@ -73,8 +73,12 @@ export const getRevenueSummary = async (req, res) => {
 // @route   GET /api/admin/reports
 export const getAllReports = async (req, res) => {
     try {
-        const reports = await Report.find().sort({ createdAt: -1 });
-        res.status(200).json(reports);
+        const reports = await Report.find().sort({ createdAt: -1 }).lean();
+        const phones = [...new Set(reports.map(r => r.phoneNumber))];
+        const residents = await Resident.find({ phoneNumber: { $in: phones } }, 'phoneNumber roomNumber').lean();
+        const roomMap = Object.fromEntries(residents.map(r => [r.phoneNumber, r.roomNumber]));
+        const enriched = reports.map(r => ({ ...r, roomNumber: roomMap[r.phoneNumber] || "-" }));
+        res.status(200).json(enriched);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
