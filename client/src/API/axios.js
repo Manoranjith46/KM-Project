@@ -37,11 +37,11 @@ API.interceptors.response.use(
     (error) => {
         const originalRequest = error.config;
 
-        // If access token expired (401 with code TOKEN_EXPIRED)
+        // If access token expired or missing (401) — attempt refresh
         if (
             error.response?.status === 401 && 
-            error.response?.data?.code === 'TOKEN_EXPIRED' &&
-            !originalRequest._retry
+            !originalRequest._retry &&
+            originalRequest.url !== '/auth/refresh'
         ) {
             if (isRefreshing) {
                 // If already refreshing, queue this request
@@ -70,16 +70,7 @@ API.interceptors.response.use(
                 });
         }
 
-        // Handle auth failures carefully:
-        // - 401: unauthenticated/session expired -> show popup
-        // - 403 on /auth/refresh: refresh token invalid/expired -> show popup
-        // - 403 on business routes (e.g., owner-only action): do NOT logout automatically
-        if (error.response?.status === 401) {
-            sessionStorage.removeItem('user');
-            window.location.replace('/login');
-            window.dispatchEvent(new CustomEvent('session-expired'));
-        }
-
+        // 403 on /auth/refresh means refresh token is invalid/expired — must re-login
         if (error.response?.status === 403 && originalRequest.url === '/auth/refresh') {
             sessionStorage.removeItem('user');
             window.location.replace('/login');

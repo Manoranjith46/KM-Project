@@ -18,12 +18,13 @@ const generateRefreshToken = (id, role) => {
 
 // Set cookies helper
 const setTokenCookies = (res, accessToken, refreshToken) => {
-  // Access token cookie (15 minutes)
+  // Access token cookie - maxAge matches refresh token so the browser keeps it.
+  // The JWT's own expiry (15m) controls access; the cookie must survive for refresh to work.
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge: 15 * 60 * 1000, // 15 minutes
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (same as refresh token)
   });
 
   // Refresh token cookie (7 days)
@@ -124,7 +125,7 @@ export const refreshAccessToken = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (same as refresh token)
       });
 
       res.status(200).json({ message: 'Token refreshed successfully' });
