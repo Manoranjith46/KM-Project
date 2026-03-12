@@ -24,7 +24,11 @@ const app = express();
 const server = createServer(app);
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL,
+  origin: [
+    'http://localhost:5173',
+    'https://km-pg.vercel.app',
+    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  ],
   credentials: true, // Allow credentials (cookies)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
