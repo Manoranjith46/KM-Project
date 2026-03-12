@@ -11,18 +11,11 @@ export default function Admin_Record_Payment() {
 
   const navigate = useNavigate();
 
-  const [activeNav, setActiveNav] = useState("payments");
-  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   useBlockInteraction(isSubmitting);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   // Form state for Manual Cash Entry
   const [cashForm, setCashForm] = useState({
@@ -83,7 +76,7 @@ export default function Admin_Record_Payment() {
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      <Sidebar currentPath={"payments"} />
+      <Sidebar currentPath={"payments"} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className={styles.mainContent}>
         <header className={styles.topBar}>
@@ -155,22 +148,6 @@ export default function Admin_Record_Payment() {
         </div>
       </main>
 
-      {isMobile && (
-        <nav className={styles.bottomNav} aria-label="Mobile navigation">
-            <button className={styles.bottomNavItem} onClick={() => setActiveNav('dashboard')}>
-                <span className={styles.bottomNavIcon}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                </span>
-                <span className={styles.bottomNavLabel}>Dashboard</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${styles.bottomNavItemActive}`} onClick={() => setActiveNav('payments')}>
-                <span className={styles.bottomNavIcon}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                </span>
-                <span className={styles.bottomNavLabel}>Payments</span>
-            </button>
-        </nav>
-      )}
       {isSubmitting && (
         <div className={styles.loaderOverlay}>
           <div className={styles.loaderPopup}>

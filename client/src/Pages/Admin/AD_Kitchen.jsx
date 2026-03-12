@@ -36,8 +36,7 @@ export default function Admin_Kitchen() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [activeNav, setActiveNav] = useState("kitchen");
-  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [listType, setListType] = useState(null); // 'willing' or 'notWilling'
@@ -49,15 +48,6 @@ export default function Admin_Kitchen() {
     lunch: { willing: [], notWilling: [] },
     dinner: { willing: [], notWilling: [] },
   });
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayDay = DAYS[new Date().getDay()];
@@ -135,7 +125,7 @@ export default function Admin_Kitchen() {
       </div>
 
       {/* ══════════ SIDEBAR ══════════ */}
-      <Sidebar currentPath={'kitchen'} />
+      <Sidebar currentPath={'kitchen'} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* ══════════ MAIN WRAPPER ══════════ */}
       <main className={styles.mainContent}>
@@ -145,6 +135,7 @@ export default function Admin_Kitchen() {
           title="Kitchen Management" 
           subtitle="Track meals, inventory, and feedback"
           currentView="kitchen"
+          onMenuClick={() => setIsSidebarOpen(true)}
         />
 
         {/* ── Section header ── */}
@@ -373,28 +364,6 @@ export default function Admin_Kitchen() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* ══════════ BOTTOM NAV (Mobile Only) ══════════ */}
-      {isMobile && (
-        <nav className={styles.bottomNav} aria-label="Mobile navigation">
-            <button className={`${styles.bottomNavItem} ${activeNav === 'dashboard' ? styles.active : ""}`} onClick={() => setActiveNav('dashboard')}>
-                <span className={styles.bottomNavIcon}>📊</span>
-                <span className={styles.bottomNavLabel}>Dashboard</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'residents' ? styles.active : ""}`} onClick={() => setActiveNav('residents')}>
-                <span className={styles.bottomNavIcon}>👥</span>
-                <span className={styles.bottomNavLabel}>Residents</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'kitchen' ? styles.active : ""}`} onClick={() => setActiveNav('kitchen')}>
-                <span className={styles.bottomNavIcon}>🍽️</span>
-                <span className={styles.bottomNavLabel}>Kitchen</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'more' ? styles.active : ""}`} onClick={() => setActiveNav('more')}>
-                <span className={styles.bottomNavIcon}>⚙️</span>
-                <span className={styles.bottomNavLabel}>More</span>
-            </button>
-        </nav>
       )}
     </div>
   );

@@ -884,29 +884,6 @@
   background: rgba(79, 70, 229, 0.2);
 }
 
-/* Bottom Navigation - Hidden on Desktop */
-.bottomNav {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
-
-.bottomNavItem {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.bottomNavIcon {
-  font-size: 1.5rem;
-}
-
-.bottomNavLabel {
-  font-size: 0.65rem;
-  font-weight: 500;
-  text-align: center;
-}
-
 /* Sidebar - Desktop */
 .sidebar {
   width: 280px;
@@ -1024,8 +1001,12 @@
 @media (max-width: 768px){
   .mainContent {
     padding: 1.5rem;
-    padding-bottom: 6rem;
     margin-left: 0;
+    scrollbar-width: none;
+  }
+
+  .mainContent::-webkit-scrollbar {
+    display: none;
   }
 
   .topBar {
@@ -1120,48 +1101,6 @@
   .residentCardValue {
     font-size: 0.9rem;
   }
-
-  /* Bottom Navigation - Tablet */
-  .bottomNav {
-    display: flex !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.5rem 0.25rem;
-    justify-content: space-around;
-    gap: 0.25rem;
-    z-index: 1000;
-  }
-
-  .bottomNavItem {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.5rem;
-    border-radius: 8px;
-    color: var(--text-secondary);
-    transition: all 0.3s ease;
-    flex: 1;
-    font-size: 0.7rem;
-    min-height: 56px;
-    justify-content: center;
-  }
-
-  .bottomNavItem:hover {
-    background: rgba(79, 70, 229, 0.1);
-  }
-
-  .bottomNavItem.active {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
-    color: #A78BFA;
-  }
 }
 
 /* ============================================
@@ -1170,7 +1109,11 @@
 @media (max-width: 425px) {
   .mainContent {
     padding: 1rem;
-    padding-bottom: 6rem;
+    scrollbar-width: none;
+  }
+
+  .mainContent::-webkit-scrollbar {
+    display: none;
   }
 
   .topBar {
@@ -1326,52 +1269,6 @@
   .residentCardValue {
     font-size: 0.85rem;
   }
-
-  /* Bottom Navigation - Large Phone */
-  .bottomNav {
-    display: flex !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.5rem 0.25rem;
-    justify-content: space-around;
-    gap: 0.25rem;
-    z-index: 1000;
-  }
-
-  .bottomNavItem {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.2rem;
-    padding: 0.4rem;
-    border-radius: 8px;
-    color: var(--text-secondary);
-    transition: all 0.3s ease;
-    flex: 1;
-    font-size: 0.65rem;
-    min-height: 52px;
-    justify-content: center;
-  }
-
-  .bottomNavItem:hover {
-    background: rgba(79, 70, 229, 0.1);
-  }
-
-  .bottomNavItem.active {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
-    color: #A78BFA;
-  }
-
-  .bottomNavIcon {
-    font-size: 1.25rem;
-  }
 }
 
 /* ============================================
@@ -1380,7 +1277,6 @@
 @media (max-width: 320px) {
   .mainContent {
     padding: 0.75rem;
-    padding-bottom: 5.5rem;
   }
 
   .topBar {
@@ -1535,55 +1431,5 @@
     width: 32px;
     height: 32px;
     font-size: 0.875rem;
-  }
-
-  /* Bottom Navigation - Small Phone */
-  .bottomNav {
-    display: flex !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.4rem 0.2rem;
-    justify-content: space-around;
-    gap: 0.2rem;
-    z-index: 1000;
-  }
-
-  .bottomNavItem {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.15rem;
-    padding: 0.3rem;
-    border-radius: 6px;
-    color: var(--text-secondary);
-    transition: all 0.3s ease;
-    flex: 1;
-    font-size: 0.6rem;
-    min-height: 48px;
-    justify-content: center;
-  }
-
-  .bottomNavItem:hover {
-    background: rgba(79, 70, 229, 0.1);
-  }
-
-  .bottomNavItem.active {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
-    color: #A78BFA;
-  }
-
-  .bottomNavIcon {
-    font-size: 1rem;
-  }
-
-  .bottomNavLabel {
-    font-size: 0.6rem;
   }
 }

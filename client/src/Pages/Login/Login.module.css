@@ -354,3 +354,57 @@
 .link:hover {
   color: #bfdbfe;
 }
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .glassCard {
+    padding: 2rem 1.5rem;
+    border-radius: 1.25rem;
+  }
+
+  .heading {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .socialButtonsDesktop {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .shape1, .shape2, .shape3, .shape4,
+  .shape5, .shape6, .shape7, .shape8 {
+    transform: scale(0.6);
+  }
+}
+
+@media (max-width: 400px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  .glassCard {
+    padding: 1.5rem 1.15rem;
+    border-radius: 1rem;
+  }
+
+  .heading {
+    font-size: 1.1rem;
+  }
+
+  .input {
+    height: 2.75rem;
+    font-size: 0.82rem;
+  }
+
+  .submitButton {
+    height: 2.75rem;
+  }
+
+  .socialButtonsDesktop {
+    grid-template-columns: 1fr;
+  }
+}

@@ -11,7 +11,13 @@ import useBlockInteraction from '../../hooks/useBlockInteraction';
 
 export default function Resident_ReportIssue() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logout();
+  };
 
   // Category to Icon mapping
   const categoryIcons = {
@@ -138,12 +144,17 @@ export default function Resident_ReportIssue() {
         
         {/* HEADER: Hub & Spoke Back Navigation */}
         <header className={styles.header}>
-          <button className={styles.backBtn} onClick={() => navigate('/resident/dashboard')}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Back
-          </button>
+          <div className={styles.headerRow}>
+            <button className={styles.backBtn} onClick={() => navigate('/resident/dashboard')}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Back
+            </button>
+            <button className={styles.mobileLogoutBtn} onClick={handleLogout} disabled={isLoggingOut}>
+              {isLoggingOut ? '...' : 'Logout'}
+            </button>
+          </div>
           <div className={styles.headerText}>
             <h1 className={styles.pageTitle}>Report an Issue</h1>
             <p className={styles.subTitle}>We're here to help.</p>

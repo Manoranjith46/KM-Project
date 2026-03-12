@@ -4,13 +4,14 @@ import { useAuth } from '../../../../Context/AuthContext'
 import styles from './Sidebar.module.css'
 import { useTheme } from '../../../../Context/ThemeContext'
 
-export default function Sidebar({ currentPath }) {
+export default function Sidebar({ currentPath, isOpen, onClose }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleNavClick = ( path ) => {
     navigate(`/admin/${path}`);
+    if (onClose) onClose();
   }
 
   const handleLogout = async () => {
@@ -20,12 +21,24 @@ export default function Sidebar({ currentPath }) {
 
   const { isDarkMode, toggleTheme } = useTheme()
   return (
-    <aside className={styles.sidebar}>
+    <>
+      {isOpen && <div className={styles.overlay} onClick={onClose} />}
+      <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
       <div className={styles.sidebarHeader}>
         <div className={styles.logo}>
           <span className={styles.logoIcon}>🏢</span>
           <span className={styles.logoText}>PG-Ease</span>
         </div>
+        {onClose && (
+          <button
+            type="button"
+            className={styles.closeBtn}
+            onClick={onClose}
+            aria-label="Close sidebar"
+          >
+            <span aria-hidden="true">X</span>
+          </button>
+        )}
       </div>
 
       <nav className={styles.sidebarNav}>
@@ -63,6 +76,7 @@ export default function Sidebar({ currentPath }) {
         <span className={styles.logoutText}>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
       </button>
     </aside>
+    </>
   )
 }
 

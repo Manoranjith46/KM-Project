@@ -29,7 +29,8 @@ export default function Topbar({
   currentView = 'dashboard',
   searchValue = '',
   onSearchChange = () => {},
-  username = 'Admin'
+  username = 'Admin',
+  onMenuClick
 }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -37,15 +38,22 @@ export default function Topbar({
   const showSearchBar = ['resident', 'payment', 'maintenance'].includes(currentView);
 
   const handleLogout = () => {
-    // Use AuthContext logout which clears user state
     logout();
-    // Navigate to login page
     navigate('/login');
   };
 
   return (
     <header className={styles.topBar}>
       <div className={styles.topBarLeft}>
+        {onMenuClick && (
+          <button className={styles.menuBtn} onClick={onMenuClick} aria-label="Open menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+        )}
         <div className={styles.titleSection}>
           <h1 className={styles.pageTitle}>{title}</h1>
           {subtitle && <p className={styles.pageSubtitle}>{subtitle}</p>}

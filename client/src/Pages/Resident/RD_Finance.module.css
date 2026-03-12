@@ -83,6 +83,10 @@
    HEADER
    ========================================================= */
 .header { display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem; }
+.headerRow { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.mobileLogoutBtn { display: none; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-family: 'Plus Jakarta Sans', sans-serif; }
+.mobileLogoutBtn:hover { background: rgba(239, 68, 68, 0.15); }
+.mobileLogoutBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 .backBtn { display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.8); padding: 0.5rem 1rem; border-radius: 12px; color: #0f172a; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.05); }
 .backBtn:hover { background: #006246; color: #ffffff;  transform: translateX(-4px); }
 .backBtn svg { width: 20px; height: 20px; }
@@ -377,16 +381,54 @@
    RESPONSIVE (Tablets & Mobile)
    ========================================================= */
 @media (max-width: 992px) {
-  .mainGrid { grid-template-columns: 1fr; } /* Stack columns vertically on tablets */
+  .mainGrid { grid-template-columns: 1fr; }
   .leftCol,
   .rightCol {
     height: auto;
   }
 }
+
 @media (max-width: 768px) {
   .pageWrapper { padding: 1rem; }
-  .inputRow { grid-template-columns: 1fr; } /* Stack Amount and Month inputs */
-  .statsGrid { grid-template-columns: 1fr; } /* Stack Total Spendings and Dues */
+  .mobileLogoutBtn { display: flex; }
+  .inputRow { grid-template-columns: 1fr; }
+  .statsGrid { grid-template-columns: 1fr; }
   .pageTitle { font-size: 1.8rem; }
-  .glassCard { padding: 1.5rem; }
+  .glassCard { padding: 1.5rem; border-radius: 18px; }
+  .upiBox { flex-direction: column; align-items: flex-start; gap: 0.75rem; height: auto; }
+  .historyItem { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .historyRight { text-align: left; align-items: flex-start; flex-direction: row; gap: 0.75rem; flex-wrap: wrap; }
+  .uploadZone { height: 180px; padding: 1rem; }
+  .uploadIcon { margin-top: 20px; }
+  .paymentTabs { flex-direction: column; }
+  .tabButton { padding: 0.65rem; font-size: 0.9rem; }
+}
+
+@media (max-width: 480px) {
+  .pageWrapper { padding: 0.75rem; }
+  .pageTitle { font-size: 1.4rem; }
+  .subTitle { font-size: 0.9rem; }
+  .glassCard { padding: 1.15rem; border-radius: 16px; }
+  .cardTitle { font-size: 1.1rem; }
+  .cardDesc { font-size: 0.85rem; margin-bottom: 1rem; }
+  .inputField { padding: 0.85rem 1rem; font-size: 0.9rem; border-radius: 12px; }
+  .label { font-size: 0.85rem; }
+  .submitBtn { padding: 0.9rem; font-size: 1rem; min-height: 48px; border-radius: 12px; }
+  .upiId { font-size: 0.95rem; }
+  .statCard { padding: 1rem; }
+  .statValue { font-size: 1.4rem; }
+  .statLabel { font-size: 0.82rem; }
+  .historyMonth { font-size: 0.95rem; }
+  .historyAmount { font-size: 1rem; }
+  .backBtn { padding: 0.4rem 0.85rem; font-size: 0.85rem; }
+}
+
+@media (max-width: 360px) {
+  .pageWrapper { padding: 0.5rem; }
+  .pageTitle { font-size: 1.2rem; }
+  .glassCard { padding: 1rem; border-radius: 14px; }
+  .inputField { padding: 0.75rem 0.85rem; font-size: 0.85rem; }
+  .upiBox { padding: 0.75rem; border-radius: 12px; }
+  .upiId { font-size: 0.85rem; }
+  .statValue { font-size: 1.2rem; }
 }

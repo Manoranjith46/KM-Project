@@ -142,8 +142,8 @@ export default function Admin_Payment() {
 
   const navigate = useNavigate();
 
-  const [activeNav, setActiveNav] = useState("payments");
   const [search, setSearch]   = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [month, setMonth]     = useState(() => {
     const n = new Date();
     return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
@@ -152,7 +152,6 @@ export default function Admin_Payment() {
   const [mode, setMode]       = useState("All");
   const [tab, setTab]         = useState("residents");
   const [showNotPaid, setShowNotPaid] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   const [payments, setPayments] = useState([]);
   const [residents, setResidents] = useState([]);
@@ -178,13 +177,6 @@ export default function Admin_Payment() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   /* Build a phone→resident lookup */
   const residentMap = {};
@@ -266,7 +258,7 @@ export default function Admin_Payment() {
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      <Sidebar currentPath="payments" />
+      <Sidebar currentPath="payments" isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className={styles.mainContent}>
 
@@ -275,6 +267,7 @@ export default function Admin_Payment() {
           currentView="payment"
           searchValue={search}
           onSearchChange={(value) => setSearch(value)}
+          onMenuClick={() => setIsSidebarOpen(true)}
         />
 
         <div className={styles.content}>
@@ -543,27 +536,6 @@ export default function Admin_Payment() {
             </div>
           </div>
         </div>
-      )}
-
-      {isMobile && (
-        <nav className={styles.bottomNav} aria-label="Mobile navigation">
-            <button className={`${styles.bottomNavItem} ${activeNav === 'dashboard' ? styles.bottomNavActive : ""}`} onClick={() => setActiveNav('dashboard')}>
-                <span className={styles.bottomNavIcon}><IconDashboard /></span>
-                <span className={styles.bottomNavLabel}>Dashboard</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'residents' ? styles.bottomNavActive : ""}`} onClick={() => setActiveNav('residents')}>
-                <span className={styles.bottomNavIcon}><IconResidents /></span>
-                <span className={styles.bottomNavLabel}>Residents</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'payments' ? styles.bottomNavActive : ""}`} onClick={() => setActiveNav('payments')}>
-                <span className={styles.bottomNavIcon}><IconPayments /></span>
-                <span className={styles.bottomNavLabel}>Payments</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'more' ? styles.bottomNavActive : ""}`} onClick={() => setActiveNav('more')}>
-                <span className={styles.bottomNavIcon}><IconSettings /></span>
-                <span className={styles.bottomNavLabel}>More</span>
-            </button>
-        </nav>
       )}
     </div>
   );

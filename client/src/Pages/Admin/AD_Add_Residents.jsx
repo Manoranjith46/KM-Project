@@ -17,17 +17,8 @@ export default function Admin_AddResident() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   useBlockInteraction(isSubmitting);
 
-  
-  const [activeNav, setActiveNav] = useState("residents");
-  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [availableRooms, setAvailableRooms] = useState([]);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   // Fetch available rooms from Info collection
   useEffect(() => {
@@ -406,7 +397,7 @@ export default function Admin_AddResident() {
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      <Sidebar currentPath={"residents"} />
+      <Sidebar currentPath={"residents"} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className={styles.mainContent}>
         <header className={styles.topBar}>
@@ -933,27 +924,6 @@ export default function Admin_AddResident() {
           </div>
         )}
       </main>
-
-      {isMobile && (
-        <nav className={styles.bottomNav} aria-label="Mobile navigation">
-            <button className={`${styles.bottomNavItem} ${activeNav === 'dashboard' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('dashboard')}>
-                <span className={styles.bottomNavIcon}>📊</span>
-                <span className={styles.bottomNavLabel}>Dashboard</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'residents' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('residents')}>
-                <span className={styles.bottomNavIcon}>👥</span>
-                <span className={styles.bottomNavLabel}>Residents</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'payments' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('payments')}>
-                <span className={styles.bottomNavIcon}>💳</span>
-                <span className={styles.bottomNavLabel}>Payments</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'more' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('more')}>
-                <span className={styles.bottomNavIcon}>⚙️</span>
-                <span className={styles.bottomNavLabel}>More</span>
-            </button>
-        </nav>
-      )}
       {isSubmitting && (
         <div className={styles.loaderOverlay}>
           <div className={styles.loaderPopup}>

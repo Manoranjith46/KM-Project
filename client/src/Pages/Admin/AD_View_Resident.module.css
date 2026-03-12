@@ -245,3 +245,88 @@
   color: var(--text-secondary);
 }
 .errorMessage { color: #ef4444; }
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 1rem;
+    gap: 1.25rem;
+  }
+
+  .pageTitle {
+    font-size: 1.3rem;
+  }
+
+  .gridContainer {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .glassCard {
+    padding: 1.25rem;
+    border-radius: 16px;
+    gap: 1.25rem;
+  }
+
+  .profileHeader {
+    gap: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .avatar {
+    width: 54px;
+    height: 54px;
+    font-size: 1.2rem;
+  }
+
+  .name {
+    font-size: 1.15rem;
+  }
+
+  .detailItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+
+  .label {
+    font-size: 0.8rem;
+  }
+
+  .value {
+    font-size: 0.9rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .documentViewer {
+    aspect-ratio: 3 / 2;
+  }
+}
+
+@media (max-width: 400px) {
+  .pageContainer {
+    padding: 0.75rem;
+  }
+
+  .pageTitle {
+    font-size: 1.1rem;
+  }
+
+  .glassCard {
+    padding: 1rem;
+  }
+
+  .avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+  }
+
+  .name {
+    font-size: 1rem;
+  }
+}

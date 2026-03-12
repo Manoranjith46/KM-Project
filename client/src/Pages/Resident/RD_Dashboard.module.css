@@ -541,13 +541,30 @@
 /* Very Small Phones (max-width: 480px) */
 @media (max-width: 480px) {
   .dashboardWrapper { padding: 0.75rem; }
+  .headerGlass { padding: 1rem; border-radius: 16px; }
+  .greeting { font-size: 1.25rem; }
+  .roleText { font-size: 0.85rem; }
   .mealIcon { width: 44px; height: 44px; font-size: 1.5rem; }
   .financeIcon { width: 50px; height: 50px; font-size: 2rem; }
   .amountText { font-size: 1.5rem; }
   .statusText { font-size: 1.4rem; }
+  .glassCard { padding: 1rem; border-radius: 16px; }
+  .cardTitle { font-size: 1rem; }
+  .logoutBtn { padding: 0.5rem 1rem; font-size: 0.82rem; }
+  .avatar { width: 40px; height: 40px; font-size: 1.1rem; }
+  .avatarName { font-size: 0.9rem; }
+  .tomorrowMealIcon { width: 40px; height: 40px; font-size: 1.4rem; }
 }
-@media (max-width: 320px) {
-  .avatarContainer { display: block; }
+@media (max-width: 360px) {
+  .dashboardWrapper { padding: 0.5rem; }
+  .headerGlass { padding: 0.85rem; gap: 0.75rem; }
+  .greeting { font-size: 1.1rem; }
+  .amountText { font-size: 1.3rem; }
+  .statusText { font-size: 1.2rem; }
+  .glassCard { padding: 0.85rem; border-radius: 14px; }
+  .actionCard { padding: 1rem; font-size: 0.95rem; }
+  .actionIcon { font-size: 1.4rem; padding: 0.6rem; }
+  .avatarContainer { gap: 0.5rem; }
 }
 
 /* Success Popup Styles */

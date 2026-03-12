@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./AD_Maintenance.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Topbar from "./Components/Header/Topbar";
@@ -31,9 +32,9 @@ const ANNOUNCEMENT_TYPE_MAP = {
 };
 
 export default function Admin_Maintenance() {
-  const [activeNav, setActiveNav] = useState("maintenance");
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("reports");
-  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Reports state
   const [reports, setReports] = useState([]);
@@ -57,13 +58,6 @@ export default function Admin_Maintenance() {
   useBlockInteraction(loaderText);
   const [popup, setPopup] = useState({ isOpen: false, type: "info", title: "", message: "" });
   const [pendingDelete, setPendingDelete] = useState(null);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     const hasOverlayOpen = Boolean(loaderText || popup.isOpen || viewDesc);
@@ -205,7 +199,7 @@ export default function Admin_Maintenance() {
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      <Sidebar currentPath={"maintenance"} />
+      <Sidebar currentPath={"maintenance"} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className={styles.mainContent}>
         <Topbar
@@ -214,6 +208,7 @@ export default function Admin_Maintenance() {
           currentView="maintenance"
           searchValue={activeTab === "reports" ? search : ""}
           onSearchChange={activeTab === "reports" ? setSearch : undefined}
+          onMenuClick={() => setIsSidebarOpen(true)}
         />
 
         {/* ─── Tab Switch ─── */}
@@ -556,27 +551,6 @@ export default function Admin_Maintenance() {
             </div>
           </div>
         </div>
-      )}
-
-      {isMobile && (
-        <nav className={styles.bottomNav} aria-label="Mobile navigation">
-          <button className={`${styles.bottomNavItem} ${activeNav === "dashboard" ? styles.active : ""}`} onClick={() => setActiveNav("dashboard")}>
-            <span className={styles.bottomNavIcon}>📊</span>
-            <span className={styles.bottomNavLabel}>Dashboard</span>
-          </button>
-          <button className={`${styles.bottomNavItem} ${activeNav === "residents" ? styles.active : ""}`} onClick={() => setActiveNav("residents")}>
-            <span className={styles.bottomNavIcon}>👥</span>
-            <span className={styles.bottomNavLabel}>Residents</span>
-          </button>
-          <button className={`${styles.bottomNavItem} ${activeNav === "payments" ? styles.active : ""}`} onClick={() => setActiveNav("payments")}>
-            <span className={styles.bottomNavIcon}>💳</span>
-            <span className={styles.bottomNavLabel}>Payments</span>
-          </button>
-          <button className={`${styles.bottomNavItem} ${activeNav === "maintenance" ? styles.active : ""}`} onClick={() => setActiveNav("maintenance")}>
-            <span className={styles.bottomNavIcon}>🔧</span>
-            <span className={styles.bottomNavLabel}>More</span>
-          </button>
-        </nav>
       )}
     </div>
   );

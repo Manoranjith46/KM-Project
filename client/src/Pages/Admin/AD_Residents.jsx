@@ -62,18 +62,11 @@ export default function AD_Residents() {
   const [counts, setCounts] = useState({ total: 0, residents: 0, guests: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeNav, setActiveNav] = useState("residents");
   const [roomNumberFilter, setRoomNumberFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
   const [sortBy, setSortBy] = useState("name");
-  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   useEffect(() => {
     const fetchOccupants = async () => {
@@ -143,13 +136,14 @@ export default function AD_Residents() {
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      <Sidebar currentPath={'residents'} />
+      <Sidebar currentPath={'residents'} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className={styles.mainContent}>
 
         <Topbar 
           title="Residents Directory"
           currentView="resident"
+          onMenuClick={() => setIsSidebarOpen(true)}
         />
 
         <div className={styles.content}>
@@ -278,26 +272,6 @@ export default function AD_Residents() {
         onClose={() => setPopupConfig({ ...popupConfig, isOpen: false })}
       />
 
-      {isMobile && (
-        <nav className={styles.bottomNav} aria-label="Mobile navigation">
-            <button className={`${styles.bottomNavItem} ${activeNav === 'dashboard' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('dashboard')}>
-                <span className={styles.bottomNavIcon}><BarChartIcon /></span>
-                <span className={styles.bottomNavLabel}>Dashboard</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'residents' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('residents')}>
-                <span className={styles.bottomNavIcon}><UsersIcon /></span>
-                <span className={styles.bottomNavLabel}>Residents</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'payments' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('payments')}>
-                <span className={styles.bottomNavIcon}><PaymentsIcon /></span>
-                <span className={styles.bottomNavLabel}>Payments</span>
-            </button>
-            <button className={`${styles.bottomNavItem} ${activeNav === 'more' ? styles.bottomNavItemActive : ""}`} onClick={() => setActiveNav('more')}>
-                <span className={styles.bottomNavIcon}><MoreIcon /></span>
-                <span className={styles.bottomNavLabel}>More</span>
-            </button>
-        </nav>
-      )}
     </div>
   );
 }

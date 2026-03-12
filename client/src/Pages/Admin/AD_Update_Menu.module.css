@@ -406,7 +406,11 @@
   .mainContent {
     margin-left: 0;
     padding: 1.5rem;
-    padding-bottom: 6rem; /* Space for bottom nav */
+    scrollbar-width: none;
+  }
+
+  .mainContent::-webkit-scrollbar {
+    display: none;
   }
 
   .topBar {
@@ -418,40 +422,6 @@
   }
 
   .pageTitle { font-size: 1.25rem; }
-
-  /* Bottom Navigation */
-  .bottomNav {
-    display: flex;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--glass-border);
-    padding: 0.5rem;
-    justify-content: space-around;
-    z-index: 1000;
-  }
-
-  .bottomNavItem {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.5rem;
-    border-radius: 8px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 0.7rem;
-    cursor: pointer;
-  }
-
-  .bottomNavItemActive {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
-    color: var(--pg-purple);
-  }
-
-  .bottomNavIcon { font-size: 1.25rem; }
 }
 
 /* ============================================
@@ -460,7 +430,11 @@
 @media (max-width: 425px) {
   .mainContent {
     padding: 1rem;
-    padding-bottom: 5.5rem;
+    scrollbar-width: none;
+  }
+
+  .mainContent::-webkit-scrollbar {
+    display: none;
   }
   
   .formGrid {
@@ -502,7 +476,14 @@
 }
 
 @media (max-width: 320px) {
-  .mainContent { padding: 0.75rem; }
+  .mainContent {
+    padding: 0.75rem;
+    scrollbar-width: none;
+  }
+
+  .mainContent::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ============================================

@@ -97,7 +97,7 @@ export default function Admin_Dashboard() {
 
   useEffect(() => {
     const checkMobile = () => {
-      const mobile = window.innerWidth <= 678
+      const mobile = window.innerWidth <= 768
       setIsMobile(mobile)
       if (!mobile) setIsSidebarOpen(false)
     }
@@ -180,17 +180,8 @@ export default function Admin_Dashboard() {
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      {/* Mobile Overlay Backdrop */}
-      {isSidebarOpen && isMobile && (
-        <div 
-          className={styles.sidebarOverlay} 
-          onClick={handleBackdropClick}
-          role="presentation"
-        />
-      )}
-
       {/* Sidebar Component */}
-      <Sidebar isOpen={isSidebarOpen} currentPath={'dashboard'} />
+      <Sidebar isOpen={isSidebarOpen} currentPath={'dashboard'} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Main Content */}
       <main className={styles.mainContent}>
@@ -199,6 +190,7 @@ export default function Admin_Dashboard() {
           title="Owner Dashboard" 
           subtitle="Welcome back, Admin"
           currentView="dashboard"
+          onMenuClick={() => setIsSidebarOpen(true)}
         />
 
         {isLoading ? <DashboardSkeleton /> : (
@@ -311,25 +303,6 @@ export default function Admin_Dashboard() {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className={styles.bottomNav}>
-        <button className={`${styles.bottomNavItem} ${styles.active}`} title="Dashboard" onClick={() => navigate('/admin/dashboard')}>
-          <span className={styles.bottomNavIcon}>📊</span>
-          <span className={styles.bottomNavLabel}>Dashboard</span>
-        </button>
-        <button className={styles.bottomNavItem} title="Residents" onClick={() => navigate('/admin/residents')}>
-          <span className={styles.bottomNavIcon}>👥</span>
-          <span className={styles.bottomNavLabel}>Residents</span>
-        </button>
-        <button className={styles.bottomNavItem} title="Payments" onClick={() => navigate('/admin/payments')}>
-          <span className={styles.bottomNavIcon}>💳</span>
-          <span className={styles.bottomNavLabel}>Payments</span>
-        </button>
-        <button className={styles.bottomNavItem} title="More" onClick={() => navigate('/admin/settings')}>
-          <span className={styles.bottomNavIcon}>⚙️</span>
-          <span className={styles.bottomNavLabel}>More</span>
-        </button>
-      </nav>
     </div>
   )
 }

@@ -8,7 +8,13 @@ import styles from "./RD_Notice_Board.module.css";
 
 export default function Resident_NoticeBoard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logout();
+  };
 
   const [Announcements, setAnnouncements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,12 +72,17 @@ export default function Resident_NoticeBoard() {
         
         {/* HEADER */}
         <header className={styles.header}>
-          <button className={styles.backBtn} onClick={() => navigate('/resident/dashboard')}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Back
-          </button>
+          <div className={styles.headerRow}>
+            <button className={styles.backBtn} onClick={() => navigate('/resident/dashboard')}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Back
+            </button>
+            <button className={styles.mobileLogoutBtn} onClick={handleLogout} disabled={isLoggingOut}>
+              {isLoggingOut ? '...' : 'Logout'}
+            </button>
+          </div>
           <div className={styles.headerText}>
             <h1 className={styles.pageTitle}>Announcement Board</h1>
             <p className={styles.subTitle}>Important updates and hostel rules</p>

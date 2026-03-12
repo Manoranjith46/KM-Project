@@ -62,6 +62,10 @@
    HEADER
    ========================================================= */
 .header { display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
+.headerRow { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.mobileLogoutBtn { display: none; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-family: 'Plus Jakarta Sans', sans-serif; }
+.mobileLogoutBtn:hover { background: rgba(239, 68, 68, 0.15); }
+.mobileLogoutBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 .backBtn { display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.8); padding: 0.5rem 1rem; border-radius: 12px; color: #0f172a; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.05); }
 .backBtn:hover { background: #006246; color: #ffffff; transform: translateX(-4px); }
 .backBtn svg { width: 20px; height: 20px; }
@@ -189,6 +193,8 @@
   .pageWrapper { 
     padding: 1rem; 
   }
+
+  .mobileLogoutBtn { display: flex; }
   
   .header {
     margin-bottom: 0.5rem;
@@ -259,7 +265,6 @@
     padding: 1.25rem; 
   }
   
-  /* Shrink the icon so the title has more room to breathe */
   .iconWrapper { 
     width: 40px; 
     height: 40px; 
@@ -278,4 +283,17 @@
   .noticeDate {
     font-size: 0.8rem;
   }
+
+  .backBtn { padding: 0.4rem 0.85rem; font-size: 0.85rem; }
+}
+
+/* VERY SMALL PHONES (max-width: 360px) */
+@media (max-width: 360px) {
+  .pageWrapper { padding: 0.5rem; }
+  .pageTitle { font-size: 1.25rem; }
+  .subTitle { font-size: 0.85rem; }
+  .glassCard { padding: 1rem; border-radius: 14px; }
+  .noticeTitle { font-size: 0.95rem; }
+  .noticeMessage { font-size: 0.85rem; }
+  .iconWrapper { width: 36px; height: 36px; font-size: 1.1rem; border-radius: 10px; }
 }

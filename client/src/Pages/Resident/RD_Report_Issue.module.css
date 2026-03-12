@@ -89,6 +89,11 @@
   margin-bottom: 0.5rem;
 }
 
+.headerRow { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.mobileLogoutBtn { display: none; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-family: 'Plus Jakarta Sans', sans-serif; }
+.mobileLogoutBtn:hover { background: rgba(239, 68, 68, 0.15); }
+.mobileLogoutBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .backBtn {
   display: flex;
   align-items: center;
@@ -284,7 +289,6 @@
     display: flex; 
     flex-direction: column; 
     gap: 1rem; 
-    height: 300px;
     overflow-y: auto;
     height: 500px;
     padding-right: 10px;
@@ -336,9 +340,45 @@
   .mainGrid {
     grid-template-columns: 1fr;
   }
+  .ticketList {
+    height: 350px;
+  }
 }
+
 @media (max-width: 768px) {
   .pageWrapper { padding: 1rem; }
-  .glassCard { padding: 1.5rem; }
+  .mobileLogoutBtn { display: flex; }
+  .glassCard { padding: 1.5rem; border-radius: 18px; }
+  .historyCard { padding: 1.25rem 1.5rem; }
   .pageTitle { font-size: 1.6rem; }
+  .ticketItem { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .ticketLeft { width: 100%; }
+  .ticketList { height: 300px; }
+  .uploadZone { padding: 1rem; }
+  .imagePreview { max-height: 200px; }
+}
+
+@media (max-width: 480px) {
+  .pageWrapper { padding: 0.75rem; }
+  .pageTitle { font-size: 1.35rem; }
+  .subTitle { font-size: 0.9rem; }
+  .glassCard { padding: 1.15rem; border-radius: 16px; }
+  .historyCard { padding: 1rem 1.15rem; }
+  .historyTitle { font-size: 1rem; }
+  .inputField { padding: 0.85rem 1rem; font-size: 0.9rem; border-radius: 12px; }
+  .textArea { min-height: 100px; }
+  .label { font-size: 0.85rem; }
+  .submitBtn { padding: 0.9rem; font-size: 1rem; min-height: 48px; border-radius: 12px; }
+  .ticketIcon { width: 42px; font-size: 1.3rem; padding: 0.4rem; }
+  .ticketName { font-size: 0.9rem; }
+  .ticketDate { font-size: 0.78rem; }
+  .backBtn { padding: 0.4rem 0.85rem; font-size: 0.85rem; }
+  .ticketList { height: auto; max-height: 300px; }
+}
+
+@media (max-width: 360px) {
+  .pageWrapper { padding: 0.5rem; }
+  .pageTitle { font-size: 1.15rem; }
+  .glassCard { padding: 1rem; border-radius: 14px; }
+  .inputField { padding: 0.75rem 0.85rem; font-size: 0.85rem; }
 }

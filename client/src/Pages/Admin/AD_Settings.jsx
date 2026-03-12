@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import API from "../../API/axios";
 import { minDelay } from "../../utils/minDelay";
@@ -19,9 +20,10 @@ const SETTING_TABS = [
 ];
 
 export default function Admin_Settings() {
+  const navigate = useNavigate();
   const { user, login } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
-  const [isMobile, setIsMobile]   = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { logout } = useAuth();
   const fileInputRef = useRef(null);
@@ -77,12 +79,6 @@ export default function Admin_Settings() {
   const [rooms, setRooms] = useState([]);
   const [roomsOriginal, setRoomsOriginal] = useState([]);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   // Fetch profile on mount
   useEffect(() => {
@@ -357,7 +353,7 @@ export default function Admin_Settings() {
         <div className={`${styles.blob} ${styles.blob3}`}></div>
       </div>
 
-      <Sidebar currentPath={"settings"} />
+      <Sidebar currentPath={"settings"} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className={styles.mainContent}>
         <div className={styles.content}>
@@ -756,16 +752,6 @@ export default function Admin_Settings() {
         message={popup.message}
       />
 
-      {isMobile && (
-        <nav className={styles.bottomNav} aria-label="Mobile navigation">
-          <button className={`${styles.bottomNavItem} ${styles.bottomNavItemActive}`}>
-            <span className={styles.bottomNavIcon}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06-.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            </span>
-            <span className={styles.bottomNavLabel}>Settings</span>
-          </button>
-        </nav>
-      )}
     </div>
   );
 }
