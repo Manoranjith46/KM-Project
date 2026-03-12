@@ -1,10 +1,13 @@
 import express from 'express';
 const router = express.Router();
-import { getPendingPayments, getRevenueSummary, getAllOccupants, getAllReports, updateReportStatus, getAdminAnnouncements } from '../controllers/adminController.js';
+import { getDashboardData, getPendingPayments, getRevenueSummary, getAllOccupants, getAllReports, updateReportStatus, getAdminAnnouncements } from '../controllers/adminController.js';
 import { createAnnouncement, deleteAnnouncement } from '../controllers/residentController.js';
 import { getProfile, updateProfile, getProperty, updateProperty, changePassword, uploadProfilePhoto, removeProfilePhoto, getRoomsAndRates, updateRoomsAndRates } from '../controllers/settingsController.js';
 import { verifyToken, authorizeRoles } from '../middleware/authMiddleware.js';
 import upload from '../middleware/upload.js';
+
+// Dashboard aggregate data
+router.get('/dashboard', verifyToken, authorizeRoles('owner'), getDashboardData);
 
 // Aggregate revenue from both Active Residents and History
 router.get('/revenue-summary', getRevenueSummary);

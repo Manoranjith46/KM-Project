@@ -464,3 +464,72 @@ export function SettingsRoomsSkeleton() {
     </>
   );
 }
+
+/* ── Admin Dashboard Skeleton ── */
+export function DashboardSkeleton() {
+  return (
+    <>
+      {/* Stats Cards */}
+      <div className={styles.skeletonStatsRow} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+        {[1, 2, 3, 4].map((i) => (
+          <SkeletonCard key={i}>
+            <div className={styles.skeletonRowBetween}>
+              <Skeleton width="40px" height="40px" radius="12px" />
+              <Skeleton width="90px" height="22px" radius="20px" />
+            </div>
+            <Skeleton width="100px" height="36px" radius="8px" />
+            <Skeleton width="130px" height="14px" radius="4px" />
+            <Skeleton width="80px" height="12px" radius="4px" />
+          </SkeletonCard>
+        ))}
+      </div>
+
+      {/* Meal Cards */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div className={styles.skeletonRowBetween} style={{ marginBottom: '1.5rem' }}>
+          <Skeleton width="200px" height="24px" radius="6px" />
+          <Skeleton width="100px" height="36px" radius="8px" />
+        </div>
+        <div className={styles.skeletonMealGrid}>
+          {[1, 2, 3].map((i) => (
+            <SkeletonCard key={i}>
+              <Skeleton width="90px" height="20px" radius="6px" />
+              <Skeleton width="140px" height="14px" radius="4px" />
+              <Skeleton width="60px" height="40px" radius="8px" />
+              <Skeleton width="100%" height="8px" radius="4px" />
+            </SkeletonCard>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Activity Table */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div className={styles.skeletonRowBetween} style={{ marginBottom: '1.5rem' }}>
+          <Skeleton width="220px" height="24px" radius="6px" />
+          <Skeleton width="80px" height="36px" radius="8px" />
+        </div>
+        <SkeletonCard className={styles.skeletonTableCard}>
+          <div className={styles.skeletonTableHeader}>
+            <Skeleton width="120px" height="12px" radius="4px" />
+            <Skeleton width="70px" height="12px" radius="4px" />
+            <Skeleton width="80px" height="12px" radius="4px" />
+            <Skeleton width="70px" height="12px" radius="4px" />
+            <Skeleton width="70px" height="12px" radius="4px" />
+          </div>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className={styles.skeletonTableRow}>
+              <div className={styles.skeletonRowCenter}>
+                <Skeleton width="36px" height="36px" radius="50%" />
+                <Skeleton width="110px" height="16px" radius="4px" />
+              </div>
+              <Skeleton width="50px" height="16px" radius="4px" />
+              <Skeleton width="80px" height="16px" radius="4px" />
+              <Skeleton width="90px" height="16px" radius="4px" />
+              <Skeleton width="60px" height="24px" radius="8px" />
+            </div>
+          ))}
+        </SkeletonCard>
+      </div>
+    </>
+  );
+}

@@ -28,6 +28,8 @@
   filter: blur(80px);
   opacity: 0.3;
   animation: floatBlob 20s infinite ease-in-out;
+  will-change: transform;
+  contain: strict;
 }
 
 .blob1 {
@@ -99,11 +101,12 @@
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   padding-bottom: 2rem;
   margin-left: 85px;
-  overflow-y: scroll;
+  overflow-y: auto;
   height: 100vh;
-  scroll-behavior: smooth;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+  contain: layout style;
 }
 
 .mainContent::-webkit-scrollbar {
@@ -189,8 +192,8 @@
 }
 
 .statCard:hover {
-  transform: translateY(-8px) rotateX(5deg);
-  box-shadow: 0 20px 40px rgba(79, 70, 229, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.15);
   border-color: rgba(79, 70, 229, 0.3);
 }
 
@@ -318,11 +321,13 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
 }
 
 .mealCard:hover {
-  transform: translateY(-8px) rotateX(5deg);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
 .mealCard.breakfast::before {
@@ -412,6 +417,68 @@
   background: linear-gradient(90deg, #8B5CF6, #A78BFA);
 }
 
+/* Menu Items List */
+.menuList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.menuDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7C3AED;
+  flex-shrink: 0;
+}
+
+.mealCard.breakfast .menuDot {
+  background: #F59E0B;
+}
+
+.mealCard.dinner .menuDot {
+  background: #8B5CF6;
+}
+
+.noMenu {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  margin: 0 0 1rem;
+  font-style: italic;
+}
+
+.mealFooter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.participationCount {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mealFooter .mealProgress {
+  flex: 1;
+}
+
 /* Desktop Sidebar - Hover Based Expand/Collapse */
 .sidebar {
   width: 280px;
@@ -466,12 +533,11 @@
 
 .residentTable tbody tr {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
+  transition: background 0.2s ease;
 }
 
 .residentTable tbody tr:hover {
   background: rgba(79, 70, 229, 0.05);
-  transform: scale(1.01);
 }
 
 .residentTable td {
@@ -496,6 +562,22 @@
   color: white;
   font-weight: 600;
   font-size: 1rem;
+}
+
+/* Resident Section */
+.residentSection {
+  margin-bottom: 2rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
 }
 
 .residentName {

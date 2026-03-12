@@ -2,6 +2,140 @@ import Resident from '../models/Resident.js';
 import History from '../models/History.js';
 import Report from '../models/Report.js';
 import Announcement from '../models/Announcement.js';
+import Property from '../models/Property.js';
+import Payment from '../models/Payment.js';
+import Kitchen from '../models/Kitchen.js';
+
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// @desc    Get aggregated dashboard data for admin
+// @route   GET /api/admin/dashboard
+export const getDashboardData = async (req, res) => {
+    try {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const monthStart = new Date(currentYear, currentMonth, 1);
+        const monthEnd = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+
+        const todayDay = DAYS[now.getDay()];
+
+        const [
+            allResidents,
+            property,
+            monthPayments,
+            openReports,
+            todayMenu,
+        ] = await Promise.all([
+            Resident.find().lean(),
+            Property.findOne().lean(),
+            Payment.find({
+                date: { $gte: monthStart, $lte: monthEnd },
+                status: 'approved',
+            }).lean(),
+            Report.find({ status: { $ne: 'Resolved' } }).lean(),
+            Kitchen.findOne({ day: todayDay }).lean(),
+        ]);
+
+        // --- Occupancy ---
+        const totalBeds = property?.totalBeds || 0;
+        const activeResidents = allResidents.filter(r => r.isActive);
+        const filledBeds = activeResidents.length;
+        const occupancyPercent = totalBeds > 0 ? Math.round((filledBeds / totalBeds) * 100) : 0;
+
+        // --- Revenue this month ---
+        const monthRevenue = monthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+        // --- Pending payments (residents who have a Pending status in their payments array) ---
+        const pendingResidents = allResidents.filter(r =>
+            r.type !== 'Guest' && r.payments?.some(p => p.status === 'Pending')
+        );
+
+        // --- Open complaints ---
+        const openCount = openReports.length;
+        const pendingCount = openReports.filter(r => r.status === 'Pending').length;
+        const inProgressCount = openReports.filter(r => r.status === 'In Progress').length;
+
+        // --- Meal participation counts ---
+        const mealCounts = { breakfast: 0, lunch: 0, dinner: 0 };
+
+        const emptyMeal = { time: '', items: [] };
+        const meals = [
+            {
+                type: 'Breakfast',
+                time: todayMenu?.breakfast?.time || '',
+                items: todayMenu?.breakfast?.items || [],
+                color: 'breakfast',
+            },
+            {
+                type: 'Lunch',
+                time: todayMenu?.lunch?.time || '',
+                items: todayMenu?.lunch?.items || [],
+                color: 'lunch',
+            },
+            {
+                type: 'Dinner',
+                time: todayMenu?.dinner?.time || '',
+                items: todayMenu?.dinner?.items || [],
+                color: 'dinner',
+            },
+        ];
+
+        // --- Recent payments for activity table ---
+        const recentPayments = await Payment.find({ status: 'approved' })
+            .sort({ date: -1 })
+            .limit(6)
+            .lean();
+
+        // Map phone → resident info
+        const phoneMap = {};
+        for (const r of allResidents) {
+            phoneMap[r.phoneNumber] = { name: r.name, roomNumber: r.roomNumber };
+        }
+
+        const recentActivity = recentPayments.map(p => ({
+            _id: p._id,
+            name: p.name,
+            roomNumber: phoneMap[p.phoneNumber]?.roomNumber || '-',
+            amount: p.amount,
+            date: p.date,
+            paymentMethod: p.paymentMethod,
+        }));
+
+        // --- Recent occupants for quick list ---
+        const recentOccupants = allResidents
+            .sort((a, b) => new Date(b.joiningDate) - new Date(a.joiningDate))
+            .slice(0, 6)
+            .map(r => ({
+                _id: r._id,
+                name: r.name,
+                phoneNumber: r.phoneNumber,
+                roomNumber: r.roomNumber,
+                type: r.type || 'Resident',
+                joiningDate: r.joiningDate,
+            }));
+
+        res.status(200).json({
+            occupancy: {
+                filled: filledBeds,
+                total: totalBeds,
+                percent: occupancyPercent,
+            },
+            revenue: monthRevenue,
+            pendingPayments: pendingResidents.length,
+            complaints: {
+                open: openCount,
+                pending: pendingCount,
+                inProgress: inProgressCount,
+            },
+            meals,
+            recentActivity,
+            recentOccupants,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 // @desc    Get all occupants (residents + guests) for admin directory
 // @route   GET /api/admin/occupants
