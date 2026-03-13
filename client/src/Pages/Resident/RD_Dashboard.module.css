@@ -101,7 +101,7 @@
 .dashboardWrapper {
   /* A beautiful soft mint-to-white gradient for depth */
   background: linear-gradient(135deg, #e6f9f0 0%, #f4fdf8 50%, #eefbf4 100%);
-  height: 100vh;
+  height: 100dvh;
   font-family: 'Plus Jakarta Sans', sans-serif;
   padding: 2rem;
   box-sizing: border-box;

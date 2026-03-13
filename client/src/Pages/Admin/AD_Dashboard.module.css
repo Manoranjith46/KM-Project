@@ -4,7 +4,7 @@
 
 /* Dashboard Wrapper */
 .dashboardWrapper {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-main);
   display: flex;
   position: relative;
@@ -102,7 +102,7 @@
   padding-bottom: 2rem;
   margin-left: 85px;
   overflow-y: auto;
-  height: 100vh;
+  height: 100dvh;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   will-change: scroll-position;
@@ -489,7 +489,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   z-index: 50;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -756,7 +756,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   z-index: 50;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -894,7 +894,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   z-index: 100;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);

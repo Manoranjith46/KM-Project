@@ -142,6 +142,12 @@ html {
   scroll-behavior: smooth;
 }
 
+html,
+body,
+#root {
+  min-height: 100dvh;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);

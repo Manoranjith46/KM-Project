@@ -5,7 +5,7 @@
 
 /* Dashboard Wrapper */
 .dashboardWrapper {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--background);
   display: flex;
   position: relative;
@@ -65,7 +65,7 @@
   margin-left: 92.5px; /* Offset for sidebar */
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
