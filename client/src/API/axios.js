@@ -64,7 +64,7 @@ API.interceptors.response.use(
                     // Refresh failed - session expired
                     processQueue(err);
                     sessionStorage.removeItem('user');
-                    window.location.replace('/login');
+                    // Dispatch event - let App handle the redirect to avoid race conditions
                     window.dispatchEvent(new CustomEvent('session-expired'));
                     return Promise.reject(err);
                 });
@@ -73,7 +73,7 @@ API.interceptors.response.use(
         // 403 on /auth/refresh means refresh token is invalid/expired — must re-login
         if (error.response?.status === 403 && originalRequest.url === '/auth/refresh') {
             sessionStorage.removeItem('user');
-            window.location.replace('/login');
+            // Dispatch event - let App handle the redirect
             window.dispatchEvent(new CustomEvent('session-expired'));
         }
 

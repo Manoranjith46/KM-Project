@@ -194,7 +194,7 @@ export const getAllPayments = async (req, res) => {
 	}
 };
 
-// @desc    Get current dues for a resident
+// @desc    Get current dues for a resident/guest
 // @route   GET /api/payments/dues/:phoneNumber
 export const getDues = async (req, res) => {
 	try {
@@ -204,42 +204,79 @@ export const getDues = async (req, res) => {
 			return res.status(400).json({ message: 'Phone number is required' });
 		}
 
-		// Check if resident exists
+		// Check if resident/guest exists
 		const resident = await Resident.findOne({ phoneNumber });
-		
+
 		if (!resident) {
 			return res.status(404).json({ message: 'Resident not found' });
 		}
 
-		// Get monthly rent from info collection
+		// Get rates from info collection
 		const info = await Info.findOne();
-		
-		if (!info || !info.monthly) {
+
+		if (!info) {
 			return res.status(404).json({ message: 'Rent information not found' });
 		}
 
-		const monthlyRent = Number(info.monthly);
+		const isGuest = resident.type === 'Guest';
+		let totalDue = 0;
+		let daysStayed = 0;
+		let dailyRate = 0;
+		let monthlyRate = 0;
 
-		// Get current month and year
-		const now = new Date();
-		const currentMonth = now.getMonth(); // 0-11
-		const currentYear = now.getFullYear();
+		if (isGuest) {
+			// Guest: Calculate based on daily rate from joining date
+			dailyRate = Number(info.daily) || 0;
+			const joiningDate = new Date(resident.joiningDate);
+			const today = new Date();
 
-		// Find all approved payments for current month
-		const approvedPayments = await Payment.find({
+			// Calculate days stayed (inclusive of joining date)
+			const timeDiff = today.getTime() - joiningDate.getTime();
+			daysStayed = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+
+			totalDue = dailyRate * daysStayed;
+		} else {
+			// Resident: Calculate based on monthly rate for current month
+			monthlyRate = Number(info.monthly) || 0;
+			totalDue = monthlyRate;
+		}
+
+		// Get all approved payments (for guests: all time, for residents: current month)
+		let paymentQuery = {
 			phoneNumber,
-			status: 'approved',
-			date: {
+			status: 'approved'
+		};
+
+		if (!isGuest) {
+			// For residents, only count current month's payments
+			const now = new Date();
+			const currentMonth = now.getMonth();
+			const currentYear = now.getFullYear();
+			paymentQuery.date = {
 				$gte: new Date(currentYear, currentMonth, 1),
 				$lt: new Date(currentYear, currentMonth + 1, 1)
-			}
-		});
+			};
+		}
 
-		// Sum all approved payments this month
+		const approvedPayments = await Payment.find(paymentQuery);
 		const totalPaid = approvedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-		const dueAmount = Math.max(0, monthlyRent - totalPaid);
+		const dueAmount = Math.max(0, totalDue - totalPaid);
 
-		return res.status(200).json({ dueAmount });
+		return res.status(200).json({
+			dueAmount,
+			isGuest,
+			...(isGuest && {
+				dailyRate,
+				daysStayed,
+				totalDue,
+				totalPaid,
+				joiningDate: resident.joiningDate
+			}),
+			...(!isGuest && {
+				monthlyRate,
+				totalPaid
+			})
+		});
 	} catch (error) {
 		return res.status(500).json({ message: error.message });
 	}

@@ -7,7 +7,9 @@ import { useNavigate } from 'react-router-dom';
 const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/'}api/auth`
 
 const getDashboardPathByRole = (role) => {
-  return role === 'resident' ? '/resident/dashboard' : '/admin/dashboard';
+  if (role === 'owner' || role === 'admin') return '/admin/dashboard';
+  // resident, guest, or any other role → resident pages
+  return '/resident/dashboard';
 };
 
 export default function Login() {
@@ -22,21 +24,15 @@ export default function Login() {
     fullName: ''
   })
 
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
+  // Redirect if logged in (handles initial load and post-login state update)
   useEffect(() => {
-    const storedUser = sessionStorage.getItem('user');
-    if (!storedUser) return;
-
-    try {
-      const user = JSON.parse(storedUser);
-      navigate(getDashboardPathByRole(user?.role));
-    } catch {
-      sessionStorage.removeItem('user');
+    if (user) {
+      navigate(getDashboardPathByRole(user.role), { replace: true });
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,10 +69,8 @@ export default function Login() {
         role: data.user.role,
       };
 
+      // Set user in context - useEffect will handle navigation after state update
       login(userData);
-      
-      // Navigate based on role
-      navigate(getDashboardPathByRole(data.user.role));
     } catch (err) {
       setError('Network error. Please try again.');
       console.error('Login error:', err);

@@ -310,6 +310,13 @@
 .statValue { font-size: 1.8rem; font-weight: 800; color: #0f172a; margin: 0; }
 .textGreen { color: #059669; }
 
+/* Guest Details Card */
+.guestDetailsCard { margin-bottom: 1.5rem; padding: 1.5rem; }
+.guestDetailsGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+.guestDetailItem { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.08); border-radius: 12px; }
+.guestDetailLabel { font-size: 0.8rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.guestDetailValue { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+
 .historyCard {
   flex: 1;
   min-height: 0;
@@ -418,6 +425,10 @@
   .statCard { padding: 1rem; }
   .statValue { font-size: 1.4rem; }
   .statLabel { font-size: 0.82rem; }
+  .guestDetailsGrid { gap: 0.75rem; }
+  .guestDetailItem { padding: 0.6rem; }
+  .guestDetailLabel { font-size: 0.7rem; }
+  .guestDetailValue { font-size: 0.95rem; }
   .historyMonth { font-size: 0.95rem; }
   .historyAmount { font-size: 1rem; }
   .backBtn { padding: 0.4rem 0.85rem; font-size: 0.85rem; }

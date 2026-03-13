@@ -74,6 +74,15 @@ export default function Resident_Finance() {
   const [totalSpending, setTotalSpending] = useState(0);
   const [currentDues, setCurrentDues] = useState(0);
 
+  // Guest-specific state
+  const [isGuest, setIsGuest] = useState(false);
+  const [guestDetails, setGuestDetails] = useState({
+    dailyRate: 0,
+    daysStayed: 0,
+    totalDue: 0,
+    joiningDate: null
+  });
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
@@ -162,11 +171,21 @@ export default function Resident_Finance() {
   // Fetch current dues from API
   const fetchCurrentDues = useCallback(async () => {
     if (!user?.mobileNumber) return;
-    
+
     try {
       const response = await API.get(`/payments/dues/${user.mobileNumber}`);
-      if (response?.data?.dueAmount !== undefined) {
-        setCurrentDues(response.data.dueAmount);
+      if (response?.data) {
+        setCurrentDues(response.data.dueAmount ?? 0);
+        setIsGuest(response.data.isGuest ?? false);
+
+        if (response.data.isGuest) {
+          setGuestDetails({
+            dailyRate: response.data.dailyRate ?? 0,
+            daysStayed: response.data.daysStayed ?? 0,
+            totalDue: response.data.totalDue ?? 0,
+            joiningDate: response.data.joiningDate ?? null
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching current dues:', error);
@@ -416,19 +435,35 @@ export default function Resident_Finance() {
 
           {/* RIGHT COLUMN: STATS & HISTORY (Untouched) */}
           <div className={styles.rightCol}>
-            
-            <div className={styles.statsGrid}>
-              <div className={`${styles.glassCard} ${styles.statCard}`}>
-                <p className={styles.statLabel}>Total Spendings</p>
-                <h3 className={styles.statValue}>₹{totalSpending.toLocaleString('en-IN')}</h3>
+
+            {/* Guest Details Card - Only shown for guests */}
+            {isGuest && (
+              <div className={`${styles.glassCard} ${styles.guestDetailsCard}`}>
+                <h2 className={styles.cardTitle}>Stay Details</h2>
+                <div className={styles.guestDetailsGrid}>
+                  <div className={styles.guestDetailItem}>
+                    <span className={styles.guestDetailLabel}>Daily Rate</span>
+                    <span className={styles.guestDetailValue}>₹{guestDetails.dailyRate.toLocaleString('en-IN')}/day</span>
+                  </div>
+                  <div className={styles.guestDetailItem}>
+                    <span className={styles.guestDetailLabel}>Days Stayed</span>
+                    <span className={styles.guestDetailValue}>{guestDetails.daysStayed} days</span>
+                  </div>
+                  <div className={styles.guestDetailItem}>
+                    <span className={styles.guestDetailLabel}>Joined On</span>
+                    <span className={styles.guestDetailValue}>
+                      {guestDetails.joiningDate
+                        ? new Date(guestDetails.joiningDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : '-'}
+                    </span>
+                  </div>
+                  <div className={styles.guestDetailItem}>
+                    <span className={styles.guestDetailLabel}>Total Due</span>
+                    <span className={styles.guestDetailValue}>₹{guestDetails.totalDue.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
               </div>
-              <div className={`${styles.glassCard} ${styles.statCard}`}>
-                <p className={styles.statLabel}>Current Dues</p>
-                <h3 className={`${styles.statValue} ${currentDues === 0 ? styles.textGreen : ''}`}>
-                  ₹{currentDues.toLocaleString('en-IN')}
-                </h3>
-              </div>
-            </div>
+            )}
 
             <div className={`${styles.glassCard} ${styles.historyCard}`}>
               <h2 className={styles.cardTitle}>Payment History</h2>

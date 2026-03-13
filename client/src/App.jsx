@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Login from "./Pages/Login/Login"
 import { ThemeProvider } from './Context/ThemeContext';
-import { AuthProvider } from './Context/AuthContext';
+import { AuthProvider, useAuth } from './Context/AuthContext';
 import ProtectedRoute from './Components/ProtectedRoute';
 
 // Admin Page Imports
@@ -27,20 +27,23 @@ import Resident_Finance from './Pages/Resident/RD_Finance';
 import Resident_NoticeBoard from './Pages/Resident/RD_Notice_Board';
 
 function getDashboardPathByRole(role) {
-  return role === 'resident' ? '/resident/dashboard' : '/admin/dashboard';
+  if (role === 'owner' || role === 'admin') return '/admin/dashboard';
+  // resident, guest, or any other role → resident pages
+  return '/resident/dashboard';
 }
 
 function HomeRedirect() {
-  const storedUser = sessionStorage.getItem('user');
-  if (!storedUser) return <Navigate to="/login" replace />;
+  const { user, loading } = useAuth();
 
-  try {
-    const user = JSON.parse(storedUser);
-    return <Navigate to={getDashboardPathByRole(user?.role)} replace />;
-  } catch {
-    sessionStorage.removeItem('user');
+  if (loading) {
+    return null; // Wait for auth check
+  }
+
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
+
+  return <Navigate to={getDashboardPathByRole(user?.role)} replace />;
 }
 
 function App() {
@@ -82,11 +85,11 @@ function App() {
           <Route path="/admin/maintenance" element={<ProtectedRoute allowedRoles={['owner', 'admin']}><Admin_Maintenance /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['owner', 'admin']}><Admin_Settings /></ProtectedRoute>} />
 
-          {/* Resident Routes - Protected */}
-          <Route path="/resident/dashboard" element={<ProtectedRoute allowedRoles={['resident']}><Resident_Dashboard /></ProtectedRoute>} />
-          <Route path="/resident/report" element={<ProtectedRoute allowedRoles={['resident']}><Resident_ReportIssue /></ProtectedRoute>} />
-          <Route path="/resident/finance" element={<ProtectedRoute allowedRoles={['resident']}><Resident_Finance /></ProtectedRoute>} />
-          <Route path="/resident/notice" element={<ProtectedRoute allowedRoles={['resident']}><Resident_NoticeBoard /></ProtectedRoute>} />
+          {/* Resident Routes - Protected (resident and guest can access) */}
+          <Route path="/resident/dashboard" element={<ProtectedRoute allowedRoles={['resident', 'guest']}><Resident_Dashboard /></ProtectedRoute>} />
+          <Route path="/resident/report" element={<ProtectedRoute allowedRoles={['resident', 'guest']}><Resident_ReportIssue /></ProtectedRoute>} />
+          <Route path="/resident/finance" element={<ProtectedRoute allowedRoles={['resident', 'guest']}><Resident_Finance /></ProtectedRoute>} />
+          <Route path="/resident/notice" element={<ProtectedRoute allowedRoles={['resident', 'guest']}><Resident_NoticeBoard /></ProtectedRoute>} />
 
           {/* Fallback Route */}
           <Route path="*" element={<HomeRedirect />} />

@@ -5,7 +5,7 @@ const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/'}api/
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // Stores { name, role, etc. }
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true until we verify auth state
 
   // Load user from sessionStorage on mount
   useEffect(() => {
@@ -18,12 +18,19 @@ export const AuthProvider = ({ children }) => {
         sessionStorage.removeItem('user');
       }
     }
+    setLoading(false); // Auth check complete
   }, []);
 
   const login = (userData) => {
     setUser(userData);
     // Store user data in sessionStorage (not token, as it's in HttpOnly cookie)
     sessionStorage.setItem('user', JSON.stringify(userData));
+  };
+
+  // Clear user state without redirect (for axios interceptor)
+  const clearUser = () => {
+    setUser(null);
+    sessionStorage.removeItem('user');
   };
 
   const logout = async () => {
@@ -45,7 +52,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, setLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, clearUser, loading, setLoading }}>
       {children}
     </AuthContext.Provider>
   );
