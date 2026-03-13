@@ -5,6 +5,30 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const REFRESH_SECRET = process.env.REFRESH_SECRET || 'your-refresh-secret-key';
 const ACCESS_TOKEN_EXPIRE = process.env.ACCESS_TOKEN_EXPIRE || '15m';
 const REFRESH_TOKEN_EXPIRE = process.env.REFRESH_TOKEN_EXPIRE || '7d';
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+const getCookieOptions = (req, maxAge = COOKIE_MAX_AGE) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const isHttps = req.secure || forwardedProto === 'https';
+
+  // SameSite=None requires Secure=true in modern browsers.
+  const secure = isProduction || isHttps;
+  const sameSite = secure ? 'none' : 'lax';
+
+  return {
+    httpOnly: true,
+    secure,
+    sameSite,
+    maxAge,
+    path: '/',
+  };
+};
+
+const getClearCookieOptions = (req) => {
+  const { httpOnly, secure, sameSite, path } = getCookieOptions(req);
+  return { httpOnly, secure, sameSite, path };
+};
 
 // Generate ACCESS token (short-lived)
 const generateAccessToken = (id, role) => {
@@ -17,23 +41,15 @@ const generateRefreshToken = (id, role) => {
 };
 
 // Set cookies helper
-const setTokenCookies = (res, accessToken, refreshToken) => {
+const setTokenCookies = (req, res, accessToken, refreshToken) => {
+  const cookieOptions = getCookieOptions(req);
+
   // Access token cookie - maxAge matches refresh token so the browser keeps it.
   // The JWT's own expiry (15m) controls access; the cookie must survive for refresh to work.
-  res.cookie('accessToken', accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (same as refresh token)
-  });
+  res.cookie('accessToken', accessToken, cookieOptions);
 
   // Refresh token cookie (7 days)
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
+  res.cookie('refreshToken', refreshToken, cookieOptions);
 };
 
 // Login user
@@ -63,7 +79,7 @@ export const loginUser = async (req, res) => {
     const refreshToken = generateRefreshToken(user._id, user.role);
 
     // Set cookies
-    setTokenCookies(res, accessToken, refreshToken);
+    setTokenCookies(req, res, accessToken, refreshToken);
 
     // Return user data (excluding password)
     res.status(200).json({
@@ -85,17 +101,9 @@ export const loginUser = async (req, res) => {
 // Logout user
 export const logoutUser = (req, res) => {
   try {
-    res.clearCookie('accessToken', {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-    });
-
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-    });
+    const clearOptions = getClearCookieOptions(req);
+    res.clearCookie('accessToken', clearOptions);
+    res.clearCookie('refreshToken', clearOptions);
 
     res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
@@ -121,18 +129,13 @@ export const refreshAccessToken = async (req, res) => {
       const newAccessToken = generateAccessToken(decoded.id, decoded.role);
 
       // Set new access token cookie
-      res.cookie('accessToken', newAccessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (same as refresh token)
-      });
+      res.cookie('accessToken', newAccessToken, getCookieOptions(req));
 
       res.status(200).json({ message: 'Token refreshed successfully' });
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
         // Refresh token has expired - user must login again
-        res.clearCookie('refreshToken');
+        res.clearCookie('refreshToken', getClearCookieOptions(req));
         return res.status(403).json({ message: 'Refresh token expired. Please login again.' });
       }
       return res.status(403).json({ message: 'Invalid refresh token' });

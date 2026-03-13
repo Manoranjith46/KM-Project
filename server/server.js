@@ -23,12 +23,31 @@ connectDB();
 const app = express();
 const server = createServer(app);
 
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://km-pg.vercel.app',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+];
+
 const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'https://km-pg.vercel.app',
-    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
-  ],
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    const isLanDevOrigin = /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/.test(origin);
+
+    if (!isProduction && isLanDevOrigin) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true, // Allow credentials (cookies)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
