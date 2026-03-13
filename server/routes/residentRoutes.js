@@ -15,12 +15,12 @@ router.route('/')
 router.get('/room/:roomNumber', verifyToken, authorizeRoles('owner'), getResidentsByRoom);
 
 // Gate toggle route (must come before :phoneNumber)
-router.put('/gate-toggle/:phoneNumber', verifyToken, authorizeRoles('resident'), toggleGateStatus);
+router.put('/gate-toggle/:phoneNumber', verifyToken, authorizeRoles('resident', 'guest'), toggleGateStatus);
 
 // Resident report and announcement routes (must come before :phoneNumber)
-router.post('/report', verifyToken, authorizeRoles('resident'), upload.single('photo'), registerReport);
-router.get('/report/:phoneNumber', verifyToken, authorizeRoles('resident'), getReport);
-router.get('/announcements', verifyToken, authorizeRoles('resident'), getAnnouncements);
+router.post('/report', verifyToken, authorizeRoles('resident', 'guest'), upload.single('photo'), registerReport);
+router.get('/report/:phoneNumber', verifyToken, authorizeRoles('resident', 'guest'), getReport);
+router.get('/announcements', verifyToken, authorizeRoles('resident', 'guest'), getAnnouncements);
 
 // Route: /:phoneNumber - Generic phone lookup (must come LAST)
 router.route('/:phoneNumber')

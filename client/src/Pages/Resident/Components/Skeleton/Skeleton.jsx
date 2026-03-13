@@ -1,105 +1,105 @@
 import styles from './Skeleton.module.css';
 
-export function Skeleton({ width, height, radius, className = '' }) {
+export function Skeleton({ width, height, radius, className = '', isGuest = false }) {
   return (
     <div
-      className={`${styles.skeleton} ${className}`}
+      className={`${isGuest ? styles.skeletonGuest : styles.skeleton} ${className}`}
       style={{ width, height, borderRadius: radius }}
     />
   );
 }
 
-export function SkeletonCard({ children, className = '' }) {
+export function SkeletonCard({ children, className = '', isGuest = false }) {
   return (
-    <div className={`${styles.skeletonCard} ${className}`}>
+    <div className={`${styles.skeletonCard} ${isGuest ? styles.skeletonCardGuest : ''} ${className}`}>
       {children}
     </div>
   );
 }
 
 /* ── Dashboard Skeleton ── */
-export function DashboardSkeleton() {
+export function DashboardSkeleton({ isGuest = false }) {
   return (
     <>
       {/* Header */}
-      <div className={styles.skeletonHeader}>
+      <div className={`${styles.skeletonHeader} ${isGuest ? styles.skeletonHeaderGuest : ''}`}>
         <div>
-          <Skeleton width="260px" height="28px" radius="8px" />
-          <Skeleton width="180px" height="16px" radius="6px" />
+          <Skeleton width="260px" height="28px" radius="8px" isGuest={isGuest} />
+          <Skeleton width="180px" height="16px" radius="6px" isGuest={isGuest} />
         </div>
         <div className={styles.skeletonHeaderRight}>
-          <Skeleton width="48px" height="48px" radius="50%" />
-          <Skeleton width="100px" height="16px" radius="6px" />
-          <Skeleton width="90px" height="40px" radius="12px" />
+          <Skeleton width="48px" height="48px" radius="50%" isGuest={isGuest} />
+          <Skeleton width="100px" height="16px" radius="6px" isGuest={isGuest} />
+          <Skeleton width="90px" height="40px" radius="12px" isGuest={isGuest} />
         </div>
       </div>
 
       {/* Grid */}
       <div className={styles.skeletonGrid3}>
         {/* Gate Status */}
-        <SkeletonCard>
+        <SkeletonCard isGuest={isGuest}>
           <div className={styles.skeletonRow}>
-            <Skeleton width="120px" height="18px" radius="6px" />
-            <Skeleton width="80px" height="28px" radius="12px" />
+            <Skeleton width="120px" height="18px" radius="6px" isGuest={isGuest} />
+            <Skeleton width="80px" height="28px" radius="12px" isGuest={isGuest} />
           </div>
-          <Skeleton width="200px" height="32px" radius="8px" />
-          <Skeleton width="100%" height="48px" radius="14px" />
+          <Skeleton width="200px" height="32px" radius="8px" isGuest={isGuest} />
+          <Skeleton width="100%" height="48px" radius="14px" isGuest={isGuest} />
         </SkeletonCard>
 
         {/* Total Spendings */}
-        <SkeletonCard>
+        <SkeletonCard isGuest={isGuest}>
           <div className={styles.skeletonRow}>
-            <Skeleton width="140px" height="18px" radius="6px" />
-            <Skeleton width="70px" height="28px" radius="12px" />
+            <Skeleton width="140px" height="18px" radius="6px" isGuest={isGuest} />
+            <Skeleton width="70px" height="28px" radius="12px" isGuest={isGuest} />
           </div>
           <div className={styles.skeletonRowCenter}>
-            <Skeleton width="64px" height="64px" radius="16px" />
+            <Skeleton width="64px" height="64px" radius="16px" isGuest={isGuest} />
             <div>
-              <Skeleton width="140px" height="32px" radius="8px" />
-              <Skeleton width="90px" height="14px" radius="4px" />
+              <Skeleton width="140px" height="32px" radius="8px" isGuest={isGuest} />
+              <Skeleton width="90px" height="14px" radius="4px" isGuest={isGuest} />
             </div>
           </div>
         </SkeletonCard>
 
         {/* Current Dues */}
-        <SkeletonCard>
+        <SkeletonCard isGuest={isGuest}>
           <div className={styles.skeletonRow}>
-            <Skeleton width="120px" height="18px" radius="6px" />
-            <Skeleton width="70px" height="28px" radius="12px" />
+            <Skeleton width="120px" height="18px" radius="6px" isGuest={isGuest} />
+            <Skeleton width="70px" height="28px" radius="12px" isGuest={isGuest} />
           </div>
           <div className={styles.skeletonRowCenter}>
-            <Skeleton width="64px" height="64px" radius="16px" />
+            <Skeleton width="64px" height="64px" radius="16px" isGuest={isGuest} />
             <div>
-              <Skeleton width="120px" height="32px" radius="8px" />
-              <Skeleton width="90px" height="14px" radius="4px" />
+              <Skeleton width="120px" height="32px" radius="8px" isGuest={isGuest} />
+              <Skeleton width="90px" height="14px" radius="4px" isGuest={isGuest} />
             </div>
           </div>
         </SkeletonCard>
 
         {/* Meals spanning 2 cols */}
-        <SkeletonCard className={styles.skeletonSpan2}>
+        <SkeletonCard className={styles.skeletonSpan2} isGuest={isGuest}>
           <div className={styles.skeletonRow}>
-            <Skeleton width="220px" height="18px" radius="6px" />
+            <Skeleton width="220px" height="18px" radius="6px" isGuest={isGuest} />
           </div>
           <div className={styles.skeletonMealGrid}>
             {[1, 2, 3].map((i) => (
               <div key={i} className={styles.skeletonMealRow}>
-                <Skeleton width="56px" height="56px" radius="16px" />
+                <Skeleton width="56px" height="56px" radius="16px" isGuest={isGuest} />
                 <div>
-                  <Skeleton width="80px" height="16px" radius="4px" />
-                  <Skeleton width="100px" height="12px" radius="4px" />
+                  <Skeleton width="80px" height="16px" radius="4px" isGuest={isGuest} />
+                  <Skeleton width="100px" height="12px" radius="4px" isGuest={isGuest} />
                 </div>
-                <Skeleton width="54px" height="32px" radius="30px" className={styles.skeletonToggle} />
+                <Skeleton width="54px" height="32px" radius="30px" className={styles.skeletonToggle} isGuest={isGuest} />
               </div>
             ))}
           </div>
         </SkeletonCard>
 
         {/* Quick Services */}
-        <SkeletonCard>
-          <Skeleton width="130px" height="18px" radius="6px" />
-          <Skeleton width="100%" height="60px" radius="16px" />
-          <Skeleton width="100%" height="60px" radius="16px" />
+        <SkeletonCard isGuest={isGuest}>
+          <Skeleton width="130px" height="18px" radius="6px" isGuest={isGuest} />
+          <Skeleton width="100%" height="60px" radius="16px" isGuest={isGuest} />
+          <Skeleton width="100%" height="60px" radius="16px" isGuest={isGuest} />
         </SkeletonCard>
       </div>
     </>

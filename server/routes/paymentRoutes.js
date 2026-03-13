@@ -23,7 +23,7 @@ router.get('/dues/:phoneNumber', verifyToken, getDues);
 router.get('/:phoneNumber', verifyToken, getPaymentsByPhoneNumber);
 
 // Resident: Submit online payment with proof
-router.post('/online', verifyToken, authorizeRoles('resident'), upload.single('paymentProof'), createOnlineRentPayment);
+router.post('/online', verifyToken, authorizeRoles('resident', 'guest'), upload.single('paymentProof'), createOnlineRentPayment);
 
 // Admin: Add cash payment
 router.post('/cash', verifyToken, authorizeRoles('owner'), createCashRentPayment);

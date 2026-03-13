@@ -1,4 +1,5 @@
 import Resident from '../models/Resident.js';
+import User from '../models/User.js';
 import { getIO } from '../socket.js';
 
 // @desc    Check if a resident is "In" or "Out" for meals
@@ -26,6 +27,21 @@ export const getFoodStatus = async (req, res) => {
 export const toggleFoodStatus = async (req, res) => {
     try {
         const { phoneNumber, mealType } = req.body;
+
+        if (!phoneNumber || !mealType) {
+            return res.status(400).json({ message: "phoneNumber and mealType are required" });
+        }
+
+        const validMeals = ['breakfast', 'lunch', 'dinner'];
+        if (!validMeals.includes(mealType)) {
+            return res.status(400).json({ message: "Invalid mealType. Use breakfast, lunch, or dinner" });
+        }
+
+        // Ensure resident/guest can only toggle their own meal preference.
+        const requester = await User.findById(req.user?.id).select('mobileNumber');
+        if (!requester || requester.mobileNumber !== phoneNumber) {
+            return res.status(403).json({ message: "Access denied. You can only update your own meal preference." });
+        }
         
         const resident = await Resident.findOne({ phoneNumber });
         if (!resident) return res.status(404).json({ message: "Resident not found" });

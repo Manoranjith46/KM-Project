@@ -8,6 +8,25 @@ import Info from "../models/Info.js";
 import { getIO } from "../socket.js";
 import { uploadToGridFS } from "../config/gridfs.js";
 
+const PHONE_REGEX = /^\d{7,15}$/;
+
+const ensureOwnPhoneOrOwner = async (req, phoneNumber) => {
+  if (req.user?.role === 'owner') {
+    return { allowed: true };
+  }
+
+  const requester = await User.findById(req.user?.id).select('mobileNumber');
+  if (!requester || requester.mobileNumber !== phoneNumber) {
+    return {
+      allowed: false,
+      status: 403,
+      message: 'Access denied. You can only access your own data.',
+    };
+  }
+
+  return { allowed: true };
+};
+
 // @access  Public (for now)
 export const registerResident = async (req, res) => {
   try {
@@ -128,6 +147,15 @@ export const getResidentByPhone = async (req, res) => {
         // Validate input
         if (!phoneNumber) {
             return res.status(400).json({ message: "Phone number is required" });
+        }
+
+        if (!PHONE_REGEX.test(String(phoneNumber))) {
+          return res.status(400).json({ message: "Please provide a valid phone number" });
+        }
+
+        const accessCheck = await ensureOwnPhoneOrOwner(req, String(phoneNumber));
+        if (!accessCheck.allowed) {
+          return res.status(accessCheck.status).json({ message: accessCheck.message });
         }
 
         // Query resident by phone number
@@ -266,6 +294,15 @@ export const registerReport = async (req, res) => {
       return res.status(400).json({ message: "Please provide all required fields: name, phoneNumber, category, and description" });
     }
 
+    if (!PHONE_REGEX.test(String(phoneNumber))) {
+      return res.status(400).json({ message: "Please provide a valid phone number" });
+    }
+
+    const accessCheck = await ensureOwnPhoneOrOwner(req, String(phoneNumber));
+    if (!accessCheck.allowed) {
+      return res.status(accessCheck.status).json({ message: accessCheck.message });
+    }
+
     // Upload photo to GridFS if provided
     let documentId = null;
     if (req.file) {
@@ -310,6 +347,16 @@ export const getReport = async (req, res) => {
     if (!phoneNumber) {
       return res.status(400).json({ message: "Phone number is required" });
     }
+
+    if (!PHONE_REGEX.test(String(phoneNumber))) {
+      return res.status(400).json({ message: "Please provide a valid phone number" });
+    }
+
+    const accessCheck = await ensureOwnPhoneOrOwner(req, String(phoneNumber));
+    if (!accessCheck.allowed) {
+      return res.status(accessCheck.status).json({ message: accessCheck.message });
+    }
+
     const reports = await Report.find({ phoneNumber });
 
     if (!reports || reports.length === 0) {
@@ -330,6 +377,16 @@ export const getReport = async (req, res) => {
 export const toggleGateStatus = async (req, res) => {
   try {
     const { phoneNumber } = req.params;
+
+    if (!phoneNumber) {
+      return res.status(400).json({ message: "Phone number is required" });
+    }
+
+    // Ensure resident/guest can only toggle their own gate status.
+    const requester = await User.findById(req.user?.id).select('mobileNumber');
+    if (!requester || requester.mobileNumber !== phoneNumber) {
+      return res.status(403).json({ message: "Access denied. You can only update your own gate status." });
+    }
 
     const resident = await Resident.findOne({ phoneNumber });
     if (!resident) {

@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../API/axios";
 import { useAuth } from "../../Context/AuthContext";
 import useSocket from "../../hooks/useSocket";
 import { NoticeSkeleton } from "./Components/Skeleton/Skeleton";
+import Popup from './Components/popup/Popup';
 import styles from "./RD_Notice_Board.module.css";
 
 export default function Resident_NoticeBoard() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const isGuest = user?.role === 'guest';
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -19,6 +21,12 @@ export default function Resident_NoticeBoard() {
   const [Announcements, setAnnouncements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const socketRef = useSocket(user?.mobileNumber);
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    type: 'error',
+    title: '',
+    message: ''
+  });
 
   const sortedNotices = [...Announcements].sort((a, b) => {
     const aIsUrgent = a.type === "urgent";
@@ -30,21 +38,27 @@ export default function Resident_NoticeBoard() {
 
 // API Call for Fetching Announcements from Backend
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
     try {
       const response = await API.get("/residents/announcements");
       setAnnouncements(response?.data || []);
     } catch (error) {
       console.error('Error fetching announcement history:', error);
       setAnnouncements([]);
+      setPopup({
+        isOpen: true,
+        type: 'error',
+        title: 'Load Failed',
+        message: error.response?.data?.message || 'Could not fetch announcements right now.'
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAnnouncements();
-  }, []);
+  }, [fetchAnnouncements]);
 
   useEffect(() => {
     const socket = socketRef.current;
@@ -54,18 +68,17 @@ export default function Resident_NoticeBoard() {
     socket.on('announcements:updated', onUpdated);
 
     return () => socket.off('announcements:updated', onUpdated);
-  }, [socketRef]);
+  }, [socketRef, fetchAnnouncements]);
 
   
 
   return (
-    <div className={styles.pageWrapper}>
-      
-      {/* THE EMERALD BLOBS */}
+    <div className={`${styles.pageWrapper} ${isGuest ? styles.pageWrapperGuest : ''}`}>
+
       <div className={styles.backgroundBlobs}>
-        <div className={`${styles.blob} ${styles.blob1}`}></div>
-        <div className={`${styles.blob} ${styles.blob2}`}></div>
-        <div className={`${styles.blob} ${styles.blob3}`}></div>
+        <div className={`${styles.blob} ${isGuest ? styles.blobGuest1 : styles.blob1}`}></div>
+        <div className={`${styles.blob} ${isGuest ? styles.blobGuest2 : styles.blob2}`}></div>
+        <div className={`${styles.blob} ${isGuest ? styles.blobGuest3 : styles.blob3}`}></div>
       </div>
 
       <div className={styles.container}>
@@ -73,7 +86,7 @@ export default function Resident_NoticeBoard() {
         {/* HEADER */}
         <header className={styles.header}>
           <div className={styles.headerRow}>
-            <button className={styles.backBtn} onClick={() => navigate('/resident/dashboard')}>
+            <button className={`${styles.backBtn} ${isGuest ? styles.backBtnGuest : ''}`} onClick={() => navigate('/resident/dashboard')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
@@ -90,7 +103,7 @@ export default function Resident_NoticeBoard() {
         </header>
 
         {/* Announcements LIST */}
-        {isLoading ? <NoticeSkeleton /> : (
+        {isLoading ? <NoticeSkeleton isGuest={isGuest} /> : (
         <div className={`${styles.noticeList} ${Announcements.length === 0 ? styles.noticeListEmpty : ""}`}>
           {Announcements.length === 0 ? (
             <div className={styles.emptyState}>
@@ -103,7 +116,7 @@ export default function Resident_NoticeBoard() {
                 className={`${styles.glassCard} ${styles.urgentCard}`}
               >
                 <div className={styles.cardTop}>
-                  <div className={styles.iconWrapper}>{Announcement.icon}</div>
+                  <div className={`${styles.iconWrapper} ${isGuest ? styles.iconWrapperGuest : ''}`}>{Announcement.icon}</div>
                   <div className={styles.titleArea}>
                     <h2 className={styles.noticeTitle}>{Announcement.title}</h2>
                     <span className={styles.noticeDate}>
@@ -124,6 +137,14 @@ export default function Resident_NoticeBoard() {
         )}
 
       </div>
+
+      <Popup
+        isOpen={popup.isOpen}
+        onClose={() => setPopup((prev) => ({ ...prev, isOpen: false }))}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+      />
     </div>
   );
 }

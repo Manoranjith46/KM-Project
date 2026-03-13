@@ -12,6 +12,7 @@ import useBlockInteraction from '../../hooks/useBlockInteraction';
 export default function Resident_Finance() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const isGuestFromRole = String(user?.role || '').toLowerCase() === 'guest';
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -71,17 +72,19 @@ export default function Resident_Finance() {
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
-  const [totalSpending, setTotalSpending] = useState(0);
-  const [currentDues, setCurrentDues] = useState(0);
 
   // Guest-specific state
-  const [isGuest, setIsGuest] = useState(false);
+  const [isGuest, setIsGuest] = useState(isGuestFromRole);
   const [guestDetails, setGuestDetails] = useState({
     dailyRate: 0,
     daysStayed: 0,
     totalDue: 0,
     joiningDate: null
   });
+
+  useEffect(() => {
+    setIsGuest(isGuestFromRole);
+  }, [isGuestFromRole]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -146,14 +149,6 @@ export default function Resident_Finance() {
         status: payment.status.charAt(0).toUpperCase() + payment.status.slice(1), // Capitalize first letter
       }));
       
-      // Calculate total spending from approved payments only
-      const total = payments.reduce((sum, payment) => {
-        const isApproved = String(payment?.status || '').toLowerCase() === 'approved';
-        const amount = Number(payment?.amount) || 0;
-        return isApproved ? sum + amount : sum;
-      }, 0);
-      setTotalSpending(total);
-      
       setHistory(formattedPayments);
     } catch (error) {
       console.error('Error fetching payment history:', error);
@@ -175,22 +170,36 @@ export default function Resident_Finance() {
     try {
       const response = await API.get(`/payments/dues/${user.mobileNumber}`);
       if (response?.data) {
-        setCurrentDues(response.data.dueAmount ?? 0);
-        setIsGuest(response.data.isGuest ?? false);
+        const responseIsGuest = response.data.isGuest;
+        const isGuestFromResponse =
+          responseIsGuest === true ||
+          String(responseIsGuest).toLowerCase() === 'true' ||
+          String(responseIsGuest).toLowerCase() === 'guest';
+        const effectiveIsGuest = isGuestFromRole || isGuestFromResponse;
 
-        if (response.data.isGuest) {
+        setIsGuest(effectiveIsGuest);
+
+        if (effectiveIsGuest) {
           setGuestDetails({
             dailyRate: response.data.dailyRate ?? 0,
             daysStayed: response.data.daysStayed ?? 0,
             totalDue: response.data.totalDue ?? 0,
             joiningDate: response.data.joiningDate ?? null
           });
+        } else {
+          setGuestDetails({
+            dailyRate: 0,
+            daysStayed: 0,
+            totalDue: 0,
+            joiningDate: null
+          });
         }
       }
     } catch (error) {
       console.error('Error fetching current dues:', error);
+      setIsGuest(isGuestFromRole);
     }
-  }, [user?.mobileNumber]);
+  }, [isGuestFromRole, user?.mobileNumber]);
 
 // Fetch payment history and dues on component mount
   useEffect(() => {
@@ -271,7 +280,7 @@ export default function Resident_Finance() {
 
 
   return (
-    <div className={styles.pageWrapper}>
+    <div className={`${styles.pageWrapper} ${isGuest ? styles.pageWrapperGuest : ''}`}>
       {isSubmitting && (
         <div className={styles.loaderOverlay}>
           <div className={styles.loaderPopup}>
@@ -279,12 +288,11 @@ export default function Resident_Finance() {
           </div>
         </div>
       )}
-      
-      {/* THE EMERALD BLOBS */}
+
       <div className={styles.backgroundBlobs}>
-        <div className={`${styles.blob} ${styles.blob1}`}></div>
-        <div className={`${styles.blob} ${styles.blob2}`}></div>
-        <div className={`${styles.blob} ${styles.blob3}`}></div>
+        <div className={`${styles.blob} ${isGuest ? styles.blobGuest1 : styles.blob1}`}></div>
+        <div className={`${styles.blob} ${isGuest ? styles.blobGuest2 : styles.blob2}`}></div>
+        <div className={`${styles.blob} ${isGuest ? styles.blobGuest3 : styles.blob3}`}></div>
       </div>
 
       <div className={styles.container}>
@@ -292,7 +300,7 @@ export default function Resident_Finance() {
         {/* HEADER */}
         <header className={styles.header}>
           <div className={styles.headerRow}>
-            <button className={styles.backBtn} onClick={() => navigate('/resident/dashboard')}>
+            <button className={`${styles.backBtn} ${isGuest ? styles.backBtnGuest : ''}`} onClick={() => navigate('/resident/dashboard')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
@@ -308,7 +316,7 @@ export default function Resident_Finance() {
           </div>
         </header>
 
-        {pageLoading ? <FinanceSkeleton /> : (
+        {pageLoading ? <FinanceSkeleton isGuest={isGuest} /> : (
         <div className={styles.mainGrid}>
           
           {/* LEFT COLUMN: UPLOAD FORM */}
@@ -425,7 +433,7 @@ export default function Resident_Finance() {
                   )}
                 </div>
 
-                <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+                <button type="submit" className={`${styles.submitBtn} ${isGuest ? styles.submitBtnGuest : ''}`} disabled={isSubmitting}>
                   {isSubmitting ? <span className={styles.loader}></span> : "Submit Receipt"}
                 </button>
               </form>
@@ -438,7 +446,7 @@ export default function Resident_Finance() {
 
             {/* Guest Details Card - Only shown for guests */}
             {isGuest && (
-              <div className={`${styles.glassCard} ${styles.guestDetailsCard}`}>
+              <div className={`${styles.glassCard} ${styles.guestDetailsCard} ${styles.guestDetailsCardRed}`}>
                 <h2 className={styles.cardTitle}>Stay Details</h2>
                 <div className={styles.guestDetailsGrid}>
                   <div className={styles.guestDetailItem}>
@@ -477,7 +485,7 @@ export default function Resident_Finance() {
                 {history.map((tx) => (
                   <div key={tx.id} className={styles.historyItem}>
                     <div className={styles.historyLeft}>
-                      <div className={styles.historyIcon}>{getPaymentIcon(tx.paymentMethod)}</div>
+                      <div className={`${styles.historyIcon} ${isGuest ? styles.historyIconGuest : ''}`}>{getPaymentIcon(tx.paymentMethod)}</div>
                       <div>
                         <p className={styles.historyMonth}>{tx.month}</p>
                         <small className={styles.historyDate}>{tx.date}</small>

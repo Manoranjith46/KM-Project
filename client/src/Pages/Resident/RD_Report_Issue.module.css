@@ -15,6 +15,10 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.pageWrapperGuest {
+  background: rgba(254, 242, 242, 0.85);
+}
+
 .loaderOverlay {
   position: fixed;
   inset: 0;
@@ -56,6 +60,14 @@
   background-color: #006246;
 }
 
+.pageWrapperGuest::-webkit-scrollbar-thumb {
+  background-color: #ef4444;
+}
+
+.pageWrapperGuest::-webkit-scrollbar-thumb:hover {
+  background-color: #b91c1c;
+}
+
 .container {
   margin: 0 auto;
   display: flex;
@@ -71,6 +83,9 @@
 .blob1 { width: 400px; height: 400px; background: linear-gradient(135deg, #10b981, #059669); top: -100px; left: -100px; animation-delay: 0s; }
 .blob2 { width: 500px; height: 500px; background: linear-gradient(135deg, #059669, #047857); bottom: -150px; right: -150px; animation-delay: 7s; }
 .blob3 { width: 350px; height: 350px; background: linear-gradient(135deg, #34d399, #10b981); top: 50%; left: 50%; margin-top: -175px; margin-left: -175px; animation-delay: 14s; }
+.blobGuest1 { width: 400px; height: 400px; background: linear-gradient(135deg, #f87171, #ef4444); top: -100px; left: -100px; animation-delay: 0s; }
+.blobGuest2 { width: 500px; height: 500px; background: linear-gradient(135deg, #ef4444, #dc2626); bottom: -150px; right: -150px; animation-delay: 7s; }
+.blobGuest3 { width: 350px; height: 350px; background: linear-gradient(135deg, #fca5a5, #f87171); top: 50%; left: 50%; margin-top: -175px; margin-left: -175px; animation-delay: 14s; }
 
 @keyframes floatBlob {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -111,6 +126,7 @@
   box-shadow: 0 4px 12px rgba(4, 120, 87, 0.05);
 }
 .backBtn:hover { background: #006246; color: white; transform: translateX(-4px); }
+.backBtnGuest:hover { background: #dc2626; box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25); }
 .backBtn svg { width: 20px; height: 20px; }
 
 .pageTitle { font-size: 2rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; }
@@ -179,6 +195,14 @@
   border-color: #10b981;
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
 }
+.pageWrapperGuest .inputField {
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.pageWrapperGuest .inputField:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
 .inputField::placeholder { color: #94a3b8; }
 
 .textArea { resize: vertical; min-height: 120px; }
@@ -194,6 +218,10 @@
   color: #10b981;
   pointer-events: none;
   font-size: 0.8rem;
+}
+
+.pageWrapperGuest .selectArrow {
+  color: #ef4444;
 }
 
 /* Custom Photo Upload Zone */
@@ -216,6 +244,15 @@
   background: rgba(16, 185, 129, 0.08);
   border-color: #10b981;
 }
+.pageWrapperGuest .uploadZone {
+  background: rgba(239, 68, 68, 0.03);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.pageWrapperGuest .uploadZone:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: #ef4444;
+}
 .uploadContent {
   display: flex;
   flex-direction: column;
@@ -224,6 +261,7 @@
 }
 .uploadIcon { font-size: 2rem; }
 .uploadText { font-size: 0.95rem; font-weight: 600; color: #047857; }
+.pageWrapperGuest .uploadText { color: #b91c1c; }
 .imagePreviewContainer {
   width: 100%;
   border-radius: 16px;
@@ -263,6 +301,8 @@
 }
 .submitBtn:hover { background: #006246; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(4, 120, 87, 0.35); }
 .submitBtn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+.submitBtnGuest { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 6px 20px rgba(220, 38, 38, 0.25); }
+.submitBtnGuest:hover { background: #b91c1c; box-shadow: 0 8px 25px rgba(185, 28, 28, 0.35); }
 
 /* Success Toast */
 .successToast {
@@ -317,6 +357,7 @@
 .ticketItem { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.5); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.8); }
 .ticketLeft { display: flex; align-items: center; gap: 1rem; }
 .ticketIcon { font-size: 1.5rem; background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 50px; width: 50px;}
+.ticketIconGuest { background: rgba(239, 68, 68, 0.12); }
 .ticketName { margin: 0; font-weight: 700; color: #0f172a; }
 .ticketDate { color: #64748b; font-weight: 500; }
 .badgeResolved { background: rgba(16, 185, 129, 0.15); color: #059669; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: 700; }

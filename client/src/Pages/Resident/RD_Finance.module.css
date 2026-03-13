@@ -16,6 +16,10 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.pageWrapperGuest {
+  background: rgba(254, 242, 242, 0.85);
+}
+
 .loaderOverlay {
   position: fixed;
   inset: 0;
@@ -66,12 +70,23 @@
   background-color: #006246;
 }
 
+.pageWrapperGuest::-webkit-scrollbar-thumb {
+  background-color: #ef4444;
+}
+
+.pageWrapperGuest::-webkit-scrollbar-thumb:hover {
+  background-color: #b91c1c;
+}
+
 /* Background Blobs */
 .backgroundBlobs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; animation: floatBlob 20s infinite ease-in-out; }
 .blob1 { width: 400px; height: 400px; background: linear-gradient(135deg, #10b981, #059669); top: -100px; left: -100px; animation-delay: 0s; }
 .blob2 { width: 500px; height: 500px; background: linear-gradient(135deg, #059669, #047857); bottom: -150px; right: -150px; animation-delay: 7s; }
 .blob3 { width: 350px; height: 350px; background: linear-gradient(135deg, #34d399, #10b981); top: 50%; left: 50%; margin-top: -175px; margin-left: -175px; animation-delay: 14s; }
+.blobGuest1 { width: 400px; height: 400px; background: linear-gradient(135deg, #f87171, #ef4444); top: -100px; left: -100px; animation-delay: 0s; }
+.blobGuest2 { width: 500px; height: 500px; background: linear-gradient(135deg, #ef4444, #dc2626); bottom: -150px; right: -150px; animation-delay: 7s; }
+.blobGuest3 { width: 350px; height: 350px; background: linear-gradient(135deg, #fca5a5, #f87171); top: 50%; left: 50%; margin-top: -175px; margin-left: -175px; animation-delay: 14s; }
 
 @keyframes floatBlob {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -89,6 +104,7 @@
 .mobileLogoutBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 .backBtn { display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.8); padding: 0.5rem 1rem; border-radius: 12px; color: #0f172a; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.05); }
 .backBtn:hover { background: #006246; color: #ffffff;  transform: translateX(-4px); }
+.backBtnGuest:hover { background: #dc2626; box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25); }
 .backBtn svg { width: 20px; height: 20px; }
 .pageTitle { font-size: 2.2rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2; }
 .subTitle { font-size: 1.05rem; color: #475569; margin: 0; font-weight: 500; }
@@ -239,6 +255,8 @@
 /* Submit Button */
 .submitBtn { width: 100%; padding: 1.1rem; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 6px 20px rgba(4, 120, 87, 0.25); display: flex; justify-content: center; align-items: center; min-height: 56px; margin-top: 0.5rem; }
 .submitBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(4, 120, 87, 0.35); }
+.submitBtnGuest { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 6px 20px rgba(220, 38, 38, 0.25); }
+.submitBtnGuest:hover { box-shadow: 0 8px 25px rgba(185, 28, 28, 0.35); }
 
 
 /* =========================================================
@@ -316,6 +334,8 @@
 .guestDetailItem { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.08); border-radius: 12px; }
 .guestDetailLabel { font-size: 0.8rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
 .guestDetailValue { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+.guestDetailsCardRed .guestDetailItem { background: rgba(239, 68, 68, 0.09); }
+.guestDetailsCardRed .guestDetailValue { color: #991b1b; }
 
 .historyCard {
   flex: 1;
@@ -369,6 +389,7 @@
 .historyItem:hover { background: white; }
 .historyLeft { display: flex; align-items: center; gap: 1rem; }
 .historyIcon { font-size: 1.5rem; background: rgba(16, 185, 129, 0.1); padding: 0.6rem; border-radius: 12px; }
+.historyIconGuest { background: rgba(239, 68, 68, 0.12); }
 .historyMonth { margin: 0; font-weight: 700; color: #0f172a; font-size: 1.05rem; }
 .historyDate { color: #64748b; font-weight: 500; font-size: 0.85rem; }
 .historyRight { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }

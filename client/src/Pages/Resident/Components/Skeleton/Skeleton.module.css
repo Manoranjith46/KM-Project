@@ -13,6 +13,18 @@
   animation: shimmer 1.8s ease-in-out infinite;
 }
 
+/* Guest red shimmer */
+.skeletonGuest {
+  background: linear-gradient(
+    90deg,
+    rgba(239, 68, 68, 0.06) 25%,
+    rgba(239, 68, 68, 0.14) 50%,
+    rgba(239, 68, 68, 0.06) 75%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
@@ -32,6 +44,10 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.skeletonCardGuest {
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.05);
 }
 
 /* =========================================================
@@ -65,6 +81,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.skeletonHeaderGuest {
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.04);
 }
 
 .skeletonHeader > div:first-child {

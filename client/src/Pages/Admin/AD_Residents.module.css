@@ -245,7 +245,7 @@
   opacity: 1 !important;
 }
 .statGuests::before {
-  background: linear-gradient(90deg, #d97706, #f59e0b) !important;
+  background: linear-gradient(90deg, #dc2626, #ef4444) !important;
   opacity: 1 !important;
 }
 

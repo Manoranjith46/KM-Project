@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import styles from "./RD_Report_Issue.module.css";
 import API from '../../API/axios';
@@ -6,12 +6,14 @@ import { minDelay } from '../../utils/minDelay';
 import { useAuth } from '../../Context/AuthContext';
 import useSocket from '../../hooks/useSocket';
 import Loader from './Components/Loader/Loader';
+import Popup from './Components/popup/Popup';
 import { ReportSkeleton } from './Components/Skeleton/Skeleton';
 import useBlockInteraction from '../../hooks/useBlockInteraction';
 
 export default function Resident_ReportIssue() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const isGuest = user?.role === 'guest';
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -42,6 +44,36 @@ export default function Resident_ReportIssue() {
   const [reports, setReports] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const socketRef = useSocket(user?.mobileNumber);
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    type: 'error',
+    title: '',
+    message: ''
+  });
+
+  const showError = useCallback((title, message) => {
+    setPopup({
+      isOpen: true,
+      type: 'error',
+      title,
+      message
+    });
+  }, []);
+
+  const fetchReports = useCallback(async () => {
+    if (!user?.mobileNumber) return;
+
+    try {
+      const response = await API.get(`/residents/report/${user?.mobileNumber}`);
+      setReports(response?.data || []);
+    } catch (error) {
+      console.error('Error fetching report history:', error);
+      setReports([]);
+      showError('History Load Failed', error.response?.data?.message || 'Could not fetch report history.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showError, user?.mobileNumber]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -87,30 +119,15 @@ export default function Resident_ReportIssue() {
 
     } catch (error) {
       console.error('Error submitting report:', error);
-      alert(error.response?.data?.message || 'Failed to submit report. Please try again.');
+      showError('Submit Failed', error.response?.data?.message || 'Failed to submit report. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-// API Call for Get the Report History of Resident
-  const fetchReports = async () => {
-    if (!user?.mobileNumber) return;
-
-    try {
-      const response = await API.get(`/residents/report/${user?.mobileNumber}`);
-      setReports(response?.data || []);
-    } catch (error) {
-      console.error('Error fetching report history:', error);
-      setReports([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchReports();
-  }, [user?.mobileNumber]);
+  }, [fetchReports]);
 
   useEffect(() => {
     const socket = socketRef.current;
@@ -120,11 +137,11 @@ export default function Resident_ReportIssue() {
     socket.on('resident:reports-updated', onUpdated);
 
     return () => socket.off('resident:reports-updated', onUpdated);
-  }, [socketRef]);
+  }, [socketRef, fetchReports]);
 
 
   return (
-    <div className={styles.pageWrapper}>
+    <div className={`${styles.pageWrapper} ${isGuest ? styles.pageWrapperGuest : ''}`}>
       {isSubmitting && (
         <div className={styles.loaderOverlay}>
           <div className={styles.loaderPopup}>
@@ -135,9 +152,9 @@ export default function Resident_ReportIssue() {
       
       {/* THE EMERALD BLOBS (Vibe Match!) */}
       <div className={styles.backgroundBlobs}>
-        <div className={`${styles.blob} ${styles.blob1}`}></div>
-        <div className={`${styles.blob} ${styles.blob2}`}></div>
-        <div className={`${styles.blob} ${styles.blob3}`}></div>
+        <div className={`${styles.blob} ${isGuest ? styles.blobGuest1 : styles.blob1}`}></div>
+        <div className={`${styles.blob} ${isGuest ? styles.blobGuest2 : styles.blob2}`}></div>
+        <div className={`${styles.blob} ${isGuest ? styles.blobGuest3 : styles.blob3}`}></div>
       </div>
 
       <div className={styles.container}>
@@ -145,7 +162,7 @@ export default function Resident_ReportIssue() {
         {/* HEADER: Hub & Spoke Back Navigation */}
         <header className={styles.header}>
           <div className={styles.headerRow}>
-            <button className={styles.backBtn} onClick={() => navigate('/resident/dashboard')}>
+            <button className={`${styles.backBtn} ${isGuest ? styles.backBtnGuest : ''}`} onClick={() => navigate('/resident/dashboard')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
@@ -246,7 +263,7 @@ export default function Resident_ReportIssue() {
             </div>
 
             {/* Submit Button */}
-            <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+            <button type="submit" className={`${styles.submitBtn} ${isGuest ? styles.submitBtnGuest : ''}`} disabled={isSubmitting}>
               Raise Ticket
             </button>
 
@@ -265,7 +282,7 @@ export default function Resident_ReportIssue() {
               {reports.map((report) => (
                 <div key={report._id} className={styles.ticketItem}>
                   <div className={styles.ticketLeft}>
-                    <span className={styles.ticketIcon}>{categoryIcons[report.category] || "❓"}</span>
+                    <span className={`${styles.ticketIcon} ${isGuest ? styles.ticketIconGuest : ''}`}>{categoryIcons[report.category] || "❓"}</span>
                     <div>
                       <p className={styles.ticketName}>{report.description}</p>
                       <small className={styles.ticketDate}>Reported on {new Date(report.createdAt).toLocaleDateString()}</small>
@@ -282,6 +299,14 @@ export default function Resident_ReportIssue() {
         )}
 
       </div>
+
+      <Popup
+        isOpen={popup.isOpen}
+        onClose={() => setPopup((prev) => ({ ...prev, isOpen: false }))}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+      />
     </div>
   );
 }
