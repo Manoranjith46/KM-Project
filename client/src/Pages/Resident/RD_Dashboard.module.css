@@ -101,9 +101,10 @@
 .dashboardWrapper {
   /* A beautiful soft mint-to-white gradient for depth */
   background: linear-gradient(135deg, #e6f9f0 0%, #f4fdf8 50%, #eefbf4 100%);
-  height: 100dvh;
+  min-height: var(--app-height, 100dvh);
   font-family: 'Plus Jakarta Sans', sans-serif;
   padding: 2rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
@@ -593,7 +594,10 @@
 
 /* Tablets Portrait (max-width: 992px) */
 @media (max-width: 992px) {
-  .dashboardWrapper { padding: 1.5rem; }
+  .dashboardWrapper {
+    padding: 1.5rem;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
   .headerGlass { padding: 1.25rem 1.5rem; }
   .mealGrid { grid-template-columns: 1fr; } /* Stack meals vertically inside the card */
   .mealRow { flex-direction: row; min-height: auto; align-items: center; }
@@ -604,7 +608,10 @@
 
 /* Standard Mobile Phones (max-width: 768px) */
 @media (max-width: 768px) {
-  .dashboardWrapper { padding: 1rem; }
+  .dashboardWrapper {
+    padding: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
   .headerGlass { flex-direction: column; align-items: flex-start; gap: 1rem; border-radius: 20px; }
   .headerRight { width: 100%; justify-content: space-between; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 1rem; }
   .avatarContainer { display: flex; align-items: center; gap: 0.75rem; }
@@ -620,7 +627,10 @@
 
 /* Very Small Phones (max-width: 480px) */
 @media (max-width: 480px) {
-  .dashboardWrapper { padding: 0.75rem; }
+  .dashboardWrapper {
+    padding: 0.75rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
   .headerGlass { padding: 1rem; border-radius: 16px; }
   .greeting { font-size: 1.25rem; }
   .roleText { font-size: 0.85rem; }
@@ -636,7 +646,10 @@
   .tomorrowMealIcon { width: 40px; height: 40px; font-size: 1.4rem; }
 }
 @media (max-width: 360px) {
-  .dashboardWrapper { padding: 0.5rem; }
+  .dashboardWrapper {
+    padding: 0.5rem;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
   .headerGlass { padding: 0.85rem; gap: 0.75rem; }
   .greeting { font-size: 1.1rem; }
   .amountText { font-size: 1.3rem; }

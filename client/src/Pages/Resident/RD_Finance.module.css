@@ -3,9 +3,10 @@
    ========================================================= */
 .pageWrapper {
   background: rgba(240, 253, 244, 0.8);
-  height: 100dvh;
+  min-height: var(--app-height, 100dvh);
   font-family: 'Plus Jakarta Sans', sans-serif;
   padding: 2rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   position: relative;
   z-index: 1;
@@ -417,7 +418,10 @@
 }
 
 @media (max-width: 768px) {
-  .pageWrapper { padding: 1rem; }
+  .pageWrapper {
+    padding: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
   .mobileLogoutBtn { display: flex; }
   .inputRow { grid-template-columns: 1fr; }
   .statsGrid { grid-template-columns: 1fr; }
@@ -433,7 +437,10 @@
 }
 
 @media (max-width: 480px) {
-  .pageWrapper { padding: 0.75rem; }
+  .pageWrapper {
+    padding: 0.75rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
   .pageTitle { font-size: 1.4rem; }
   .subTitle { font-size: 0.9rem; }
   .glassCard { padding: 1.15rem; border-radius: 16px; }
@@ -456,7 +463,10 @@
 }
 
 @media (max-width: 360px) {
-  .pageWrapper { padding: 0.5rem; }
+  .pageWrapper {
+    padding: 0.5rem;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
   .pageTitle { font-size: 1.2rem; }
   .glassCard { padding: 1rem; border-radius: 14px; }
   .inputField { padding: 0.75rem 0.85rem; font-size: 0.85rem; }

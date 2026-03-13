@@ -2,6 +2,8 @@
 
 /* Light theme (default) */
 :root {
+  --app-height: 100dvh;
+
   /* Core colors */
   --background: #ffffff;
   --foreground: #0a0a0a;
@@ -145,7 +147,7 @@ html {
 html,
 body,
 #root {
-  min-height: 100dvh;
+  min-height: var(--app-height, 100dvh);
 }
 
 body {
