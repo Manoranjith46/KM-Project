@@ -241,3 +241,19 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
 }
+
+/* Mobile-only scrollbar hiding for resident/guest/admin pages.
+   Tablet and above keep their existing custom scrollbars. */
+@media (max-width: 768px) {
+  * {
+    scrollbar-width: none; /* Firefox */;
+    -ms-overflow-style: none;
+  }
+
+  *::-webkit-scrollbar {
+    width: 0 ;
+    height: 0 ;
+    display: none ;
+    background: transparent;
+  }
+}
