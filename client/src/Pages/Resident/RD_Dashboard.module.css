@@ -619,6 +619,11 @@
 /* Standard Mobile Phones (max-width: 768px) */
 @media (max-width: 768px) {
   .dashboardWrapper {
+    margin-top: 0.75rem;
+    min-height: var(--app-height, 100dvh);
+    height: auto;
+    overflow-y: visible;
+    touch-action: pan-y;
     padding: 1rem;
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }

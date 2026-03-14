@@ -400,8 +400,23 @@
 
 @media (max-width: 768px) {
   .pageWrapper {
+    margin-top: 0.75rem;
+    min-height: var(--app-height, 100dvh);
+    height: auto;
+    overflow-y: visible;
+    touch-action: pan-y;
     padding: 1rem;
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+  .ticketList::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+    background: transparent;
+  }
+  .ticketList {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   .mobileLogoutBtn { display: flex; }
   .glassCard { padding: 1.5rem; border-radius: 18px; }

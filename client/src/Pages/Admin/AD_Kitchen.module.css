@@ -1046,6 +1046,9 @@
 }
 
 @media (max-width: 768px) {
+  .dashboardWrapper {
+    margin-top: 0.75rem;
+  }
   .mainContent {
     margin-left: 0;
     padding: 1.5rem;

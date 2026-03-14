@@ -999,6 +999,9 @@
    TABLET - 767px
    ============================================ */
 @media (max-width: 768px){
+  .dashboardWrapper {
+    margin-top: 0.75rem;
+  }
   .mainContent {
     padding: 1.5rem;
     margin-left: 0;
