@@ -318,68 +318,6 @@
   margin-left: 0.25rem;
 }
 
-/* Error Summary Banner */
-.errorBanner {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
-  border: 2px solid #ef4444;
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  display: flex;
-  gap: 1rem;
-  animation: slideDown 0.3s ease-out;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.errorBannerIcon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
-
-.errorBannerContent {
-  flex: 1;
-}
-
-.errorBannerTitle {
-  color: #ef4444;
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-}
-
-.errorBannerList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.errorBannerList li {
-  color: #dc2626;
-  font-size: 0.875rem;
-  padding-left: 1.25rem;
-  position: relative;
-}
-
-.errorBannerList li::before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  font-weight: bold;
-}
 
 /* Document Upload Box */
 .uploadBox {

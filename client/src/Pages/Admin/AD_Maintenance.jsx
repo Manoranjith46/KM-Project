@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AD_Maintenance.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
@@ -9,6 +9,8 @@ import Loader from "../Resident/Components/Loader/Loader";
 import Popup from "./Components/Popup/Popup";
 import { minDelay } from "../../utils/minDelay";
 import useBlockInteraction from "../../hooks/useBlockInteraction";
+import { validators } from "../../utils/validators";
+import { FormFieldError } from "../../Components/FormError";
 
 const CATEGORY_ICONS = {
   Plumbing:   "🔧",
@@ -52,6 +54,53 @@ export default function Admin_Maintenance() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newAnn, setNewAnn] = useState({ title: "", message: "", type: "general", icon: "" });
   const [creating, setCreating] = useState(false);
+  const [annErrors, setAnnErrors] = useState({});
+  const [annTouched, setAnnTouched] = useState({});
+  const annInputRefs = useRef({});
+
+  const validateAnnField = (field, value) => {
+    if (field === 'title') {
+      return validators.minLength(value?.trim(), 3, 'Title') || validators.maxLength(value, 100, 'Title');
+    }
+    if (field === 'message') {
+      return validators.textarea(value, 'Message', { minLength: 10, maxLength: 500 });
+    }
+    return '';
+  };
+
+  const focusAnnField = (fieldName) => () => {
+    if (annInputRefs.current[fieldName]) {
+      annInputRefs.current[fieldName].focus();
+    }
+  };
+
+  const handleAnnBlur = (field) => () => {
+    setAnnTouched(prev => ({ ...prev, [field]: true }));
+    setAnnErrors(prev => ({ ...prev, [field]: validateAnnField(field, newAnn[field]) }));
+  };
+
+  const handleAnnChange = (field) => (e) => {
+    const value = e.target.value;
+    setNewAnn(p => ({ ...p, [field]: value }));
+    if (annTouched[field]) {
+      setAnnErrors(prev => ({ ...prev, [field]: validateAnnField(field, value) }));
+    }
+  };
+
+  const validateAnnForm = () => {
+    const titleError = validateAnnField('title', newAnn.title);
+    const messageError = validateAnnField('message', newAnn.message);
+    setAnnErrors({ title: titleError, message: messageError });
+    setAnnTouched({ title: true, message: true });
+
+    if (titleError && annInputRefs.current.title) {
+      annInputRefs.current.title.focus();
+    } else if (messageError && annInputRefs.current.message) {
+      annInputRefs.current.message.focus();
+    }
+
+    return !titleError && !messageError;
+  };
 
   // Loader & Popup state
   const [loaderText, setLoaderText] = useState("");
@@ -120,13 +169,16 @@ export default function Admin_Maintenance() {
   // Create announcement
   const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
-    if (!newAnn.title.trim() || !newAnn.message.trim()) return;
+    if (!validateAnnForm()) return;
+
     setCreating(true);
     setLoaderText("Publishing");
     try {
       const { data } = await minDelay(API.post("/admin/announcements", newAnn));
       setAnnouncements(prev => [data, ...prev]);
       setNewAnn({ title: "", message: "", type: "general", icon: "" });
+      setAnnErrors({});
+      setAnnTouched({});
       setShowCreateForm(false);
       setLoaderText("");
       setPopup({ isOpen: true, type: "success", title: "Announcement Published", message: "Your announcement has been broadcast to all residents." });
@@ -431,14 +483,18 @@ export default function Admin_Maintenance() {
             {showCreateForm && (
               <form className={styles.annForm} onSubmit={handleCreateAnnouncement}>
                 <div className={styles.annFormRow}>
-                  <input
-                    className={styles.annInput}
-                    type="text"
-                    placeholder="Announcement title"
-                    value={newAnn.title}
-                    onChange={(e) => setNewAnn((p) => ({ ...p, title: e.target.value }))}
-                    required
-                  />
+                  <div className={styles.annFieldGroup}>
+                    <input
+                      ref={(el) => annInputRefs.current.title = el}
+                      className={`${styles.annInput} ${annTouched.title && annErrors.title ? 'input-error' : ''}`}
+                      type="text"
+                      placeholder="Announcement title"
+                      value={newAnn.title}
+                      onChange={handleAnnChange('title')}
+                      onBlur={handleAnnBlur('title')}
+                    />
+                    <FormFieldError error={annTouched.title && annErrors.title} onFocus={focusAnnField('title')} />
+                  </div>
                   <select
                     className={styles.annSelect}
                     value={newAnn.type}
@@ -450,14 +506,18 @@ export default function Admin_Maintenance() {
                     <option value="urgent">Urgent</option>
                   </select>
                 </div>
-                <textarea
-                  className={styles.annTextarea}
-                  placeholder="Write your announcement message..."
-                  rows={3}
-                  value={newAnn.message}
-                  onChange={(e) => setNewAnn((p) => ({ ...p, message: e.target.value }))}
-                  required
-                />
+                <div className={styles.annFieldGroup}>
+                  <textarea
+                    ref={(el) => annInputRefs.current.message = el}
+                    className={`${styles.annTextarea} ${annTouched.message && annErrors.message ? 'input-error' : ''}`}
+                    placeholder="Write your announcement message (min 10 characters)..."
+                    rows={3}
+                    value={newAnn.message}
+                    onChange={handleAnnChange('message')}
+                    onBlur={handleAnnBlur('message')}
+                  />
+                  <FormFieldError error={annTouched.message && annErrors.message} onFocus={focusAnnField('message')} />
+                </div>
                 <button type="submit" className={styles.primaryBtn} disabled={creating}>
                   {creating ? "Publishing..." : "Publish Announcement"}
                 </button>

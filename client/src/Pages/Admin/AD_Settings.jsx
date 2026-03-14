@@ -11,6 +11,8 @@ import { SettingsProfileSkeleton, SettingsPropertySkeleton, SettingsRoomsSkeleto
 import styles from "./AD_Settings.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import useBlockInteraction from "../../hooks/useBlockInteraction";
+import { validators } from "../../utils/validators";
+import { FormFieldError } from "../../Components/FormError";
 
 const SETTING_TABS = [
   { id: "profile",  label: "My Profile" },
@@ -71,6 +73,91 @@ export default function Admin_Settings() {
   // Security form
   const [secForm, setSecForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const handleSec = (e) => setSecForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+
+  // Validation state
+  const [profileErrors, setProfileErrors] = useState({});
+  const [profileTouched, setProfileTouched] = useState({});
+  const profileRefs = useRef({});
+
+  const [secErrors, setSecErrors] = useState({});
+  const [secTouched, setSecTouched] = useState({});
+  const secRefs = useRef({});
+
+  const [propertyErrors, setPropertyErrors] = useState({});
+  const [propertyTouched, setPropertyTouched] = useState({});
+  const propertyRefs = useRef({});
+
+  // Validation functions
+  const validateProfileField = (field, value) => {
+    if (field === 'name') return validators.name(value, 'Name');
+    if (field === 'mobileNumber') return validators.phone(value, true);
+    if (field === 'email') return validators.email(value, false);
+    return '';
+  };
+
+  const validateSecField = (field, value, allValues = secForm) => {
+    if (field === 'currentPassword') return validators.required(value, 'Current password');
+    if (field === 'newPassword') return validators.password(value, 6);
+    if (field === 'confirmPassword') return validators.confirmPassword(value, allValues.newPassword);
+    return '';
+  };
+
+  const validatePropertyField = (field, value) => {
+    if (field === 'contactNumber') return validators.phone(value, false);
+    if (field === 'managerEmail') return validators.email(value, false);
+    if (field === 'upiId') return validators.upiId(value, false);
+    return '';
+  };
+
+  const focusProfileField = (field) => () => { if (profileRefs.current[field]) profileRefs.current[field].focus(); };
+  const focusSecField = (field) => () => { if (secRefs.current[field]) secRefs.current[field].focus(); };
+  const focusPropertyField = (field) => () => { if (propertyRefs.current[field]) propertyRefs.current[field].focus(); };
+
+  const handleProfileChange = (e) => {
+    let { name, value } = e.target;
+    if (name === 'mobileNumber') value = value.replace(/\D/g, '').slice(0, 10);
+    setProfile((p) => ({ ...p, [name]: value }));
+    if (profileTouched[name]) {
+      setProfileErrors((prev) => ({ ...prev, [name]: validateProfileField(name, value) }));
+    }
+  };
+
+  const handleProfileBlur = (field) => () => {
+    setProfileTouched((prev) => ({ ...prev, [field]: true }));
+    setProfileErrors((prev) => ({ ...prev, [field]: validateProfileField(field, profile[field]) }));
+  };
+
+  const handleSecChange = (e) => {
+    const { name, value } = e.target;
+    const newSecForm = { ...secForm, [name]: value };
+    setSecForm(newSecForm);
+    if (secTouched[name]) {
+      setSecErrors((prev) => ({ ...prev, [name]: validateSecField(name, value, newSecForm) }));
+    }
+    // Re-validate confirmPassword if newPassword changes
+    if (name === 'newPassword' && secTouched.confirmPassword) {
+      setSecErrors((prev) => ({ ...prev, confirmPassword: validateSecField('confirmPassword', newSecForm.confirmPassword, newSecForm) }));
+    }
+  };
+
+  const handleSecBlur = (field) => () => {
+    setSecTouched((prev) => ({ ...prev, [field]: true }));
+    setSecErrors((prev) => ({ ...prev, [field]: validateSecField(field, secForm[field], secForm) }));
+  };
+
+  const handlePropertyChangeWithValidation = (e) => {
+    let { name, value } = e.target;
+    if (name === 'contactNumber') value = value.replace(/\D/g, '').slice(0, 10);
+    setForm((p) => ({ ...p, [name]: value }));
+    if (propertyTouched[name]) {
+      setPropertyErrors((prev) => ({ ...prev, [name]: validatePropertyField(name, value) }));
+    }
+  };
+
+  const handlePropertyBlur = (field) => () => {
+    setPropertyTouched((prev) => ({ ...prev, [field]: true }));
+    setPropertyErrors((prev) => ({ ...prev, [field]: validatePropertyField(field, form[field]) }));
+  };
 
   // Rooms & Rates
   const [loadingRooms, setLoadingRooms] = useState(true);
@@ -150,10 +237,20 @@ export default function Admin_Settings() {
 
   // ── Save profile ──
   const saveProfile = async () => {
-    if (!profile.name.trim() || !profile.mobileNumber.trim()) {
-      setPopup({ isOpen: true, type: "warning", title: "Missing Fields", message: "Name and mobile number are required." });
+    const nameError = validateProfileField('name', profile.name);
+    const mobileError = validateProfileField('mobileNumber', profile.mobileNumber);
+    const emailError = validateProfileField('email', profile.email);
+
+    setProfileErrors({ name: nameError, mobileNumber: mobileError, email: emailError });
+    setProfileTouched({ name: true, mobileNumber: true, email: true });
+
+    if (nameError || mobileError || emailError) {
+      if (nameError && profileRefs.current.name) profileRefs.current.name.focus();
+      else if (mobileError && profileRefs.current.mobileNumber) profileRefs.current.mobileNumber.focus();
+      else if (emailError && profileRefs.current.email) profileRefs.current.email.focus();
       return;
     }
+
     setLoaderText("Saving");
     try {
       const { data } = await minDelay(API.put("/admin/settings/profile", {
@@ -256,18 +353,20 @@ export default function Admin_Settings() {
 
   // ── Change password ──
   const savePassword = async () => {
-    if (!secForm.currentPassword || !secForm.newPassword || !secForm.confirmPassword) {
-      setPopup({ isOpen: true, type: "warning", title: "Missing Fields", message: "Please fill in all password fields." });
+    const currentError = validateSecField('currentPassword', secForm.currentPassword);
+    const newError = validateSecField('newPassword', secForm.newPassword);
+    const confirmError = validateSecField('confirmPassword', secForm.confirmPassword, secForm);
+
+    setSecErrors({ currentPassword: currentError, newPassword: newError, confirmPassword: confirmError });
+    setSecTouched({ currentPassword: true, newPassword: true, confirmPassword: true });
+
+    if (currentError || newError || confirmError) {
+      if (currentError && secRefs.current.currentPassword) secRefs.current.currentPassword.focus();
+      else if (newError && secRefs.current.newPassword) secRefs.current.newPassword.focus();
+      else if (confirmError && secRefs.current.confirmPassword) secRefs.current.confirmPassword.focus();
       return;
     }
-    if (secForm.newPassword.length < 6) {
-      setPopup({ isOpen: true, type: "warning", title: "Weak Password", message: "New password must be at least 6 characters." });
-      return;
-    }
-    if (secForm.newPassword !== secForm.confirmPassword) {
-      setPopup({ isOpen: true, type: "warning", title: "Mismatch", message: "New password and confirm password do not match." });
-      return;
-    }
+
     setLoaderText("Updating");
     try {
       await minDelay(API.post("/admin/settings/change-password", {
@@ -435,7 +534,16 @@ export default function Admin_Settings() {
                       <div className={styles.formGrid}>
                         <div className={styles.fieldGroup}>
                           <label className={styles.label} htmlFor="name">Full Name</label>
-                          <input id="name" name="name" className={styles.input} value={profile.name} onChange={handleProfile} />
+                          <input
+                            ref={(el) => profileRefs.current.name = el}
+                            id="name"
+                            name="name"
+                            className={`${styles.input} ${profileTouched.name && profileErrors.name ? 'input-error' : ''}`}
+                            value={profile.name}
+                            onChange={handleProfileChange}
+                            onBlur={handleProfileBlur('name')}
+                          />
+                          <FormFieldError error={profileTouched.name && profileErrors.name} onFocus={focusProfileField('name')} />
                         </div>
                         <div className={styles.fieldGroup}>
                           <label className={styles.label} htmlFor="role">Role</label>
@@ -443,11 +551,32 @@ export default function Admin_Settings() {
                         </div>
                         <div className={styles.fieldGroup}>
                           <label className={styles.label} htmlFor="profileEmail">Email Address</label>
-                          <input id="profileEmail" name="email" type="email" className={styles.input} value={profile.email} onChange={handleProfile} />
+                          <input
+                            ref={(el) => profileRefs.current.email = el}
+                            id="profileEmail"
+                            name="email"
+                            type="email"
+                            className={`${styles.input} ${profileTouched.email && profileErrors.email ? 'input-error' : ''}`}
+                            value={profile.email}
+                            onChange={handleProfileChange}
+                            onBlur={handleProfileBlur('email')}
+                          />
+                          <FormFieldError error={profileTouched.email && profileErrors.email} onFocus={focusProfileField('email')} />
                         </div>
                         <div className={styles.fieldGroup}>
                           <label className={styles.label} htmlFor="profilePhone">Mobile Number</label>
-                          <input id="profilePhone" name="mobileNumber" className={styles.input} value={profile.mobileNumber} onChange={handleProfile} />
+                          <input
+                            ref={(el) => profileRefs.current.mobileNumber = el}
+                            id="profilePhone"
+                            name="mobileNumber"
+                            type="tel"
+                            className={`${styles.input} ${profileTouched.mobileNumber && profileErrors.mobileNumber ? 'input-error' : ''}`}
+                            value={profile.mobileNumber}
+                            onChange={handleProfileChange}
+                            onBlur={handleProfileBlur('mobileNumber')}
+                            placeholder="9876543210"
+                          />
+                          <FormFieldError error={profileTouched.mobileNumber && profileErrors.mobileNumber} onFocus={focusProfileField('mobileNumber')} />
                         </div>
                       </div>
 
@@ -510,12 +639,33 @@ export default function Admin_Settings() {
 
                         <div className={styles.fieldGroup}>
                           <label className={styles.label} htmlFor="contactNumber">Contact Number</label>
-                          <input id="contactNumber" name="contactNumber" className={styles.input} value={form.contactNumber} onChange={handleChange} />
+                          <input
+                            ref={(el) => propertyRefs.current.contactNumber = el}
+                            id="contactNumber"
+                            name="contactNumber"
+                            type="tel"
+                            className={`${styles.input} ${propertyTouched.contactNumber && propertyErrors.contactNumber ? 'input-error' : ''}`}
+                            value={form.contactNumber}
+                            onChange={handlePropertyChangeWithValidation}
+                            onBlur={handlePropertyBlur('contactNumber')}
+                            placeholder="9876543210"
+                          />
+                          <FormFieldError error={propertyTouched.contactNumber && propertyErrors.contactNumber} onFocus={focusPropertyField('contactNumber')} />
                         </div>
 
                         <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                           <label className={styles.label} htmlFor="managerEmail">Manager Email</label>
-                          <input id="managerEmail" name="managerEmail" type="email" className={styles.input} value={form.managerEmail} onChange={handleChange} />
+                          <input
+                            ref={(el) => propertyRefs.current.managerEmail = el}
+                            id="managerEmail"
+                            name="managerEmail"
+                            type="email"
+                            className={`${styles.input} ${propertyTouched.managerEmail && propertyErrors.managerEmail ? 'input-error' : ''}`}
+                            value={form.managerEmail}
+                            onChange={handlePropertyChangeWithValidation}
+                            onBlur={handlePropertyBlur('managerEmail')}
+                          />
+                          <FormFieldError error={propertyTouched.managerEmail && propertyErrors.managerEmail} onFocus={focusPropertyField('managerEmail')} />
                         </div>
                       </div>
 
@@ -525,7 +675,17 @@ export default function Admin_Settings() {
                         <div className={styles.formGrid}>
                           <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                             <label className={styles.label} htmlFor="upiId">Default UPI ID</label>
-                            <input id="upiId" name="upiId" className={styles.input} value={form.upiId} onChange={handleChange} />
+                            <input
+                              ref={(el) => propertyRefs.current.upiId = el}
+                              id="upiId"
+                              name="upiId"
+                              className={`${styles.input} ${propertyTouched.upiId && propertyErrors.upiId ? 'input-error' : ''}`}
+                              value={form.upiId}
+                              onChange={handlePropertyChangeWithValidation}
+                              onBlur={handlePropertyBlur('upiId')}
+                              placeholder="yourname@upi"
+                            />
+                            <FormFieldError error={propertyTouched.upiId && propertyErrors.upiId} onFocus={focusPropertyField('upiId')} />
                           </div>
                         </div>
                       </div>
@@ -671,15 +831,48 @@ export default function Admin_Settings() {
                     <div className={styles.formGrid}>
                       <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                         <label className={styles.label} htmlFor="currentPassword">Current Password</label>
-                        <input id="currentPassword" name="currentPassword" type="password" className={styles.input} placeholder="••••••••" value={secForm.currentPassword} onChange={handleSec} />
+                        <input
+                          ref={(el) => secRefs.current.currentPassword = el}
+                          id="currentPassword"
+                          name="currentPassword"
+                          type="password"
+                          className={`${styles.input} ${secTouched.currentPassword && secErrors.currentPassword ? 'input-error' : ''}`}
+                          placeholder="••••••••"
+                          value={secForm.currentPassword}
+                          onChange={handleSecChange}
+                          onBlur={handleSecBlur('currentPassword')}
+                        />
+                        <FormFieldError error={secTouched.currentPassword && secErrors.currentPassword} onFocus={focusSecField('currentPassword')} />
                       </div>
                       <div className={styles.fieldGroup}>
                         <label className={styles.label} htmlFor="newPassword">New Password</label>
-                        <input id="newPassword" name="newPassword" type="password" className={styles.input} placeholder="Min. 6 characters" value={secForm.newPassword} onChange={handleSec} />
+                        <input
+                          ref={(el) => secRefs.current.newPassword = el}
+                          id="newPassword"
+                          name="newPassword"
+                          type="password"
+                          className={`${styles.input} ${secTouched.newPassword && secErrors.newPassword ? 'input-error' : ''}`}
+                          placeholder="Min. 6 characters"
+                          value={secForm.newPassword}
+                          onChange={handleSecChange}
+                          onBlur={handleSecBlur('newPassword')}
+                        />
+                        <FormFieldError error={secTouched.newPassword && secErrors.newPassword} onFocus={focusSecField('newPassword')} />
                       </div>
                       <div className={styles.fieldGroup}>
                         <label className={styles.label} htmlFor="confirmPassword">Confirm Password</label>
-                        <input id="confirmPassword" name="confirmPassword" type="password" className={styles.input} placeholder="Repeat new password" value={secForm.confirmPassword} onChange={handleSec} />
+                        <input
+                          ref={(el) => secRefs.current.confirmPassword = el}
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          type="password"
+                          className={`${styles.input} ${secTouched.confirmPassword && secErrors.confirmPassword ? 'input-error' : ''}`}
+                          placeholder="Repeat new password"
+                          value={secForm.confirmPassword}
+                          onChange={handleSecChange}
+                          onBlur={handleSecBlur('confirmPassword')}
+                        />
+                        <FormFieldError error={secTouched.confirmPassword && secErrors.confirmPassword} onFocus={focusSecField('confirmPassword')} />
                       </div>
                     </div>
                   </div>

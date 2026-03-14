@@ -280,3 +280,48 @@ body {
     background: transparent;
   }
 }
+
+/* ─── Form Validation Styles ─── */
+.form-field-error {
+  color: var(--destructive);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.form-field-error:hover {
+  opacity: 0.8;
+}
+
+.form-error-box {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--status-red-bg);
+  border: 1px solid var(--destructive);
+  border-radius: var(--radius);
+  color: var(--destructive);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Input error state */
+.input-error,
+input.input-error,
+select.input-error,
+textarea.input-error {
+  border-color: var(--destructive) !important;
+  background-color: var(--status-red-bg) !important;
+}
+
+.input-error:focus,
+input.input-error:focus,
+select.input-error:focus,
+textarea.input-error:focus {
+  border-color: var(--destructive) !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+  outline: none;
+}

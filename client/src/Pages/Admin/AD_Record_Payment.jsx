@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import styles from "./AD_Record_Payment.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Loader from "./Components/Loader/Loader";
@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import API from "../../API/axios";
 import { minDelay } from "../../utils/minDelay";
 import useBlockInteraction from "../../hooks/useBlockInteraction";
+import { validators } from "../../utils/validators";
+import { FormFieldError } from "../../Components/FormError";
 
 export default function Admin_Record_Payment() {
 
@@ -16,6 +18,10 @@ export default function Admin_Record_Payment() {
   useBlockInteraction(isSubmitting);
   const [error, setError] = useState("");
 
+  // Validation state
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const inputRefs = useRef({});
 
   // Form state for Manual Cash Entry
   const [cashForm, setCashForm] = useState({
@@ -25,8 +31,53 @@ export default function Admin_Record_Payment() {
     notes: "",
   });
 
+  const validateField = (field, value) => {
+    if (field === 'resident') return validators.phone(value, true);
+    if (field === 'amount') return validators.positiveNumber(value, 'Amount');
+    return '';
+  };
+
+  const focusField = (fieldName) => () => {
+    if (inputRefs.current[fieldName]) {
+      inputRefs.current[fieldName].focus();
+    }
+  };
+
   const handleCashChange = (e) => {
-    setCashForm({ ...cashForm, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+
+    // Only allow digits for phone number
+    if (name === 'resident') {
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
+
+    setCashForm({ ...cashForm, [name]: value });
+    setError('');
+
+    if (touched[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    }
+  };
+
+  const handleBlur = (fieldName) => () => {
+    setTouched(prev => ({ ...prev, [fieldName]: true }));
+    setFieldErrors(prev => ({ ...prev, [fieldName]: validateField(fieldName, cashForm[fieldName]) }));
+  };
+
+  const validateAll = () => {
+    const residentError = validateField('resident', cashForm.resident);
+    const amountError = validateField('amount', cashForm.amount);
+
+    setFieldErrors({ resident: residentError, amount: amountError });
+    setTouched({ resident: true, amount: true });
+
+    if (residentError && inputRefs.current.resident) {
+      inputRefs.current.resident.focus();
+    } else if (amountError && inputRefs.current.amount) {
+      inputRefs.current.amount.focus();
+    }
+
+    return !residentError && !amountError;
   };
 
   const handleGoBack = () => {
@@ -35,10 +86,11 @@ export default function Admin_Record_Payment() {
 
   const handleSubmitCash = async () => {
     setError("");
-    if (!cashForm.resident || !cashForm.amount) {
-      setError("Mobile number and amount are required.");
+
+    if (!validateAll()) {
       return;
     }
+
     try {
       setIsSubmitting(true);
       await minDelay((async () => {
@@ -106,21 +158,35 @@ export default function Admin_Record_Payment() {
                   <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                     <label className={styles.label} htmlFor="resident">Resident Mobile Number</label>
                     <input
+                      ref={(el) => inputRefs.current.resident = el}
                       id="resident"
                       name="resident"
                       type="tel"
-                      className={styles.input}
+                      className={`${styles.input} ${touched.resident && fieldErrors.resident ? 'input-error' : ''}`}
                       placeholder="e.g. 9876543210"
                       value={cashForm.resident}
                       onChange={handleCashChange}
+                      onBlur={handleBlur('resident')}
                     />
+                    <FormFieldError error={touched.resident && fieldErrors.resident} onFocus={focusField('resident')} />
                   </div>
-                  
+
                   <div className={styles.fieldGroup}>
                     <label className={styles.label} htmlFor="amount">Amount Received (₹)</label>
-                    <input id="amount" name="amount" type="number" className={styles.input} placeholder="e.g. 8500" value={cashForm.amount} onChange={handleCashChange} />
+                    <input
+                      ref={(el) => inputRefs.current.amount = el}
+                      id="amount"
+                      name="amount"
+                      type="number"
+                      className={`${styles.input} ${touched.amount && fieldErrors.amount ? 'input-error' : ''}`}
+                      placeholder="e.g. 8500"
+                      value={cashForm.amount}
+                      onChange={handleCashChange}
+                      onBlur={handleBlur('amount')}
+                    />
+                    <FormFieldError error={touched.amount && fieldErrors.amount} onFocus={focusField('amount')} />
                   </div>
-                  
+
                   <div className={styles.fieldGroup}>
                     <label className={styles.label} htmlFor="date">Payment Date</label>
                     <input id="date" name="date" type="date" className={styles.input} value={cashForm.date} onChange={handleCashChange} />

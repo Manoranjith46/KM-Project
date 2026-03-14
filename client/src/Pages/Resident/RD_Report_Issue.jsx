@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
 import styles from "./RD_Report_Issue.module.css";
 import API from '../../API/axios';
@@ -9,6 +9,8 @@ import Loader from './Components/Loader/Loader';
 import Popup from './Components/popup/Popup';
 import { ReportSkeleton } from './Components/Skeleton/Skeleton';
 import useBlockInteraction from '../../hooks/useBlockInteraction';
+import { validators } from '../../utils/validators';
+import { FormFieldError } from '../../Components/FormError';
 
 export default function Resident_ReportIssue() {
   const navigate = useNavigate();
@@ -36,6 +38,50 @@ export default function Resident_ReportIssue() {
     description: "",
     photo: null,
   });
+
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const inputRefs = useRef({});
+
+  const validateField = (field, value) => {
+    if (field === 'category') return validators.select(value, 'Category');
+    if (field === 'description') return validators.textarea(value, 'Description', { minLength: 10, maxLength: 500 });
+    return '';
+  };
+
+  const focusField = (fieldName) => () => {
+    if (inputRefs.current[fieldName]) {
+      inputRefs.current[fieldName].focus();
+    }
+  };
+
+  const handleBlur = (fieldName) => () => {
+    setTouched(prev => ({ ...prev, [fieldName]: true }));
+    setFieldErrors(prev => ({ ...prev, [fieldName]: validateField(fieldName, formData[fieldName]) }));
+  };
+
+  const handleFieldChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
+    if (touched[field]) {
+      setFieldErrors(prev => ({ ...prev, [field]: validateField(field, value) }));
+    }
+  };
+
+  const validateAll = () => {
+    const categoryError = validateField('category', formData.category);
+    const descriptionError = validateField('description', formData.description);
+
+    setFieldErrors({ category: categoryError, description: descriptionError });
+    setTouched({ category: true, description: true });
+
+    if (categoryError && inputRefs.current.category) {
+      inputRefs.current.category.focus();
+    } else if (descriptionError && inputRefs.current.description) {
+      inputRefs.current.description.focus();
+    }
+
+    return !categoryError && !descriptionError;
+  };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   useBlockInteraction(isSubmitting);
@@ -93,8 +139,13 @@ export default function Resident_ReportIssue() {
 // API Call for Submit the Form
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateAll()) {
+      return;
+    }
+
     setIsSubmitting(true);
-    
+
     try {
       const uploadData = new FormData();
       uploadData.append('name', user?.name);
@@ -110,9 +161,11 @@ export default function Resident_ReportIssue() {
 
       setSuccessMsg(response?.data?.message);
       setFormData({ category: "", description: "", photo: null });
+      setFieldErrors({});
+      setTouched({});
       setPreviewUrl(null);
       await fetchReports();
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMsg(""), 3000);
 
@@ -194,11 +247,12 @@ export default function Resident_ReportIssue() {
             <div className={styles.inputGroup}>
               <label className={styles.label}>Issue Category</label>
               <div className={styles.selectWrapper}>
-                <select 
-                  className={styles.inputField} 
-                  required
+                <select
+                  ref={(el) => inputRefs.current.category = el}
+                  className={`${styles.inputField} ${touched.category && fieldErrors.category ? 'input-error' : ''}`}
                   value={formData.category}
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  onChange={(e) => handleFieldChange('category', e.target.value)}
+                  onBlur={handleBlur('category')}
                 >
                   <option value="" disabled>Select a category...</option>
                   <option value="electrical">⚡ Electrical (Lights, Fan, AC)</option>
@@ -210,19 +264,22 @@ export default function Resident_ReportIssue() {
                 </select>
                 <div className={styles.selectArrow}>▼</div>
               </div>
+              <FormFieldError error={touched.category && fieldErrors.category} onFocus={focusField('category')} />
             </div>
 
             {/* Description Area */}
             <div className={styles.inputGroup}>
               <label className={styles.label}>Description</label>
-              <textarea 
-                className={`${styles.inputField} ${styles.textArea}`} 
-                placeholder="Please describe the issue in detail. E.g., 'The AC in room A102 is leaking water...'"
+              <textarea
+                ref={(el) => inputRefs.current.description = el}
+                className={`${styles.inputField} ${styles.textArea} ${touched.description && fieldErrors.description ? 'input-error' : ''}`}
+                placeholder="Please describe the issue in detail (min 10 characters). E.g., 'The AC in room A102 is leaking water...'"
                 rows="4"
-                required
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => handleFieldChange('description', e.target.value)}
+                onBlur={handleBlur('description')}
               ></textarea>
+              <FormFieldError error={touched.description && fieldErrors.description} onFocus={focusField('description')} />
             </div>
 
             {/* Photo Upload Zone */}

@@ -8,35 +8,103 @@ const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/'}api/
 
 const getDashboardPathByRole = (role) => {
   if (role === 'owner' || role === 'admin') return '/admin/dashboard';
-  // resident, guest, or any other role → resident pages
   return '/resident/dashboard';
 };
 
 export default function Login() {
-  const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     mobileNumber: '',
     password: '',
-    confirmPassword: '',
-    fullName: ''
+  })
+  const [fieldErrors, setFieldErrors] = useState({
+    mobileNumber: '',
+    password: '',
+  })
+  const [touched, setTouched] = useState({
+    mobileNumber: false,
+    password: false,
   })
 
   const { user, login } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if logged in (handles initial load and post-login state update)
   useEffect(() => {
     if (user) {
       navigate(getDashboardPathByRole(user.role), { replace: true });
     }
   }, [user, navigate]);
 
+  const validateMobileNumber = (value) => {
+    if (!value.trim()) {
+      return 'Mobile number is required';
+    }
+    if (!/^[6-9]\d{9}$/.test(value.trim())) {
+      return 'Enter a valid 10-digit mobile number';
+    }
+    return '';
+  };
+
+  const validatePassword = (value) => {
+    if (!value) {
+      return 'Password is required';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return '';
+  };
+
+  const handleMobileChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setFormData({ ...formData, mobileNumber: value });
+    setError('');
+    if (touched.mobileNumber) {
+      setFieldErrors({ ...fieldErrors, mobileNumber: validateMobileNumber(value) });
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setFormData({ ...formData, password: value });
+    setError('');
+    if (touched.password) {
+      setFieldErrors({ ...fieldErrors, password: validatePassword(value) });
+    }
+  };
+
+  const handleBlur = (field) => {
+    setTouched({ ...touched, [field]: true });
+    if (field === 'mobileNumber') {
+      setFieldErrors({ ...fieldErrors, mobileNumber: validateMobileNumber(formData.mobileNumber) });
+    } else if (field === 'password') {
+      setFieldErrors({ ...fieldErrors, password: validatePassword(formData.password) });
+    }
+  };
+
+  const validateForm = () => {
+    const mobileError = validateMobileNumber(formData.mobileNumber);
+    const passwordError = validatePassword(formData.password);
+
+    setFieldErrors({
+      mobileNumber: mobileError,
+      password: passwordError,
+    });
+    setTouched({ mobileNumber: true, password: true });
+
+    return !mobileError && !passwordError;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -45,7 +113,7 @@ export default function Login() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Include cookies
+        credentials: 'include',
         body: JSON.stringify({
           mobileNumber: formData.mobileNumber,
           password: formData.password,
@@ -55,12 +123,11 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || 'Login failed');
+        setError(data.message || data.error || 'Login failed');
         setLoading(false);
         return;
       }
 
-      // Login successful
       const userData = {
         id: data.user.id,
         name: data.user.name,
@@ -69,7 +136,6 @@ export default function Login() {
         role: data.user.role,
       };
 
-      // Set user in context - useEffect will handle navigation after state update
       login(userData);
     } catch (err) {
       setError('Network error. Please try again.');
@@ -106,15 +172,7 @@ export default function Login() {
 
           {/* Error Message */}
           {error && (
-            <div style={{
-              padding: '10px',
-              marginBottom: '15px',
-              backgroundColor: '#fee',
-              color: '#c33',
-              borderRadius: '5px',
-              fontSize: '14px',
-              textAlign: 'center'
-            }}>
+            <div className={styles.errorBox}>
               {error}
             </div>
           )}
@@ -130,11 +188,14 @@ export default function Login() {
                 type="tel"
                 placeholder="9876543210"
                 value={formData.mobileNumber}
-                onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
-                className={styles.input}
-                required
+                onChange={handleMobileChange}
+                onBlur={() => handleBlur('mobileNumber')}
+                className={`${styles.input} ${touched.mobileNumber && fieldErrors.mobileNumber ? styles.inputError : ''}`}
                 disabled={loading}
               />
+              {touched.mobileNumber && fieldErrors.mobileNumber && (
+                <span className={styles.fieldError}>{fieldErrors.mobileNumber}</span>
+              )}
             </div>
 
             <div className={styles.formGroup}>
@@ -145,11 +206,11 @@ export default function Login() {
                 <input
                   id="desktop-password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Password"
+                  placeholder="Enter your password"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className={styles.input}
-                  required
+                  onChange={handlePasswordChange}
+                  onBlur={() => handleBlur('password')}
+                  className={`${styles.input} ${touched.password && fieldErrors.password ? styles.inputError : ''}`}
                   disabled={loading}
                 />
                 <button
@@ -162,6 +223,9 @@ export default function Login() {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              {touched.password && fieldErrors.password && (
+                <span className={styles.fieldError}>{fieldErrors.password}</span>
+              )}
             </div>
 
             <button type="submit" className={styles.submitButton} disabled={loading}>

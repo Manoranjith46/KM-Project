@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AD_Update_Menu.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
@@ -6,6 +6,7 @@ import Loader from "../Resident/Components/Loader/Loader";
 import API from "../../API/axios";
 import { minDelay } from "../../utils/minDelay";
 import useBlockInteraction from "../../hooks/useBlockInteraction";
+import { FormFieldError } from "../../Components/FormError";
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -25,6 +26,41 @@ export default function Admin_UpdateMenu() {
     Object.fromEntries(DAYS.map((d) => [d, { ...emptyForm }]))
   );
   const [loaded, setLoaded] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const inputRefs = useRef({});
+  const [error, setError] = useState('');
+
+  // Validate timing format (e.g., "8:00 AM - 10:00 AM" or "08:00-10:00")
+  const validateTime = (value, fieldName) => {
+    if (!value || !value.trim()) return ''; // Optional field
+    // Accept various time formats
+    const timePattern = /^[\d:.\s\-aAmMpP]+$/;
+    if (!timePattern.test(value.trim())) {
+      return `${fieldName} should be a valid time format (e.g., "8:00 AM - 10:00 AM")`;
+    }
+    return '';
+  };
+
+  const validateField = (field, value) => {
+    if (field.includes('Time')) {
+      const mealName = field.replace('Time', '');
+      return validateTime(value, `${mealName.charAt(0).toUpperCase() + mealName.slice(1)} time`);
+    }
+    return '';
+  };
+
+  const handleBlur = (fieldName) => () => {
+    setTouched(prev => ({ ...prev, [fieldName]: true }));
+    const form = weekForms[selectedDay];
+    setFieldErrors(prev => ({ ...prev, [fieldName]: validateField(fieldName, form[fieldName]) }));
+  };
+
+  const focusField = (fieldName) => () => {
+    if (inputRefs.current[fieldName]) {
+      inputRefs.current[fieldName].focus();
+    }
+  };
 
 
   // Fetch all 7 days on mount
@@ -56,18 +92,49 @@ export default function Admin_UpdateMenu() {
   const form = weekForms[selectedDay];
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setWeekForms((prev) => ({
       ...prev,
-      [selectedDay]: { ...prev[selectedDay], [e.target.name]: e.target.value },
+      [selectedDay]: { ...prev[selectedDay], [name]: value },
     }));
+    setError('');
+    if (touched[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    }
   };
 
   const handleGoBack = () => {
     navigate('/admin/kitchen');
   };
 
+  const validateAll = () => {
+    const form = weekForms[selectedDay];
+    const errors = {};
+    ['breakfastTime', 'lunchTime', 'dinnerTime'].forEach(field => {
+      const err = validateField(field, form[field]);
+      if (err) errors[field] = err;
+    });
+
+    setFieldErrors(errors);
+    setTouched({ breakfastTime: true, lunchTime: true, dinnerTime: true });
+
+    if (Object.keys(errors).length > 0) {
+      const firstErrorField = Object.keys(errors)[0];
+      if (inputRefs.current[firstErrorField]) {
+        inputRefs.current[firstErrorField].focus();
+      }
+      return false;
+    }
+    return true;
+  };
+
   const handlePublish = async () => {
+    if (!validateAll()) {
+      return;
+    }
+
     setIsSubmitting(true);
+    setError('');
     try {
       const toItems = (str) => str.split("\n").map((s) => s.trim()).filter(Boolean);
 
@@ -81,6 +148,7 @@ export default function Admin_UpdateMenu() {
       navigate("/admin/kitchen");
     } catch (err) {
       console.error("Failed to publish menu", err);
+      setError(err.response?.data?.message || "Failed to publish menu. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -136,6 +204,8 @@ export default function Admin_UpdateMenu() {
 
             <hr className={styles.mainDivider} />
 
+            {error && <div className="form-error-box">{error}</div>}
+
             {/* 1. Breakfast Section */}
             <section className={`${styles.mealSection} ${styles.mealOrange}`}>
               <div className={styles.mealHeader}>
@@ -144,16 +214,26 @@ export default function Admin_UpdateMenu() {
               <div className={styles.formGrid}>
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="breakfastTime">Service Timings</label>
-                  <input id="breakfastTime" name="breakfastTime" className={styles.input} value={form.breakfastTime} onChange={handleChange} />
+                  <input
+                    ref={(el) => inputRefs.current.breakfastTime = el}
+                    id="breakfastTime"
+                    name="breakfastTime"
+                    className={`${styles.input} ${touched.breakfastTime && fieldErrors.breakfastTime ? 'input-error' : ''}`}
+                    value={form.breakfastTime}
+                    onChange={handleChange}
+                    onBlur={handleBlur('breakfastTime')}
+                    placeholder="e.g., 8:00 AM - 10:00 AM"
+                  />
+                  <FormFieldError error={touched.breakfastTime && fieldErrors.breakfastTime} onFocus={focusField('breakfastTime')} />
                 </div>
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                   <label className={styles.label} htmlFor="breakfastItems">Menu Items <span className={styles.labelSub}>(Enter one item per line)</span></label>
-                  <textarea 
-                    id="breakfastItems" 
-                    name="breakfastItems" 
-                    className={`${styles.input} ${styles.textarea}`} 
-                    value={form.breakfastItems} 
-                    onChange={handleChange} 
+                  <textarea
+                    id="breakfastItems"
+                    name="breakfastItems"
+                    className={`${styles.input} ${styles.textarea}`}
+                    value={form.breakfastItems}
+                    onChange={handleChange}
                   />
                 </div>
               </div>
@@ -167,16 +247,26 @@ export default function Admin_UpdateMenu() {
               <div className={styles.formGrid}>
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="lunchTime">Service Timings</label>
-                  <input id="lunchTime" name="lunchTime" className={styles.input} value={form.lunchTime} onChange={handleChange} />
+                  <input
+                    ref={(el) => inputRefs.current.lunchTime = el}
+                    id="lunchTime"
+                    name="lunchTime"
+                    className={`${styles.input} ${touched.lunchTime && fieldErrors.lunchTime ? 'input-error' : ''}`}
+                    value={form.lunchTime}
+                    onChange={handleChange}
+                    onBlur={handleBlur('lunchTime')}
+                    placeholder="e.g., 12:00 PM - 2:00 PM"
+                  />
+                  <FormFieldError error={touched.lunchTime && fieldErrors.lunchTime} onFocus={focusField('lunchTime')} />
                 </div>
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                   <label className={styles.label} htmlFor="lunchItems">Menu Items <span className={styles.labelSub}>(Enter one item per line)</span></label>
-                  <textarea 
-                    id="lunchItems" 
-                    name="lunchItems" 
-                    className={`${styles.input} ${styles.textarea}`} 
-                    value={form.lunchItems} 
-                    onChange={handleChange} 
+                  <textarea
+                    id="lunchItems"
+                    name="lunchItems"
+                    className={`${styles.input} ${styles.textarea}`}
+                    value={form.lunchItems}
+                    onChange={handleChange}
                   />
                 </div>
               </div>
@@ -190,16 +280,26 @@ export default function Admin_UpdateMenu() {
               <div className={styles.formGrid}>
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="dinnerTime">Service Timings</label>
-                  <input id="dinnerTime" name="dinnerTime" className={styles.input} value={form.dinnerTime} onChange={handleChange} />
+                  <input
+                    ref={(el) => inputRefs.current.dinnerTime = el}
+                    id="dinnerTime"
+                    name="dinnerTime"
+                    className={`${styles.input} ${touched.dinnerTime && fieldErrors.dinnerTime ? 'input-error' : ''}`}
+                    value={form.dinnerTime}
+                    onChange={handleChange}
+                    onBlur={handleBlur('dinnerTime')}
+                    placeholder="e.g., 7:00 PM - 9:00 PM"
+                  />
+                  <FormFieldError error={touched.dinnerTime && fieldErrors.dinnerTime} onFocus={focusField('dinnerTime')} />
                 </div>
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                   <label className={styles.label} htmlFor="dinnerItems">Menu Items <span className={styles.labelSub}>(Enter one item per line)</span></label>
-                  <textarea 
-                    id="dinnerItems" 
-                    name="dinnerItems" 
-                    className={`${styles.input} ${styles.textarea}`} 
-                    value={form.dinnerItems} 
-                    onChange={handleChange} 
+                  <textarea
+                    id="dinnerItems"
+                    name="dinnerItems"
+                    className={`${styles.input} ${styles.textarea}`}
+                    value={form.dinnerItems}
+                    onChange={handleChange}
                   />
                 </div>
               </div>

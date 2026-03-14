@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "../../API/axios";
 import styles from "./AD_Edit_Resident.module.css";
@@ -7,6 +7,8 @@ import { EditResidentSkeleton } from "./Components/Skeleton/Skeleton";
 import Loader from "../Resident/Components/Loader/Loader";
 import { minDelay } from "../../utils/minDelay";
 import useBlockInteraction from "../../hooks/useBlockInteraction";
+import { validators } from "../../utils/validators";
+import { FormFieldError } from "../../Components/FormError";
 
 const toInputDate = (dateValue) => {
   if (!dateValue) return "";
@@ -48,12 +50,54 @@ export default function Admin_EditResident() {
     guardianPhone: "",
   });
 
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const inputRefs = useRef({});
+
   const [originalPhone, setOriginalPhone] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   useBlockInteraction(saving);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const validationRules = {
+    name: (value) => validators.name(value, 'Full name'),
+    phoneNumber: (value) => validators.phone(value, true),
+    roomNumber: (value) => validators.required(value, 'Room number'),
+    guardianName: (value) => validators.name(value, 'Guardian name'),
+    guardianPhone: (value) => validators.phone(value, true),
+  };
+
+  const validateField = (name, value) => {
+    if (validationRules[name]) {
+      return validationRules[name](value);
+    }
+    return '';
+  };
+
+  const focusField = (fieldName) => () => {
+    if (inputRefs.current[fieldName]) {
+      inputRefs.current[fieldName].focus();
+      inputRefs.current[fieldName].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  const validateAll = () => {
+    const errors = {};
+    Object.keys(validationRules).forEach(field => {
+      const error = validateField(field, form[field]);
+      if (error) errors[field] = error;
+    });
+    setFieldErrors(errors);
+    setTouched(Object.keys(validationRules).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+
+    const firstErrorField = Object.keys(errors)[0];
+    if (firstErrorField && inputRefs.current[firstErrorField]) {
+      inputRefs.current[firstErrorField].focus();
+    }
+    return Object.keys(errors).length === 0;
+  };
 
   useEffect(() => {
     const fetchResident = async () => {
@@ -97,11 +141,33 @@ export default function Admin_EditResident() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setForm((previous) => ({ ...previous, [name]: value }));
+    let processedValue = value;
+
+    // Handle phone number fields - only digits, max 10
+    if (name === 'phoneNumber' || name === 'guardianPhone') {
+      processedValue = value.replace(/\D/g, '').slice(0, 10);
+    }
+
+    setForm((previous) => ({ ...previous, [name]: processedValue }));
+    setError('');
+
+    if (touched[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: validateField(name, processedValue) }));
+    }
+  };
+
+  const handleBlur = (fieldName) => () => {
+    setTouched((prev) => ({ ...prev, [fieldName]: true }));
+    setFieldErrors((prev) => ({ ...prev, [fieldName]: validateField(fieldName, form[fieldName]) }));
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (!validateAll()) {
+      return;
+    }
+
     setSaving(true);
     setError("");
     setSuccess("");
@@ -163,17 +229,46 @@ export default function Admin_EditResident() {
               <div className={styles.grid}>
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="name">Full Name</label>
-                  <input id="name" name="name" className={styles.input} value={form.name} onChange={handleChange} required />
+                  <input
+                    ref={(el) => inputRefs.current.name = el}
+                    id="name"
+                    name="name"
+                    className={`${styles.input} ${touched.name && fieldErrors.name ? 'input-error' : ''}`}
+                    value={form.name}
+                    onChange={handleChange}
+                    onBlur={handleBlur('name')}
+                  />
+                  <FormFieldError error={touched.name && fieldErrors.name} onFocus={focusField('name')} />
                 </div>
 
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="phoneNumber">Phone Number</label>
-                  <input id="phoneNumber" name="phoneNumber" className={styles.input} value={form.phoneNumber} onChange={handleChange} required />
+                  <input
+                    ref={(el) => inputRefs.current.phoneNumber = el}
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    type="tel"
+                    className={`${styles.input} ${touched.phoneNumber && fieldErrors.phoneNumber ? 'input-error' : ''}`}
+                    value={form.phoneNumber}
+                    onChange={handleChange}
+                    onBlur={handleBlur('phoneNumber')}
+                    placeholder="9876543210"
+                  />
+                  <FormFieldError error={touched.phoneNumber && fieldErrors.phoneNumber} onFocus={focusField('phoneNumber')} />
                 </div>
 
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="roomNumber">Room Number</label>
-                  <input id="roomNumber" name="roomNumber" className={styles.input} value={form.roomNumber} onChange={handleChange} required />
+                  <input
+                    ref={(el) => inputRefs.current.roomNumber = el}
+                    id="roomNumber"
+                    name="roomNumber"
+                    className={`${styles.input} ${touched.roomNumber && fieldErrors.roomNumber ? 'input-error' : ''}`}
+                    value={form.roomNumber}
+                    onChange={handleChange}
+                    onBlur={handleBlur('roomNumber')}
+                  />
+                  <FormFieldError error={touched.roomNumber && fieldErrors.roomNumber} onFocus={focusField('roomNumber')} />
                 </div>
 
                 <div className={styles.fieldGroup}>
@@ -183,12 +278,32 @@ export default function Admin_EditResident() {
 
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="guardianName">Guardian Name</label>
-                  <input id="guardianName" name="guardianName" className={styles.input} value={form.guardianName} onChange={handleChange} required />
+                  <input
+                    ref={(el) => inputRefs.current.guardianName = el}
+                    id="guardianName"
+                    name="guardianName"
+                    className={`${styles.input} ${touched.guardianName && fieldErrors.guardianName ? 'input-error' : ''}`}
+                    value={form.guardianName}
+                    onChange={handleChange}
+                    onBlur={handleBlur('guardianName')}
+                  />
+                  <FormFieldError error={touched.guardianName && fieldErrors.guardianName} onFocus={focusField('guardianName')} />
                 </div>
 
                 <div className={styles.fieldGroup}>
                   <label className={styles.label} htmlFor="guardianPhone">Guardian Phone</label>
-                  <input id="guardianPhone" name="guardianPhone" className={styles.input} value={form.guardianPhone} onChange={handleChange} required />
+                  <input
+                    ref={(el) => inputRefs.current.guardianPhone = el}
+                    id="guardianPhone"
+                    name="guardianPhone"
+                    type="tel"
+                    className={`${styles.input} ${touched.guardianPhone && fieldErrors.guardianPhone ? 'input-error' : ''}`}
+                    value={form.guardianPhone}
+                    onChange={handleChange}
+                    onBlur={handleBlur('guardianPhone')}
+                    placeholder="9876543210"
+                  />
+                  <FormFieldError error={touched.guardianPhone && fieldErrors.guardianPhone} onFocus={focusField('guardianPhone')} />
                 </div>
 
                 <div className={styles.fieldGroup}>

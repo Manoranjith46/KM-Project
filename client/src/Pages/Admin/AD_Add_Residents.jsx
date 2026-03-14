@@ -417,21 +417,6 @@ export default function Admin_AddResident() {
 
         <div className={styles.content}>
           <div className={styles.formContainer}>
-            
-            {/* Error Summary Banner */}
-            {showErrorSummary && Object.keys(errors).length > 0 && (
-              <div className={styles.errorBanner}>
-                <div className={styles.errorBannerIcon}>⚠️</div>
-                <div className={styles.errorBannerContent}>
-                  <h4 className={styles.errorBannerTitle}>Please fix the following errors:</h4>
-                  <ul className={styles.errorBannerList}>
-                    {Object.entries(errors).map(([field, error]) => (
-                      error && <li key={field}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
 
             {/* 1. Personal Information */}
             <section className={styles.subSection}>

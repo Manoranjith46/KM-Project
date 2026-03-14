@@ -8,6 +8,8 @@ import Loader from './Components/Loader/Loader';
 import Popup from './Components/popup/Popup';
 import { FinanceSkeleton } from './Components/Skeleton/Skeleton';
 import useBlockInteraction from '../../hooks/useBlockInteraction';
+import { validators } from '../../utils/validators';
+import { FormFieldError } from '../../Components/FormError';
 
 export default function Resident_Finance() {
   const navigate = useNavigate();
@@ -54,6 +56,50 @@ export default function Resident_Finance() {
     date: new Date().toISOString().split('T')[0],
     receipt: null,
   });
+
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const amountRef = useRef(null);
+
+  const validateField = (field, value) => {
+    if (field === 'amount') return validators.positiveNumber(value, 'Amount');
+    if (field === 'receipt') return !value ? 'Please upload a payment screenshot' : '';
+    return '';
+  };
+
+  const focusField = (fieldName) => () => {
+    if (fieldName === 'amount' && amountRef.current) {
+      amountRef.current.focus();
+    }
+  };
+
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+    setPaymentData({ ...paymentData, amount: value });
+    setWarningMsg('');
+    if (touched.amount) {
+      setFieldErrors(prev => ({ ...prev, amount: validateField('amount', value) }));
+    }
+  };
+
+  const handleAmountBlur = () => {
+    setTouched(prev => ({ ...prev, amount: true }));
+    setFieldErrors(prev => ({ ...prev, amount: validateField('amount', paymentData.amount) }));
+  };
+
+  const validateAll = () => {
+    const amountError = validateField('amount', paymentData.amount);
+    const receiptError = validateField('receipt', paymentData.receipt);
+
+    setFieldErrors({ amount: amountError, receipt: receiptError });
+    setTouched({ amount: true, receipt: true });
+
+    if (amountError && amountRef.current) {
+      amountRef.current.focus();
+    }
+
+    return !amountError && !receiptError;
+  };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   useBlockInteraction(isSubmitting);
@@ -216,15 +262,7 @@ export default function Resident_Finance() {
       return;
     }
 
-    // Validate amount
-    if (!paymentData.amount || Number(paymentData.amount) <= 0) {
-      setWarningMsg("Please enter a valid amount.");
-      return;
-    }
-
-    // Validate receipt
-    if (!paymentData.receipt) {
-      setWarningMsg("Please upload a payment screenshot before submitting.");
+    if (!validateAll()) {
       return;
     }
 
@@ -249,13 +287,15 @@ export default function Resident_Finance() {
         message: response?.data?.message || 'Receipt uploaded! Awaiting admin approval.'
       });
       
-      setPaymentData({ 
-        amount: "", 
-        month: currentMonth, 
+      setPaymentData({
+        amount: "",
+        month: currentMonth,
         paymentMethod: "UPI",
         date: new Date().toISOString().split('T')[0],
-        receipt: null 
+        receipt: null
       });
+      setFieldErrors({});
+      setTouched({});
       setReceiptPreview("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -329,14 +369,16 @@ export default function Resident_Finance() {
                 <div className={styles.inputRow}>
                   <div className={styles.inputGroup}>
                     <label className={styles.label}>Amount Paid (₹)</label>
-                    <input 
-                      type="number" 
-                      className={styles.inputField} 
+                    <input
+                      ref={amountRef}
+                      type="number"
+                      className={`${styles.inputField} ${touched.amount && fieldErrors.amount ? 'input-error' : ''}`}
                       placeholder="e.g. 6500"
-                      required
                       value={paymentData.amount}
-                      onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
+                      onChange={handleAmountChange}
+                      onBlur={handleAmountBlur}
                     />
+                    <FormFieldError error={touched.amount && fieldErrors.amount} onFocus={focusField('amount')} />
                   </div>
                   
                   <div className={styles.inputGroup}>
@@ -431,6 +473,7 @@ export default function Resident_Finance() {
                   {warningMsg && (
                     <p className={styles.warningText}>{warningMsg}</p>
                   )}
+                  <FormFieldError error={touched.receipt && fieldErrors.receipt} onFocus={() => {}} />
                 </div>
 
                 <button type="submit" className={`${styles.submitBtn} ${isGuest ? styles.submitBtnGuest : ''}`} disabled={isSubmitting}>
