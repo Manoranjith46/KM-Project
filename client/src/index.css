@@ -2,7 +2,7 @@
 
 /* Light theme (default) */
 :root {
-  --app-height: 100dvh;
+  --app-height: 100svh; /* small viewport = visible area when mobile URL bar is shown */
 
   /* Core colors */
   --background: #ffffff;
@@ -147,7 +147,15 @@ html {
 html,
 body,
 #root {
-  min-height: var(--app-height, 100dvh);
+  min-height: var(--app-height, 100svh);
+}
+
+/* Mobile: respect safe areas so content isn't under notch or home indicator */
+@media (max-width: 768px) {
+  html {
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
 }
 
 body {

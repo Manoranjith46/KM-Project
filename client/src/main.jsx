@@ -7,8 +7,15 @@ import './index.css'
 import App from './App.jsx'
 
 function setAppViewportHeight() {
-  const viewportHeight = window.visualViewport?.height || window.innerHeight;
-  document.documentElement.style.setProperty('--app-height', `${viewportHeight}px`);
+  const vv = window.visualViewport;
+  const viewportHeight = vv ? vv.height : window.innerHeight;
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  // On mobile, use the smaller of visual viewport and innerHeight so we never
+  // assume more than the visible area (avoids content hidden under URL bar).
+  const heightPx = isMobile
+    ? Math.min(viewportHeight, window.innerHeight)
+    : viewportHeight;
+  document.documentElement.style.setProperty('--app-height', `${heightPx}px`);
 }
 
 setAppViewportHeight();
