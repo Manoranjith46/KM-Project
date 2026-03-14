@@ -200,12 +200,36 @@
 .contentHeader {
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 .contentTitle {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+}
+
+/* Mobile menu button to open sidebar */
+.menuButton {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  cursor: pointer;
+}
+.menuButton span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text-primary);
 }
 
 /* ── Settings Split Card ── */
@@ -774,6 +798,10 @@
   }
 
   .pageTitle { font-size: 1.5rem; }
+
+  .menuButton {
+    display: inline-flex;
+  }
 }
 
 /* ============================================

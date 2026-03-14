@@ -3,6 +3,8 @@ import { createServer } from 'http';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import mongoSanitizer from './middleware/mongoSanitizer.js';
+import rateLimit from 'express-rate-limit';
 import connectDB from './config/db.js'; // Ensure .js extension
 import { initSocket } from './socket.js';
 import adminRoutes from './routes/adminRoutes.js';
@@ -13,6 +15,8 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import kitchenRoutes from './routes/kitchenRoutes.js';
 import { startMonthlyRentReset } from './cron/monthlyRentReset.js';
+import helmet from 'helmet';
+
 
 // Load config
 dotenv.config({ silent: true });
@@ -22,6 +26,12 @@ connectDB();
 
 const app = express();
 const server = createServer(app);
+
+// Rate limiting configuration (with .env overrides)
+const GLOBAL_RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000; // default 1 minute
+const GLOBAL_RATE_LIMIT_MAX = Number(process.env.MAX_REQUESTS_PER_WINDOW) || 10; // default 10 requests
+const AUTH_RATE_LIMIT_WINDOW_MS = Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000; // default 1 hour
+const AUTH_RATE_LIMIT_MAX = Number(process.env.AUTH_RATE_LIMIT_MAX) || 5; // default 5 requests
 
 const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = [
@@ -55,9 +65,38 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions));
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Parse cookies from requests
+
+// 🛡️ SECURITY MIDDLEWARE
+// 1. Data sanitization against NoSQL injection
+app.use(mongoSanitizer());
+
+// 2. Global rate limiting - default 10 requests per minute per IP
+const globalLimiter = rateLimit({
+  windowMs: GLOBAL_RATE_LIMIT_WINDOW_MS,
+  max: GLOBAL_RATE_LIMIT_MAX,
+  message: {
+    message: 'Too many requests from this IP, please try again after 1 minute.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api', globalLimiter);
+
+// 3. Stricter rate limiting for auth/login routes
+const authLimiter = rateLimit({
+  windowMs: AUTH_RATE_LIMIT_WINDOW_MS,
+  max: AUTH_RATE_LIMIT_MAX,
+  message: {
+    message: 'Too many login attempts. Please try again in an minute.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/login', authLimiter);
 
 // Initialize Socket.IO
 initSocket(server, corsOptions);

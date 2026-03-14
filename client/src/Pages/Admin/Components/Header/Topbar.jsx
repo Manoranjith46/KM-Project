@@ -67,7 +67,7 @@ export default function Topbar({
             type="text"
             className={styles.searchInput}
             placeholder="Search..."
-            value={searchValue}
+            defaultValue={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>

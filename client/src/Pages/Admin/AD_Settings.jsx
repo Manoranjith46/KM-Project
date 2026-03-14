@@ -359,6 +359,16 @@ export default function Admin_Settings() {
         <div className={styles.content}>
           <div className={styles.contentHeader}>
             <h2 className={styles.contentTitle}>Admin Settings</h2>
+            <button
+              type="button"
+              className={styles.menuButton}
+              onClick={() => setIsSidebarOpen(true)}
+              aria-label="Open navigation"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
           </div>
 
           <div className={styles.settingsCard}>
