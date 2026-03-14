@@ -101,7 +101,7 @@
 .dashboardWrapper {
   /* A beautiful soft mint-to-white gradient for depth */
   background: linear-gradient(135deg, #e6f9f0 0%, #f4fdf8 50%, #eefbf4 100%);
-  min-height: var(--app-height, 100dvh);
+  height: var(--app-height, 100dvh);
   font-family: 'Plus Jakarta Sans', sans-serif;
   padding: 2rem;
   padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
@@ -117,32 +117,42 @@
   background: linear-gradient(135deg, #fef2f2 0%, #fef8f8 50%, #fef2f2 100%);
 }
 
-.dashboardWrapper::-webkit-scrollbar {
-  width: 11px;
+/* Tablet and above: volume-bar style scrollbar. Below tablet: hidden in index.css */
+@media (min-width: 769px) {
+  .dashboardWrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+  .dashboardWrapper::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 999px;
+  }
+  .dashboardWrapper::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border-radius: 999px;
+  }
+  .dashboardWrapper::-webkit-scrollbar-thumb:hover {
+    background: #059669;
+  }
+  .dashboardWrapper::-webkit-scrollbar-thumb {
+    background: #f97373;
+  }
+  .dashboardWrapper::-webkit-scrollbar-thumb:hover {
+    background: #ef4444;
+  }
 }
-
-.dashboardWrapper::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
-  border-left: 1px solid #e2e8f0;
-}
-
-.dashboardWrapper::-webkit-scrollbar-thumb {
-  background-color:#059669;
-  border-radius: 10px;
-  border: 3px solid #f1f5f9;
-}
-
-.dashboardWrapper::-webkit-scrollbar-thumb:hover {
-  background-color: #006246;
-}
-
-.dashboardWrapperGuest::-webkit-scrollbar-thumb {
-  background-color: #ef4444;
-}
-
-.dashboardWrapperGuest::-webkit-scrollbar-thumb:hover {
-  background-color: #b91c1c;
+@media (max-width: 768px) {
+  .dashboardWrapper::-webkit-scrollbar,
+  .dashboardWrapperGuest::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+    background: transparent;
+  }
+  .dashboardWrapper,
+  .dashboardWrapperGuest {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
 }
 
 .hubContainer {

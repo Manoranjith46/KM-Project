@@ -150,6 +150,13 @@ body,
   min-height: var(--app-height, 100svh);
 }
 
+/* Hide scrollbar arrow buttons (up/down) globally in WebKit-based browsers */
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Mobile: respect safe areas so content isn't under notch or home indicator */
 @media (max-width: 768px) {
   html {

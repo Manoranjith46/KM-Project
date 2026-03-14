@@ -3,7 +3,7 @@
    ========================================================= */
 .pageWrapper {
   background: rgba(240, 253, 244, 0.8);
-  min-height: var(--app-height, 100dvh);
+  height: var(--app-height, 100dvh);
   font-family: 'Plus Jakarta Sans', sans-serif;
   padding: 2rem;
   padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
@@ -51,32 +51,43 @@
   z-index: 10;
 }
 
-.pageWrapper::-webkit-scrollbar {
-  width: 11px;
-}
+/* Tablet and above: volume-bar style scrollbar. Below tablet: hidden in index.css */
+@media (min-width: 769px) {
+  .pageWrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+  .pageWrapper::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 999px;
+  }
+  .pageWrapper::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border-radius: 999px;
+  }
+  .pageWrapper::-webkit-scrollbar-thumb:hover {
+    background: #059669;
+  }
+  .pageWrapper::-webkit-scrollbar-thumb {
+    background: #f97373;
+  }
+  .pageWrapper::-webkit-scrollbar-thumb:hover {
+    background: #ef4444;
+  }
 
-.pageWrapper::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
-  border-left: 1px solid #e2e8f0;
 }
-
-.pageWrapper::-webkit-scrollbar-thumb {
-  background-color:#059669;
-  border-radius: 10px;
-  border: 3px solid #f1f5f9;
-}
-
-.pageWrapper::-webkit-scrollbar-thumb:hover {
-  background-color: #006246;
-}
-
-.pageWrapperGuest::-webkit-scrollbar-thumb {
-  background-color: #ef4444;
-}
-
-.pageWrapperGuest::-webkit-scrollbar-thumb:hover {
-  background-color: #b91c1c;
+@media (max-width: 768px) {
+  .pageWrapper::-webkit-scrollbar,
+  .pageWrapperGuest::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+    background: transparent;
+  }
+  .pageWrapper,
+  .pageWrapperGuest {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
 }
 
 /* Background Blobs */
