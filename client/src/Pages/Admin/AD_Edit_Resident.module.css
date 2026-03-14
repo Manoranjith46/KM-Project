@@ -263,12 +263,9 @@
 }
 
 @media (max-width: 768px) {
-	.dashboardWrapper {
-		margin-top: 0.75rem;
-	}
 	.mainContent {
 		margin-left: 0;
-		padding: 1rem;
+		padding: calc(1rem + 0.75rem) 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
     scrollbar-width: none;
   }
 

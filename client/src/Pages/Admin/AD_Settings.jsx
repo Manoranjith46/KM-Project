@@ -10,6 +10,7 @@ import Popup from "./Components/Popup/Popup";
 import { SettingsProfileSkeleton, SettingsPropertySkeleton, SettingsRoomsSkeleton } from "./Components/Skeleton/Skeleton";
 import styles from "./AD_Settings.module.css";
 import Sidebar from "./Components/Sidebar/Sidebar";
+import Topbar from "./Components/Header/Topbar";
 import useBlockInteraction from "../../hooks/useBlockInteraction";
 import { validators } from "../../utils/validators";
 import { FormFieldError } from "../../Components/FormError";
@@ -455,19 +456,17 @@ export default function Admin_Settings() {
       <Sidebar currentPath={"settings"} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className={styles.mainContent}>
+        <Topbar
+          title="Settings"
+          subtitle="Manage profile, property details, and security"
+          currentView="settings"
+          username={profile.name || user?.name || "Admin"}
+          onMenuClick={() => setIsSidebarOpen(true)}
+        />
+
         <div className={styles.content}>
           <div className={styles.contentHeader}>
             <h2 className={styles.contentTitle}>Admin Settings</h2>
-            <button
-              type="button"
-              className={styles.menuButton}
-              onClick={() => setIsSidebarOpen(true)}
-              aria-label="Open navigation"
-            >
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
           </div>
 
           <div className={styles.settingsCard}>

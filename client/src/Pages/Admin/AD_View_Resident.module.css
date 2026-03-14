@@ -249,8 +249,7 @@
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
   .pageContainer {
-    margin-top: 0.75rem;
-    padding: 1rem;
+    padding: calc(1rem + 0.75rem) 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
     gap: 1.25rem;
   }
 
