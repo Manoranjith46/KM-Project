@@ -7,6 +7,7 @@ import useSocket from "../../hooks/useSocket";
 import Loader from "./Components/Loader/Loader";
 import { DashboardSkeleton } from "./Components/Skeleton/Skeleton";
 import Popup from './Components/popup/Popup';
+import useBlockInteraction from '../../hooks/useBlockInteraction';
 import styles from "./RD_Dashboard.module.css";
 
 export default function Resident_Dashboard() {
@@ -164,6 +165,8 @@ export default function Resident_Dashboard() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [scanAction, setScanAction] = useState("");
   const [isUpdatingMeal, setIsUpdatingMeal] = useState(false);
+  const [isTogglingGate, setIsTogglingGate] = useState(false);
+  useBlockInteraction(isTogglingGate);
 
   const handleMealToggle = async (mealType) => {
     if (isUpdatingMeal) return;
@@ -196,8 +199,6 @@ export default function Resident_Dashboard() {
     await logout();
   };
 
-  const [isTogglingGate, setIsTogglingGate] = useState(false);
-
   const handleGateToggle = async () => {
     if (isTogglingGate || !user?.mobileNumber) return;
     try {
@@ -213,7 +214,7 @@ export default function Resident_Dashboard() {
 
       setScanAction(action);
       setShowSuccessPopup(true);
-      setTimeout(() => setShowSuccessPopup(false), 3000);
+      setTimeout(() => setShowSuccessPopup(false), 1500);
     } catch (err) {
       console.error("Error toggling gate status:", err);
       showError('Gate Update Failed', err.response?.data?.message || 'Could not update gate status. Please try again.');
@@ -432,10 +433,10 @@ export default function Resident_Dashboard() {
         </div> {/* End of Main Grid */}
         </>)}
       </div>
-      {isUpdatingMeal && (
-        <div className={styles.updateOverlay}>
-          <div className={styles.updatePopup}>
-            <Loader text="Updating..." />
+      {isTogglingGate && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text="Updating" />
           </div>
         </div>
       )}
