@@ -7,27 +7,49 @@ const ACCESS_TOKEN_EXPIRE = process.env.ACCESS_TOKEN_EXPIRE || '15m';
 const REFRESH_TOKEN_EXPIRE = process.env.REFRESH_TOKEN_EXPIRE || '7d';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
+// Detect browsers that don't support SameSite=None (IE, old Safari, old Chrome)
+const shouldAvoidSameSiteNone = (userAgent) => {
+  if (!userAgent) return false;
+  // IE 11 and below (Trident) or IE Edge Legacy (Edge/)
+  if (/Trident|MSIE|Edge\//.test(userAgent)) return true;
+  // Old Safari on macOS 10.14 Mojave
+  if (/Safari/.test(userAgent) && /Macintosh.*Version\/12/.test(userAgent)) return true;
+  return false;
+};
+
 const getCookieOptions = (req, maxAge = COOKIE_MAX_AGE) => {
   const isProduction = process.env.NODE_ENV === 'production';
   const forwardedProto = req.headers['x-forwarded-proto'];
   const isHttps = req.secure || forwardedProto === 'https';
+  const userAgent = req.headers['user-agent'] || '';
 
   // SameSite=None requires Secure=true in modern browsers.
   const secure = isProduction || isHttps;
-  const sameSite = secure ? 'none' : 'lax';
 
-  return {
+  // For browsers that don't support SameSite=None, omit it entirely
+  // This lets the browser use its default behavior
+  const incompatibleBrowser = shouldAvoidSameSiteNone(userAgent);
+  const sameSite = incompatibleBrowser ? undefined : (secure ? 'none' : 'lax');
+
+  const options = {
     httpOnly: true,
     secure,
-    sameSite,
     maxAge,
     path: '/',
   };
+
+  // Only set sameSite if defined (omitting it for IE/legacy browsers)
+  if (sameSite !== undefined) {
+    options.sameSite = sameSite;
+  }
+
+  return options;
 };
 
 const getClearCookieOptions = (req) => {
-  const { httpOnly, secure, sameSite, path } = getCookieOptions(req);
-  return { httpOnly, secure, sameSite, path };
+  const options = getCookieOptions(req);
+  delete options.maxAge; // clearCookie doesn't need maxAge
+  return options;
 };
 
 // Generate ACCESS token (short-lived)
