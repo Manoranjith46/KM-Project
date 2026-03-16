@@ -436,7 +436,15 @@ export default function Resident_Dashboard() {
       {isTogglingGate && (
         <div className={styles.loaderOverlay}>
           <div className={styles.loaderPopup}>
-            <Loader text="Updating" />
+            <Loader text="Updating..." />
+          </div>
+        </div>
+      )}
+
+      {isUpdatingMeal && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loaderPopup}>
+            <Loader text="Updating..." />
           </div>
         </div>
       )}
