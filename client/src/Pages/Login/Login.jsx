@@ -146,40 +146,57 @@ export default function Login() {
   };
 
   return (
-    <div className={styles.container}>
-      {/* Animated Background Elements */}
-      <div className={styles.backgroundShapes}>
-        <div className={styles.shape1} />
-        <div className={styles.shape2} />
-        <div className={styles.shape3} />
-        <div className={styles.shape4} />
-        <div className={styles.shape5} />
-        <div className={styles.shape6} />
-        <div className={styles.shape7} />
-        <div className={styles.shape8} />
+    <div className={styles.page}>
+      <div className={styles.ambient} aria-hidden="true">
+        <span className={`${styles.orb} ${styles.orbOne}`} />
+        <span className={`${styles.orb} ${styles.orbTwo}`} />
+        <span className={`${styles.orb} ${styles.orbThree}`} />
+        <span className={`${styles.orb} ${styles.orbFour}`} />
       </div>
 
-      {/* Desktop Version - Login Only */}
-      <div className={`${styles.card} ${styles.desktopCard}`}>
-        <div className={styles.glassCard}>
-          {/* Logo */}
-          <div className={styles.desktopLogoContainer}>
-            <div className={styles.desktopLogo}>Logo</div>
+      <main className={styles.shell}>
+        <section className={styles.brandPane}>
+          <div className={styles.brandTop}>
+            <div className={styles.logoMark}>KM</div>
+            <span className={styles.brandBadge}>Resident Portal</span>
           </div>
 
-          {/* Login Heading */}
-          <h2 className={styles.heading}>Login</h2>
+          <h1 className={styles.brandTitle}>A calmer way to manage your stay.</h1>
+          <p className={styles.brandSubtitle}>
+            Payments, notices, and service requests in one organized space.
+          </p>
 
-          {/* Error Message */}
+          <div className={styles.featureGrid}>
+            <div className={styles.featureCard}>
+              <p className={styles.featureTitle}>Payments</p>
+              <p className={styles.featureText}>Review dues, history, and receipts fast.</p>
+            </div>
+            <div className={styles.featureCard}>
+              <p className={styles.featureTitle}>Requests</p>
+              <p className={styles.featureText}>Log issues and track updates in minutes.</p>
+            </div>
+            <div className={styles.featureCard}>
+              <p className={styles.featureTitle}>Notices</p>
+              <p className={styles.featureText}>Stay up to date with property updates.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.formPane}>
+          <div className={styles.formHeader}>
+            <p className={styles.formEyebrow}>Welcome back</p>
+            <h2 className={styles.formTitle}>Sign in to your account</h2>
+            <p className={styles.formSubtitle}>Use your registered mobile number.</p>
+          </div>
+
           {error && (
-            <div className={styles.errorBox}>
+            <div className={styles.errorBox} role="alert">
               {error}
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.formGroup}>
+            <div className={styles.fieldGroup}>
               <label htmlFor="desktop-phone" className={styles.label}>
                 Mobile Number
               </label>
@@ -198,11 +215,11 @@ export default function Login() {
               )}
             </div>
 
-            <div className={styles.formGroup}>
+            <div className={styles.fieldGroup}>
               <label htmlFor="desktop-password" className={styles.label}>
                 Password
               </label>
-              <div className={styles.passwordInputWrapper}>
+              <div className={styles.passwordRow}>
                 <input
                   id="desktop-password"
                   type={showPassword ? 'text' : 'password'}
@@ -216,7 +233,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className={styles.passwordToggleBtn}
+                  className={styles.passwordToggle}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   disabled={loading}
                 >
@@ -232,8 +249,12 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
-        </div>
-      </div>
+
+          <p className={styles.supportText}>
+            Need access? Contact the property manager to enable your account.
+          </p>
+        </section>
+      </main>
     </div>
   )
 }
